@@ -3,6 +3,11 @@
   const SESSION_KEY = "pharmacy-schedule-session-v12";
   const LEGACY_INITIAL_PASSWORD = "1".repeat(4);
   const ADMIN_PASSWORD = "tndnjs1!2@";
+  const SUPABASE_URL = "https://seqefputbjlxjyvloywk.supabase.co";
+  const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_k8EqPOzPYr6itPaOgFYwCA_39-Zi182";
+  const SUPABASE_STATE_ID = "shared_schedule";
+  const REMOTE_SYNC_INTERVAL_MS = 30000;
+  const SHARED_STATE_KEYS = ["employees", "schedules", "staffSchedules", "swapRequests", "holidays"];
 
   const SHIFT_META = {
     "10pm": { label: "10-10", detail: "10시 마감 · 12시간", className: "ten", hours: 12 },
@@ -78,6 +83,15 @@
   let monthlyPayCache = new Map();
   let assignmentsCache = new Map();
   let lastStoredSnapshot = "";
+  let remoteSyncReady = false;
+  let remoteSyncInFlight = false;
+  let remoteSyncTimer = null;
+  let remotePollTimer = null;
+  let remoteSyncStatus = "연결중";
+  let remoteSyncErrorShown = false;
+  let lastRemoteUpdatedAt = "";
+  let lastRemotePayloadSnapshot = "";
+  let pendingRemotePayloadSnapshot = "";
   let db = loadDb();
   let session = loadSession();
   let currentTab = "calendar";
@@ -92,12 +106,19 @@
   document.addEventListener("click", handleClick);
   document.addEventListener("change", handleChange);
   window.addEventListener("storage", handleStorageSync);
-  window.addEventListener("focus", syncDbFromStorage);
+  window.addEventListener("focus", () => {
+    syncDbFromStorage();
+    refreshRemoteScheduleState();
+  });
   document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) syncDbFromStorage();
+    if (!document.hidden) {
+      syncDbFromStorage();
+      refreshRemoteScheduleState();
+    }
   });
 
   render();
+  initRemoteScheduleSync();
 
   function loadDb() {
     try {
@@ -222,7 +243,7 @@
     return base;
   }
 
-  function saveDb(nextDb = db) {
+  function saveDb(nextDb = db, options = {}) {
     clearComputedCaches();
     nextDb.meta = {
       storageScope: "browser",
@@ -231,6 +252,12 @@
     };
     lastStoredSnapshot = JSON.stringify(nextDb);
     localStorage.setItem(STORAGE_KEY, lastStoredSnapshot);
+    if (!options.skipRemote && remoteSyncReady) {
+      const sharedSnapshot = getSharedStateSnapshot(nextDb);
+      if (sharedSnapshot !== lastRemotePayloadSnapshot) {
+        scheduleRemoteScheduleSave(sharedSnapshot);
+      }
+    }
   }
 
   function clearComputedCaches() {
@@ -277,6 +304,228 @@
     } catch {
       // Keep the current in-memory data if another tab is mid-write.
     }
+  }
+
+  async function initRemoteScheduleSync() {
+    if (!isRemoteSyncConfigured()) {
+      remoteSyncStatus = "로컬저장";
+      render();
+      return;
+    }
+    remoteSyncStatus = "공유연결중";
+    render();
+    try {
+      const row = await fetchRemoteScheduleRow();
+      if (row && hasRemoteSharedState(row.data)) {
+        applyRemoteSharedState(row.data);
+        lastRemoteUpdatedAt = row.updated_at || "";
+        lastRemotePayloadSnapshot = getSharedDataSnapshot(row.data);
+        saveDb(db, { skipRemote: true });
+        const currentSharedSnapshot = getSharedStateSnapshot(db);
+        if (currentSharedSnapshot !== lastRemotePayloadSnapshot) {
+          pendingRemotePayloadSnapshot = currentSharedSnapshot;
+          await pushRemoteScheduleState(true);
+        }
+      } else {
+        lastRemotePayloadSnapshot = getSharedStateSnapshot(db);
+        await pushRemoteScheduleState(true);
+      }
+      remoteSyncReady = true;
+      remoteSyncStatus = "공유중";
+      startRemoteSchedulePolling();
+      render();
+    } catch (error) {
+      remoteSyncReady = false;
+      remoteSyncStatus = "공유확인";
+      console.warn("Supabase schedule sync failed", error);
+      render();
+      if (!remoteSyncErrorShown) {
+        remoteSyncErrorShown = true;
+        showToast("Supabase 공유 연결을 확인해주세요.");
+      }
+    }
+  }
+
+  function isRemoteSyncConfigured() {
+    return Boolean(SUPABASE_URL && SUPABASE_PUBLISHABLE_KEY && window.fetch);
+  }
+
+  function getSupabaseHeaders(extra = {}) {
+    return {
+      apikey: SUPABASE_PUBLISHABLE_KEY,
+      Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
+      ...extra,
+    };
+  }
+
+  async function fetchRemoteScheduleRow() {
+    const url = `${SUPABASE_URL}/rest/v1/app_state?id=eq.${encodeURIComponent(SUPABASE_STATE_ID)}&select=id,data,updated_at`;
+    const response = await fetch(url, {
+      headers: getSupabaseHeaders({ Accept: "application/json" }),
+      cache: "no-store",
+    });
+    if (!response.ok) throw new Error(await response.text());
+    const rows = await response.json();
+    return Array.isArray(rows) ? rows[0] || null : null;
+  }
+
+  async function upsertRemoteScheduleRow(payload) {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/app_state?on_conflict=id`, {
+      method: "POST",
+      headers: getSupabaseHeaders({
+        "Content-Type": "application/json",
+        Prefer: "resolution=merge-duplicates,return=representation",
+      }),
+      body: JSON.stringify({
+        id: SUPABASE_STATE_ID,
+        data: payload,
+        updated_at: nowIso(),
+      }),
+    });
+    if (!response.ok) throw new Error(await response.text());
+    const rows = await response.json();
+    return Array.isArray(rows) ? rows[0] || null : null;
+  }
+
+  function scheduleRemoteScheduleSave(snapshot = getSharedStateSnapshot(db)) {
+    if (!remoteSyncReady) return;
+    pendingRemotePayloadSnapshot = snapshot;
+    clearTimeout(remoteSyncTimer);
+    remoteSyncTimer = setTimeout(() => {
+      remoteSyncTimer = null;
+      pushRemoteScheduleState(false);
+    }, 700);
+  }
+
+  async function pushRemoteScheduleState(force = false) {
+    if (!force && (!remoteSyncReady || remoteSyncInFlight)) return;
+    if (!isRemoteSyncConfigured()) return;
+    const snapshot = pendingRemotePayloadSnapshot || getSharedStateSnapshot(db);
+    remoteSyncInFlight = true;
+    remoteSyncStatus = "저장중";
+    try {
+      const payload = extractSharedState(db);
+      const row = await upsertRemoteScheduleRow(payload);
+      lastRemoteUpdatedAt = row?.updated_at || payload.savedAt || nowIso();
+      lastRemotePayloadSnapshot = snapshot;
+      pendingRemotePayloadSnapshot = "";
+      remoteSyncReady = true;
+      remoteSyncStatus = "공유중";
+      remoteSyncErrorShown = false;
+      render();
+    } catch (error) {
+      remoteSyncStatus = "공유확인";
+      console.warn("Supabase schedule save failed", error);
+      if (!remoteSyncErrorShown) {
+        remoteSyncErrorShown = true;
+        showToast("근무표 공유 저장을 확인해주세요.");
+      } else {
+        render();
+      }
+    } finally {
+      remoteSyncInFlight = false;
+    }
+  }
+
+  function startRemoteSchedulePolling() {
+    clearInterval(remotePollTimer);
+    remotePollTimer = setInterval(() => {
+      if (!document.hidden) refreshRemoteScheduleState();
+    }, REMOTE_SYNC_INTERVAL_MS);
+  }
+
+  async function refreshRemoteScheduleState() {
+    if (!remoteSyncReady || remoteSyncInFlight || remoteSyncTimer || pendingRemotePayloadSnapshot) return;
+    try {
+      const row = await fetchRemoteScheduleRow();
+      if (!row || !hasRemoteSharedState(row.data)) return;
+      const snapshot = getSharedDataSnapshot(row.data);
+      if (snapshot === lastRemotePayloadSnapshot && row.updated_at === lastRemoteUpdatedAt) return;
+      applyRemoteSharedState(row.data);
+      lastRemoteUpdatedAt = row.updated_at || "";
+      lastRemotePayloadSnapshot = snapshot;
+      saveDb(db, { skipRemote: true });
+      remoteSyncStatus = "공유중";
+      remoteSyncErrorShown = false;
+      render();
+    } catch (error) {
+      remoteSyncStatus = "공유확인";
+      console.warn("Supabase schedule refresh failed", error);
+      render();
+    }
+  }
+
+  function extractSharedState(source = db) {
+    return {
+      sharedVersion: 1,
+      savedAt: nowIso(),
+      ...cloneSharedStateCore(source),
+    };
+  }
+
+  function getSharedStateSnapshot(source = db) {
+    return getSharedDataSnapshot(source);
+  }
+
+  function getSharedDataSnapshot(data) {
+    return JSON.stringify(cloneSharedStateCore(data));
+  }
+
+  function cloneSharedStateCore(source = {}) {
+    return JSON.parse(
+      JSON.stringify({
+        employees: Array.isArray(source.employees) ? source.employees.map(cloneEmployeeForSharedState) : [],
+        schedules: Array.isArray(source.schedules) ? source.schedules : [],
+        staffSchedules: Array.isArray(source.staffSchedules) ? source.staffSchedules : [],
+        swapRequests: Array.isArray(source.swapRequests) ? source.swapRequests : [],
+        holidays: Array.isArray(source.holidays) ? source.holidays : [],
+      }),
+    );
+  }
+
+  function cloneEmployeeForSharedState(employee = {}) {
+    const { password, mustChangePassword, ...sharedEmployee } = employee || {};
+    return sharedEmployee;
+  }
+
+  function mergeRemoteEmployees(remoteEmployees = []) {
+    const localEmployeesById = new Map((db.employees || []).map((employee) => [employee.id, employee]));
+    return remoteEmployees.map((remoteEmployee) => {
+      const localEmployee = localEmployeesById.get(remoteEmployee.id);
+      const fallbackPassword =
+        remoteEmployee.id === "emp-bae"
+          ? ADMIN_PASSWORD
+          : ASSIGNED_INITIAL_PASSWORDS[remoteEmployee.id] || generateTemporaryPassword();
+      return {
+        ...(localEmployee || {}),
+        ...remoteEmployee,
+        password: localEmployee?.password || fallbackPassword,
+        mustChangePassword:
+          typeof localEmployee?.mustChangePassword === "boolean"
+            ? localEmployee.mustChangePassword
+            : remoteEmployee.id === "emp-bae"
+              ? false
+              : true,
+      };
+    });
+  }
+
+  function hasRemoteSharedState(data) {
+    return Boolean(data && SHARED_STATE_KEYS.some((key) => Array.isArray(data[key])));
+  }
+
+  function applyRemoteSharedState(shared) {
+    const nextShared = cloneSharedStateCore(shared);
+    if (Array.isArray(shared.employees)) {
+      db.employees = mergeRemoteEmployees(nextShared.employees);
+    }
+    ["schedules", "staffSchedules", "swapRequests", "holidays"].forEach((key) => {
+      if (Array.isArray(shared[key])) db[key] = nextShared[key];
+    });
+    db = normalizeDb(db, false);
+    clearComputedCaches();
+    removeSchedulesAfterResignations(db);
+    ensureMonthData(monthCursor, db, false);
   }
 
   function createInitialData() {
@@ -1035,6 +1284,7 @@
             <span>${escapeHtml(user.name)}</span>
           </div>
           <div class="top-actions">
+            ${renderRemoteSyncBadge()}
             <button class="ghost-button" type="button" data-action="logout">로그아웃</button>
           </div>
         </header>
@@ -1054,6 +1304,12 @@
       </div>
       ${toast ? `<div class="toast" role="status">${escapeHtml(toast)}</div>` : ""}
     `;
+  }
+
+  function renderRemoteSyncBadge() {
+    if (!isRemoteSyncConfigured()) return "";
+    const tone = remoteSyncStatus === "공유중" ? "online" : remoteSyncStatus === "저장중" || remoteSyncStatus === "공유연결중" ? "pending" : "offline";
+    return `<span class="sync-pill ${tone}">${escapeHtml(remoteSyncStatus)}</span>`;
   }
 
   function renderLogin(error = "") {

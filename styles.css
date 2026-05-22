@@ -253,6 +253,34 @@ input:disabled {
   gap: 8px;
 }
 
+.sync-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  border-radius: 999px;
+  padding: 4px 9px;
+  background: #f1f2f0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.sync-pill.online {
+  background: #e7f7ef;
+  color: var(--brand-strong);
+}
+
+.sync-pill.pending {
+  background: var(--amber-bg);
+  color: var(--amber);
+}
+
+.sync-pill.offline {
+  background: #feeaea;
+  color: var(--danger);
+}
+
 .role-pill,
 .status-pill,
 .shift-pill {
