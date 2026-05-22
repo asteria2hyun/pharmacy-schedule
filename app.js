@@ -2,6 +2,7 @@
   const STORAGE_KEY = "pharmacy-schedule-mvp-v12";
   const SESSION_KEY = "pharmacy-schedule-session-v12";
   const LEGACY_INITIAL_PASSWORD = "1".repeat(4);
+  const ADMIN_PASSWORD = "tndnjs1!2@";
 
   const SHIFT_META = {
     "10pm": { label: "10-10", detail: "10시 마감 · 12시간", className: "ten", hours: 12 },
@@ -42,6 +43,19 @@
     "emp-yeongju": "yongju",
     "emp-juna": "junah",
     "emp-juyeon": "jooyeon",
+  };
+  const ASSIGNED_INITIAL_PASSWORDS = {
+    "emp-juna": "4827",
+    "emp-juyeon": "7394",
+    "emp-jaehee": "2658",
+    "emp-minji": "9146",
+    "emp-yeongju": "6372",
+    "emp-hyeonju": "5283",
+    "emp-subin": "8461",
+    "emp-yuri": "1937",
+    "emp-hyojin": "7526",
+    "emp-sohyun": "3849",
+    "emp-old": "6195",
   };
 
   const app = document.querySelector("#app");
@@ -88,7 +102,7 @@
   function normalizeDb(value) {
     const base = value && typeof value === "object" ? value : createInitialData();
     const previousSchemaVersion = Number(base.schemaVersion || 0);
-    base.schemaVersion = 14;
+    base.schemaVersion = 16;
     base.settings = {
       defaultMonth: DEFAULT_MONTH,
       ...(base.settings || {}),
@@ -122,6 +136,13 @@
       };
       if (LOGIN_ID_OVERRIDES[normalized.id]) {
         normalized.loginId = LOGIN_ID_OVERRIDES[normalized.id];
+      }
+      if (previousSchemaVersion < 15 && ASSIGNED_INITIAL_PASSWORDS[normalized.id] && employee.mustChangePassword !== false) {
+        normalized.password = ASSIGNED_INITIAL_PASSWORDS[normalized.id];
+      }
+      if (previousSchemaVersion < 16 && normalized.id === "emp-bae") {
+        normalized.password = ADMIN_PASSWORD;
+        normalized.mustChangePassword = false;
       }
       if (!/^\d{4}-\d{2}-\d{2}$/.test(normalized.salaryEffectiveDate || "") || normalized.salaryEffectiveDate === "0000-00-00") {
         normalized.salaryEffectiveDate = "";
@@ -224,13 +245,12 @@
   function createInitialData() {
     const monthKey = DEFAULT_MONTH;
     const year = Number(monthKey.slice(0, 4));
-    const tempPassword = () => generateTemporaryPassword();
     const employees = [
       {
         id: "emp-bae",
         name: "배주성",
         loginId: "swstarp",
-        password: "admin123",
+        password: ADMIN_PASSWORD,
         role: "admin",
         status: "active",
         mustChangePassword: false,
@@ -245,7 +265,7 @@
         id: "emp-juna",
         name: "최준아",
         loginId: "junah",
-        password: tempPassword(),
+        password: ASSIGNED_INITIAL_PASSWORDS["emp-juna"],
         role: "pharmacist",
         status: "active",
         mustChangePassword: true,
@@ -260,7 +280,7 @@
         id: "emp-juyeon",
         name: "황주연",
         loginId: "jooyeon",
-        password: tempPassword(),
+        password: ASSIGNED_INITIAL_PASSWORDS["emp-juyeon"],
         role: "pharmacist",
         status: "active",
         mustChangePassword: true,
@@ -275,7 +295,7 @@
         id: "emp-jaehee",
         name: "박재희",
         loginId: "jaehee",
-        password: tempPassword(),
+        password: ASSIGNED_INITIAL_PASSWORDS["emp-jaehee"],
         role: "pharmacist",
         status: "active",
         mustChangePassword: true,
@@ -290,7 +310,7 @@
         id: "emp-minji",
         name: "송민지",
         loginId: "minji",
-        password: tempPassword(),
+        password: ASSIGNED_INITIAL_PASSWORDS["emp-minji"],
         role: "pharmacist",
         status: "active",
         mustChangePassword: true,
@@ -305,7 +325,7 @@
         id: "emp-yeongju",
         name: "원영주",
         loginId: "yongju",
-        password: tempPassword(),
+        password: ASSIGNED_INITIAL_PASSWORDS["emp-yeongju"],
         role: "pharmacist",
         status: "active",
         mustChangePassword: true,
@@ -320,7 +340,7 @@
         id: "emp-hyeonju",
         name: "이현주",
         loginId: "hyeonju",
-        password: tempPassword(),
+        password: ASSIGNED_INITIAL_PASSWORDS["emp-hyeonju"],
         role: "pharmacist",
         status: "active",
         mustChangePassword: true,
@@ -335,7 +355,7 @@
         id: "emp-subin",
         name: "김수빈",
         loginId: "subin",
-        password: tempPassword(),
+        password: ASSIGNED_INITIAL_PASSWORDS["emp-subin"],
         role: "staff",
         staffType: "staff1",
         status: "active",
@@ -351,7 +371,7 @@
         id: "emp-yuri",
         name: "유리구슬",
         loginId: "yuri",
-        password: tempPassword(),
+        password: ASSIGNED_INITIAL_PASSWORDS["emp-yuri"],
         role: "staff",
         staffType: "staff2",
         status: "active",
@@ -367,7 +387,7 @@
         id: "emp-hyojin",
         name: "윤효진",
         loginId: "hyojin",
-        password: tempPassword(),
+        password: ASSIGNED_INITIAL_PASSWORDS["emp-hyojin"],
         role: "staff",
         staffType: "staff2",
         status: "active",
@@ -383,7 +403,7 @@
         id: "emp-sohyun",
         name: "박소현",
         loginId: "sohyun",
-        password: tempPassword(),
+        password: ASSIGNED_INITIAL_PASSWORDS["emp-sohyun"],
         role: "staff",
         staffType: "staff2",
         status: "active",
@@ -399,7 +419,7 @@
         id: "emp-old",
         name: "퇴사자",
         loginId: "old",
-        password: tempPassword(),
+        password: ASSIGNED_INITIAL_PASSWORDS["emp-old"],
         role: "pharmacist",
         status: "resigned",
         mustChangePassword: true,
@@ -415,7 +435,7 @@
     const schedules = createMay2026Schedules().concat(createJune2026Schedules(), createJuly2026Schedules());
     const staffSchedules = createMay2026StaffSchedules().concat(createJune2026StaffSchedules(), createJuly2026StaffSchedules());
     return {
-      schemaVersion: 14,
+      schemaVersion: 16,
       settings: {
         defaultMonth: monthKey,
       },
@@ -1610,8 +1630,8 @@
             <span>입사일</span>
             <input class="input" name="hireDate" type="date" value="${adminSelectedDate}" />
           </label>
-          <div class="notice full">신규 계정은 숫자 4자리 임시 비밀번호가 자동 발급됩니다. 등록 후 표시된 번호를 직원에게 알려주세요.</div>
-          ${issuedPasswordNotice ? `<div class="notice password-notice full"><span>최근 발급 임시 비밀번호</span><strong>${escapeHtml(issuedPasswordNotice)}</strong></div>` : ""}
+          <div class="notice full">기본 직원 계정은 계정별 4자리 초기 비밀번호를 사용합니다. 신규 계정은 등록 후 표시된 번호를 직원에게 알려주세요.</div>
+          ${issuedPasswordNotice ? `<div class="notice password-notice full"><span>최근 발급 비밀번호</span><strong>${escapeHtml(issuedPasswordNotice)}</strong></div>` : ""}
           <label class="field">
             <span>구분</span>
             <select class="select" name="roleKind">
@@ -2548,13 +2568,13 @@
   function resetEmployeePassword(id, user) {
     const employee = getEmployee(id);
     if (!employee) return showToast("직원을 찾을 수 없습니다.");
-    const temporaryPassword = generateTemporaryPassword();
+    const temporaryPassword = ASSIGNED_INITIAL_PASSWORDS[employee.id] || generateTemporaryPassword();
     employee.password = temporaryPassword;
     employee.mustChangePassword = true;
     issuedPasswordNotice = `${employee.name} / ${temporaryPassword}`;
-    addAudit(user.id, `${employee.name}님 계정의 임시 비밀번호를 재발급했습니다.`);
+    addAudit(user.id, `${employee.name}님 계정의 초기 비밀번호를 재설정했습니다.`);
     saveDb();
-    showToast(`${employee.name}님 임시 비밀번호는 ${temporaryPassword}입니다.`);
+    showToast(`${employee.name}님 초기 비밀번호는 ${temporaryPassword}입니다.`);
   }
 
   function addSchedule(data, user) {
