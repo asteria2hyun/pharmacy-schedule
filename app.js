@@ -29,7 +29,7 @@
     api: "공공데이터 API",
     import: "가져오기",
   };
-  const DEFAULT_MONTH = "2026-06";
+  const SEED_MONTH = "2026-06";
   const PHARMACIST_RATE_PRESETS = {
     "emp-minji": 32000,
     "emp-juna": 35000,
@@ -57,15 +57,31 @@
     "emp-sohyun": "3849",
     "emp-old": "6195",
   };
+  const EMPLOYEE_HIRE_DATES = {
+    "emp-juna": "2026-03-01",
+    "emp-juyeon": "2024-08-10",
+    "emp-jaehee": "2024-05-14",
+    "emp-minji": "2024-08-20",
+    "emp-yeongju": "2024-12-05",
+    "emp-hyeonju": "2026-03-01",
+    "emp-subin": "2024-11-01",
+    "emp-hyojin": "2025-11-14",
+    "emp-sohyun": "2025-12-04",
+  };
+  const SUBIN_LEAVE_SETUP = {
+    leaveCycleStartDate: "2025-11-01",
+    leaveDates: ["2025-11-07", "2026-03-09", "2026-03-30", "2026-05-25"],
+  };
 
   const app = document.querySelector("#app");
   let salaryStatsCache = new Map();
   let monthlyPayCache = new Map();
   let assignmentsCache = new Map();
+  let lastStoredSnapshot = "";
   let db = loadDb();
   let session = loadSession();
   let currentTab = "calendar";
-  let monthCursor = db.settings?.defaultMonth || getKoreaMonthKey();
+  let monthCursor = getInitialMonthCursor();
   let adminSelectedDate = `${monthCursor}-01`;
   let selectedEmployeeId = "";
   let toast = "";
@@ -99,13 +115,17 @@
     }
   }
 
-  function normalizeDb(value) {
+  function normalizeDb(value, shouldPersist = true) {
     const base = value && typeof value === "object" ? value : createInitialData();
     const previousSchemaVersion = Number(base.schemaVersion || 0);
-    base.schemaVersion = 16;
+    base.schemaVersion = 17;
+    base.meta = {
+      storageScope: "browser",
+      ...(base.meta || {}),
+    };
     base.settings = {
-      defaultMonth: DEFAULT_MONTH,
       ...(base.settings || {}),
+      defaultMonth: getKoreaMonthKey(),
     };
     base.employees = Array.isArray(base.employees) ? base.employees : [];
     base.schedules = Array.isArray(base.schedules) ? base.schedules : [];
@@ -121,6 +141,7 @@
         monthlySalary: Number(employee.monthlySalary || 0),
         leaveAllowance: Number(employee.leaveAllowance || 0),
         leaveDates: Array.isArray(employee.leaveDates) ? employee.leaveDates : [],
+        leaveCycleStartDate: employee.leaveCycleStartDate || "",
         hireDate: employee.hireDate || "",
         firstWorkStartDate: employee.firstWorkStartDate || "",
         lastModifiedStartDate: employee.lastModifiedStartDate || "",
@@ -143,6 +164,9 @@
       if (previousSchemaVersion < 16 && normalized.id === "emp-bae") {
         normalized.password = ADMIN_PASSWORD;
         normalized.mustChangePassword = false;
+      }
+      if (previousSchemaVersion < 17) {
+        applyEmployeeSeedDetails(normalized);
       }
       if (!/^\d{4}-\d{2}-\d{2}$/.test(normalized.salaryEffectiveDate || "") || normalized.salaryEffectiveDate === "0000-00-00") {
         normalized.salaryEffectiveDate = "";
@@ -194,13 +218,19 @@
         employee.lastModifiedStartDate || employee.workStartDate || employee.salaryEffectiveDate || employee.firstWorkStartDate || "";
       return employee;
     });
-    saveDb(base);
+    if (shouldPersist) saveDb(base);
     return base;
   }
 
   function saveDb(nextDb = db) {
     clearComputedCaches();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(nextDb));
+    nextDb.meta = {
+      storageScope: "browser",
+      ...(nextDb.meta || {}),
+      lastSavedAt: nowIso(),
+    };
+    lastStoredSnapshot = JSON.stringify(nextDb);
+    localStorage.setItem(STORAGE_KEY, lastStoredSnapshot);
   }
 
   function clearComputedCaches() {
@@ -215,6 +245,10 @@
     } catch {
       return null;
     }
+  }
+
+  function getInitialMonthCursor() {
+    return getKoreaMonthKey();
   }
 
   function saveSession(nextSession) {
@@ -235,7 +269,10 @@
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (!stored) return;
-      db = normalizeDb(JSON.parse(stored));
+      if (stored === lastStoredSnapshot) return;
+      db = normalizeDb(JSON.parse(stored), false);
+      lastStoredSnapshot = stored;
+      clearComputedCaches();
       render();
     } catch {
       // Keep the current in-memory data if another tab is mid-write.
@@ -243,7 +280,7 @@
   }
 
   function createInitialData() {
-    const monthKey = DEFAULT_MONTH;
+    const monthKey = SEED_MONTH;
     const year = Number(monthKey.slice(0, 4));
     const employees = [
       {
@@ -431,11 +468,12 @@
         leaveDates: [],
       },
     ];
+    employees.forEach(applyEmployeeSeedDetails);
     const holidays = createHolidaySeed(year);
     const schedules = createMay2026Schedules().concat(createJune2026Schedules(), createJuly2026Schedules());
     const staffSchedules = createMay2026StaffSchedules().concat(createJune2026StaffSchedules(), createJuly2026StaffSchedules());
     return {
-      schemaVersion: 16,
+      schemaVersion: 17,
       settings: {
         defaultMonth: monthKey,
       },
@@ -453,6 +491,30 @@
         },
       ],
     };
+  }
+
+  function applyEmployeeSeedDetails(employee) {
+    const hireDate = EMPLOYEE_HIRE_DATES[employee.id];
+    if (hireDate) {
+      employee.hireDate = hireDate;
+      employee.firstWorkStartDate = minDate(employee.firstWorkStartDate, hireDate) || hireDate;
+    }
+    if (employee.id === "emp-subin") {
+      employee.leaveAllowance = 15;
+      employee.leaveCycleStartDate = SUBIN_LEAVE_SETUP.leaveCycleStartDate;
+      employee.leaveDates = mergeDateLists(employee.leaveDates, SUBIN_LEAVE_SETUP.leaveDates);
+    }
+    return employee;
+  }
+
+  function mergeDateLists(...lists) {
+    return Array.from(
+      new Set(
+        lists
+          .flatMap((list) => (Array.isArray(list) ? list : []))
+          .filter((date) => /^\d{4}-\d{2}-\d{2}$/.test(date || ""))
+      )
+    ).sort();
   }
 
   function createHolidaySeed(year) {
@@ -1201,15 +1263,9 @@
     const category = employeeCategory(user);
     const isStaffCoverageOnly = ["staff1", "staff2"].includes(category);
     const pageTitle = user.role === "admin" ? "근무 변경 관리" : "근무 변경";
-    const ownOptions = getAvailableOwnSchedules(user.id)
-      .map((assignment) => `<option value="${assignment.ref}">${escapeHtml(assignmentOptionLabel(assignment))}</option>`)
-      .join("");
-    const targetOptions = getAvailableTargetSchedules(user.id)
-      .map((assignment) => `<option value="${assignment.ref}">${escapeHtml(assignmentOptionLabel(assignment, true))}</option>`)
-      .join("");
     const swapGuide = isStaffCoverageOnly
       ? "휴무가 필요한 근무일을 관리자에게 요청할 수 있습니다."
-      : "교체 가능한 근무만 목록에 표시됩니다. 근무시간은 그대로 두고 사람만 바뀝니다.";
+      : "교환하거나, 내 약사 근무를 다른 근무자에게 넘길 수 있습니다.";
     return `
       <section>
         <div class="page-head">
@@ -1219,34 +1275,79 @@
           </div>
         </div>
         ${renderMonthbar()}
-        ${
-          isStaffCoverageOnly
-            ? ""
-            : `<div class="panel">
-                <h2>새 근무 변경 요청</h2>
-                <form class="form-grid" data-form="swap-request">
-                  <label class="field">
-                    <span>내 근무일</span>
-                    <select class="select" name="ownScheduleId" ${ownOptions ? "" : "disabled"} required>
-                      ${ownOptions || `<option>선택 가능한 근무가 없습니다</option>`}
-                    </select>
-                  </label>
-                  <label class="field">
-                    <span>바꿀 상대 근무일</span>
-                    <select class="select" name="targetScheduleId" ${targetOptions ? "" : "disabled"} required>
-                      ${targetOptions || `<option>선택 가능한 상대 근무가 없습니다</option>`}
-                    </select>
-                  </label>
-                  <button class="primary-button" type="submit" ${ownOptions && targetOptions ? "" : "disabled"}>요청 보내기</button>
-                </form>
-              </div>`
-        }
+        ${isStaffCoverageOnly ? "" : renderWorkChangeRequestForm(user)}
         ${renderCoverageRequestForm(user)}
         ${renderIncomingRequests(user)}
         ${renderMyRequests(user)}
         ${user.role === "admin" ? renderCompletedWorkChangesPanel(user) : ""}
         ${user.role === "admin" ? renderAllRequestsPanel(user) : ""}
       </section>
+    `;
+  }
+
+  function renderWorkChangeRequestForm(user) {
+    const ownOptions = getAvailableOwnSchedules(user.id)
+      .map((assignment) => `<option value="${assignment.ref}">${escapeHtml(assignmentOptionLabel(assignment))}</option>`)
+      .join("");
+    const targetOptions = getAvailableTargetSchedules(user.id)
+      .map((assignment) => `<option value="${assignment.ref}">${escapeHtml(assignmentOptionLabel(assignment, true))}</option>`)
+      .join("");
+    const handoffOwnOptions = getAvailableHandoffOwnSchedules(user.id)
+      .map((assignment) => `<option value="${assignment.ref}">${escapeHtml(assignmentOptionLabel(assignment))}</option>`)
+      .join("");
+    const handoffTargetOptions = getAvailableHandoffTargets(user.id)
+      .map((employee) => `<option value="${employee.id}">${escapeHtml(workerOptionLabel(employee))}</option>`)
+      .join("");
+    return `
+      <div class="panel">
+        <h2>새 근무 변경 요청</h2>
+        <div class="mode-switch">
+          <input class="mode-radio" id="work-change-exchange" type="radio" name="workChangeMode" checked />
+          <input class="mode-radio" id="work-change-handoff" type="radio" name="workChangeMode" />
+          <div class="mode-toggle" aria-label="근무 변경 방식">
+            <label for="work-change-exchange">교환하기</label>
+            <label for="work-change-handoff">넘기기</label>
+          </div>
+          <div class="mode-panels">
+            <div class="mode-panel exchange-panel">
+              <p class="item-meta">내 근무와 상대 근무를 서로 바꿉니다.</p>
+              <form class="form-grid" data-form="swap-request">
+                <label class="field">
+                  <span>내 근무일</span>
+                  <select class="select" name="ownScheduleId" ${ownOptions ? "" : "disabled"} required>
+                    ${ownOptions || `<option>선택 가능한 근무가 없습니다</option>`}
+                  </select>
+                </label>
+                <label class="field">
+                  <span>바꿀 상대 근무일</span>
+                  <select class="select" name="targetScheduleId" ${targetOptions ? "" : "disabled"} required>
+                    ${targetOptions || `<option>선택 가능한 상대 근무가 없습니다</option>`}
+                  </select>
+                </label>
+                <button class="primary-button" type="submit" ${ownOptions && targetOptions ? "" : "disabled"}>교환 요청</button>
+              </form>
+            </div>
+            <div class="mode-panel handoff-panel">
+              <p class="item-meta">내 약사 근무를 관리자 또는 근무약사에게 넘깁니다. 상대가 승인하면 그 근무자만 바뀝니다.</p>
+              <form class="form-grid" data-form="handoff-request">
+                <label class="field">
+                  <span>넘길 내 근무일</span>
+                  <select class="select" name="ownScheduleId" ${handoffOwnOptions ? "" : "disabled"} required>
+                    ${handoffOwnOptions || `<option>선택 가능한 약사 근무가 없습니다</option>`}
+                  </select>
+                </label>
+                <label class="field">
+                  <span>받을 근무자</span>
+                  <select class="select" name="targetEmployeeId" ${handoffTargetOptions ? "" : "disabled"} required>
+                    ${handoffTargetOptions || `<option>선택 가능한 근무자가 없습니다</option>`}
+                  </select>
+                </label>
+                <button class="primary-button" type="submit" ${handoffOwnOptions && handoffTargetOptions ? "" : "disabled"}>넘기기 요청</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
     `;
   }
 
@@ -1336,6 +1437,7 @@
   function renderRequestCard(request, user, actionable = false, adminMode = false) {
     const isCoverage = request.type === "coverage";
     const isLeave = request.type === "leave";
+    const isHandoff = request.type === "handoff";
     const requester = getEmployee(request.requesterId);
     const target = getEmployee(request.targetId);
     const requesterSchedule = getSwapAssignment(request.requesterScheduleId);
@@ -1350,36 +1452,51 @@
     const leftLabel = isLeave
       ? `${formatFullDate(request.leaveDate)} 연차`
       : assignmentOptionLabelWithOwner(requesterSchedule, requesterOwnerId, true);
-    const rightLabel = isCoverage
-      ? `${target?.name || "배주성"} 직원포지션 대체`
-      : isLeave
-        ? `${target?.name || "관리자"} 승인`
-      : assignmentOptionLabelWithOwner(targetSchedule, targetOwnerId, true);
+    const rightLabel = (() => {
+      if (isCoverage) return `${target?.name || "배주성"} 직원포지션 대체`;
+      if (isLeave) return `${target?.name || "관리자"} 승인`;
+      if (isHandoff) return `${target?.name || "받을 근무자"}에게 넘김`;
+      return assignmentOptionLabelWithOwner(targetSchedule, targetOwnerId, true);
+    })();
+    const requestTitle = isLeave
+      ? "연차 승인 요청"
+      : isCoverage
+        ? "관리자 대체 요청"
+        : isHandoff
+          ? request.status === "pending"
+            ? "근무 넘기기 요청"
+            : "근무 넘기기 내역"
+          : request.status === "pending"
+            ? "근무 변경 요청"
+            : "근무 변경 내역";
     const statusClass =
       request.status === "approved" ? "status-active" : request.status === "pending" ? "status-pending" : "status-resigned";
-    const requestMetaLine =
-      request.status === "pending"
-        ? `${requester?.name || "알 수 없음"}님 요청 · ${target?.name || "알 수 없음"}님 승인대기`
-        : request.status === "approved"
-          ? isLeave
-            ? `${requester?.name || "알 수 없음"}님 연차 처리완료`
-            : isCoverage
-              ? `${requester?.name || "알 수 없음"}님 직원 근무를 ${target?.name || "알 수 없음"}님이 대체 완료`
-            : `${requester?.name || "알 수 없음"}님과 ${target?.name || "알 수 없음"}님의 승인완료`
-          : isLeave
-            ? `${requester?.name || "알 수 없음"}님 연차 요청`
-            : isCoverage
-              ? `${requester?.name || "알 수 없음"}님 관리자 대체 요청`
-            : `${requester?.name || "알 수 없음"}님과 ${target?.name || "알 수 없음"}님의 근무 변경 요청`;
+    const requestMetaLine = (() => {
+      if (request.status === "pending") {
+        return isHandoff
+          ? `${requester?.name || "알 수 없음"}님이 ${target?.name || "알 수 없음"}님에게 넘기기 승인대기`
+          : `${requester?.name || "알 수 없음"}님 요청 · ${target?.name || "알 수 없음"}님 승인대기`;
+      }
+      if (request.status === "approved") {
+        if (isLeave) return `${requester?.name || "알 수 없음"}님 연차 처리완료`;
+        if (isCoverage) return `${requester?.name || "알 수 없음"}님 직원 근무를 ${target?.name || "알 수 없음"}님이 대체 완료`;
+        if (isHandoff) return `${requester?.name || "알 수 없음"}님 근무를 ${target?.name || "알 수 없음"}님에게 넘김 완료`;
+        return `${requester?.name || "알 수 없음"}님과 ${target?.name || "알 수 없음"}님의 승인완료`;
+      }
+      if (isLeave) return `${requester?.name || "알 수 없음"}님 연차 요청`;
+      if (isCoverage) return `${requester?.name || "알 수 없음"}님 관리자 대체 요청`;
+      if (isHandoff) return `${requester?.name || "알 수 없음"}님이 ${target?.name || "알 수 없음"}님에게 근무 넘기기 요청`;
+      return `${requester?.name || "알 수 없음"}님과 ${target?.name || "알 수 없음"}님의 근무 변경 요청`;
+    })();
     return `
       <article class="list-item ${request.status === "pending" ? "" : "dim"}">
         <div class="item-title">
-          <span>${isLeave ? "연차 승인 요청" : isCoverage ? "관리자 대체 요청" : request.status === "pending" ? "근무 변경 요청" : "근무 변경 내역"}</span>
+          <span>${requestTitle}</span>
           <span class="status-pill ${statusClass}">${statusText}</span>
         </div>
         <div class="swap-pair" aria-label="교체 근무 내용">
           <div>${escapeHtml(leftLabel)}</div>
-          <strong>${isCoverage || isLeave ? "→" : "&lt;-&gt;"}</strong>
+          <strong>${isCoverage || isLeave || isHandoff ? "→" : "&lt;-&gt;"}</strong>
           <div>${escapeHtml(rightLabel)}</div>
         </div>
         <div class="item-meta">
@@ -2035,6 +2152,7 @@
     if (formType === "password-setup") return setupPassword(data, user);
     if (formType === "coverage-request") return createCoverageRequest(data, user);
     if (formType === "swap-request") return createSwapRequest(data, user);
+    if (formType === "handoff-request") return createHandoffRequest(data, user);
     if (formType === "leave-add") return addLeaveDate(data, user);
     if (user.role !== "admin") return showToast("관리자만 처리할 수 있습니다.");
     if (formType === "employee-add") return addEmployee(data, user);
@@ -2153,6 +2271,8 @@
     }
     saveSession({ userId: employee.id, loginAt: nowIso() });
     currentTab = "calendar";
+    monthCursor = getKoreaMonthKey();
+    adminSelectedDate = getKoreaDateString();
     if (employee.mustChangePassword) {
       render();
       return;
@@ -2181,6 +2301,8 @@
     addAudit(user.id, `${user.name}님이 비밀번호를 설정했습니다.`);
     saveDb();
     currentTab = "calendar";
+    monthCursor = getKoreaMonthKey();
+    adminSelectedDate = getKoreaDateString();
     showToast("비밀번호가 설정되었습니다.");
   }
 
@@ -2223,6 +2345,41 @@
     showToast("근무 변경 요청을 보냈습니다.");
   }
 
+  function createHandoffRequest(data, user) {
+    if (!canHandoffEmployee(user)) return showToast("근무 넘기기는 관리자와 근무약사만 사용할 수 있습니다.");
+    const ownSchedule = getSwapAssignment(data.ownScheduleId);
+    if (!ownSchedule || ownSchedule.type !== "rx") return showToast("약사 근무만 넘길 수 있습니다.");
+    if (ownSchedule.personId !== user.id) return showToast("내 근무만 넘길 수 있습니다.");
+    if (hasPendingForSchedule(ownSchedule.ref)) return showToast("이미 승인 대기 중인 근무는 선택할 수 없습니다.");
+    const target = getEmployee(data.targetEmployeeId);
+    if (!target || target.id === user.id) return showToast("받을 근무자를 선택해주세요.");
+    if (!canHandoffEmployee(target)) return showToast("관리자 또는 근무약사에게만 넘길 수 있습니다.");
+    if (!isEmployeeEmployedOnDate(target, ownSchedule.date)) return showToast("해당 날짜에 재직중인 근무자에게만 넘길 수 있습니다.");
+    const duplicateMessage = getHandoffDuplicateMessage(target.id, ownSchedule);
+    if (duplicateMessage) return showToast(duplicateMessage);
+    const request = {
+      id: makeId("swap"),
+      type: "handoff",
+      requesterId: user.id,
+      targetId: target.id,
+      requesterScheduleId: ownSchedule.ref,
+      targetScheduleId: "",
+      requesterAssignmentType: ownSchedule.type,
+      targetAssignmentType: "handoff",
+      requesterOriginalPharmacistId: ownSchedule.personId,
+      targetOriginalPharmacistId: target.id,
+      status: "pending",
+      createdAt: nowIso(),
+      approvedAt: "",
+      rejectedAt: "",
+      cancelledAt: "",
+    };
+    db.swapRequests.push(request);
+    addAudit(user.id, `${user.name}님이 ${target.name}님에게 근무 넘기기를 요청했습니다.`);
+    saveDb();
+    showToast("근무 넘기기 요청을 보냈습니다.");
+  }
+
   function createCoverageRequest(data, user) {
     if (!["staff1", "staff2"].includes(employeeCategory(user))) return showToast("직원 계정에서만 휴무 요청을 보낼 수 있습니다.");
     const ownSchedule = getSwapAssignment(data.ownScheduleId);
@@ -2261,10 +2418,11 @@
     if (request.type === "leave") return approveLeaveRequest(request, user);
     const requesterSchedule = getSwapAssignment(request.requesterScheduleId);
     const targetSchedule = getSwapAssignment(request.targetScheduleId);
-    if (!requesterSchedule || (request.type !== "coverage" && !targetSchedule)) return showToast("스케줄이 삭제되어 승인할 수 없습니다.");
+    const needsTargetSchedule = !["coverage", "handoff"].includes(request.type);
+    if (!requesterSchedule || (needsTargetSchedule && !targetSchedule)) return showToast("스케줄이 삭제되어 승인할 수 없습니다.");
     if (
       requesterSchedule.personId !== request.requesterId ||
-      (request.type !== "coverage" && targetSchedule.personId !== request.targetId)
+      (needsTargetSchedule && targetSchedule.personId !== request.targetId)
     ) {
       request.status = "rejected";
       request.rejectedAt = nowIso();
@@ -2281,6 +2439,33 @@
       addAudit(user.id, "관리자 대체 근무 요청을 승인했습니다.", describeAssignmentChanges([{ before, after }]));
       saveDb();
       return showToast("관리자가 직원포지션 근무자로 반영되었습니다.");
+    }
+    if (request.type === "handoff") {
+      const requester = getEmployee(request.requesterId);
+      const target = getEmployee(request.targetId);
+      if (!canHandoffEmployee(requester) || !canHandoffEmployee(target) || !isEmployeeEmployedOnDate(target, requesterSchedule.date)) {
+        request.status = "rejected";
+        request.rejectedAt = nowIso();
+        addAudit(user.id, "근무 넘기기 가능한 조합이 아니어서 요청을 자동 거절했습니다.");
+        saveDb();
+        return showToast("현재 넘기기 가능한 조합이 아니어서 요청을 거절 처리했습니다.");
+      }
+      const duplicateMessage = getHandoffDuplicateMessage(request.targetId, requesterSchedule);
+      if (duplicateMessage) {
+        request.status = "rejected";
+        request.rejectedAt = nowIso();
+        addAudit(user.id, "넘긴 뒤 같은 날짜 중복 배정이 생기는 요청을 자동 거절했습니다.");
+        saveDb();
+        return showToast("넘긴 뒤 같은 날짜 중복 배정이 생겨 요청을 거절 처리했습니다.");
+      }
+      const before = getSwapAssignment(request.requesterScheduleId);
+      setAssignmentPerson(requesterSchedule.ref, request.targetId);
+      const after = getSwapAssignment(request.requesterScheduleId);
+      request.status = "approved";
+      request.approvedAt = nowIso();
+      addAudit(user.id, "근무 넘기기 요청을 승인했습니다.", describeAssignmentChanges([{ before, after }]));
+      saveDb();
+      return showToast("근무가 받을 근무자에게 넘어갔습니다.");
     }
     const requester = getEmployee(request.requesterId);
     const target = getEmployee(request.targetId);
@@ -2343,16 +2528,17 @@
         const requester = getEmployee(request.requesterId);
         if (requester) requester.leaveDates = (requester.leaveDates || []).filter((date) => date !== request.leaveDate);
       } else {
+        const isOneWayTransfer = request.type === "coverage" || request.type === "handoff";
         const requesterBefore = getSwapAssignment(request.requesterScheduleId);
-        const targetBefore = request.type !== "coverage" ? getSwapAssignment(request.targetScheduleId) : null;
+        const targetBefore = isOneWayTransfer ? null : getSwapAssignment(request.targetScheduleId);
         setAssignmentPerson(request.requesterScheduleId, request.requesterOriginalPharmacistId);
-        if (request.type !== "coverage") setAssignmentPerson(request.targetScheduleId, request.targetOriginalPharmacistId);
+        if (!isOneWayTransfer) setAssignmentPerson(request.targetScheduleId, request.targetOriginalPharmacistId);
         const requesterAfter = getSwapAssignment(request.requesterScheduleId);
-        const targetAfter = request.type !== "coverage" ? getSwapAssignment(request.targetScheduleId) : null;
+        const targetAfter = isOneWayTransfer ? null : getSwapAssignment(request.targetScheduleId);
         detail = describeAssignmentChanges(
           [
             { before: requesterBefore, after: requesterAfter },
-            request.type !== "coverage" ? { before: targetBefore, after: targetAfter } : null,
+            isOneWayTransfer ? null : { before: targetBefore, after: targetAfter },
           ].filter(Boolean),
         );
       }
@@ -2766,8 +2952,8 @@
   function resetDemo() {
     db = createInitialData();
     saveDb();
-    monthCursor = db.settings?.defaultMonth || DEFAULT_MONTH;
-    adminSelectedDate = `${monthCursor}-01`;
+    monthCursor = getKoreaMonthKey();
+    adminSelectedDate = getKoreaDateString();
     showToast("데모 데이터를 초기화했습니다.");
   }
 
@@ -3489,6 +3675,11 @@
     return false;
   }
 
+  function canHandoffEmployee(employee) {
+    const category = employeeCategory(employee);
+    return ["admin", "pharmacist"].includes(category) && isEmployeeAccessActive(employee);
+  }
+
   function normalizeAssignmentRef(value) {
     const raw = String(value || "");
     if (!raw) return "";
@@ -3605,6 +3796,30 @@
       .sort(sortAssignments);
   }
 
+  function getAvailableHandoffOwnSchedules(userId) {
+    const user = getEmployee(userId);
+    if (!canHandoffEmployee(user)) return [];
+    return getAllAssignments(monthCursor)
+      .filter((assignment) => assignment.type === "rx")
+      .filter((assignment) => assignment.personId === userId)
+      .filter((assignment) => !hasPendingForSchedule(assignment.ref))
+      .sort(sortAssignments);
+  }
+
+  function getAvailableHandoffTargets(userId) {
+    const user = getEmployee(userId);
+    if (!canHandoffEmployee(user)) return [];
+    return db.employees
+      .filter((employee) => employee.id !== userId)
+      .filter((employee) => canHandoffEmployee(employee))
+      .filter((employee) => isEmployeeAccessActive(employee))
+      .sort((a, b) => {
+        if (a.role === "admin" && b.role !== "admin") return -1;
+        if (b.role === "admin" && a.role !== "admin") return 1;
+        return a.name.localeCompare(b.name, "ko");
+      });
+  }
+
   function getAvailableCoverageSchedules(userId) {
     const user = getEmployee(userId);
     if (!["staff1", "staff2"].includes(employeeCategory(user))) return [];
@@ -3616,7 +3831,21 @@
   }
 
   function getLeavePeriodStart(employee) {
+    if (employee?.leaveCycleStartDate) {
+      return getCurrentAnnualCycleStart(employee.leaveCycleStartDate);
+    }
     return employee?.lastModifiedStartDate || employee?.workStartDate || employee?.salaryEffectiveDate || employee?.firstWorkStartDate || "";
+  }
+
+  function getCurrentAnnualCycleStart(startDate, referenceDate = getKoreaDateString()) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate || "")) return "";
+    const [, month, day] = startDate.split("-");
+    let year = Number(referenceDate.slice(0, 4));
+    let candidate = `${year}-${month}-${day}`;
+    if (candidate > referenceDate) {
+      candidate = `${year - 1}-${month}-${day}`;
+    }
+    return candidate;
   }
 
   function getLeaveDatesInCurrentPeriod(employee) {
@@ -3648,7 +3877,7 @@
   }
 
   function isCompletedPharmacistSwap(request) {
-    if (!request || request.status !== "approved" || request.type === "coverage" || request.type === "leave") return false;
+    if (!request || request.status !== "approved" || request.type === "coverage" || request.type === "leave" || request.type === "handoff") return false;
     return getEmployee(request.requesterId)?.role === "pharmacist" && getEmployee(request.targetId)?.role === "pharmacist";
   }
 
@@ -3703,6 +3932,19 @@
       return `${requester?.name || "요청자"}님은 이미 ${formatDate(targetSchedule.date)}에 근무가 있어 교체할 수 없습니다.`;
     }
     return "";
+  }
+
+  function getHandoffDuplicateMessage(targetId, requesterSchedule) {
+    if (!requesterSchedule) return "";
+    const target = getEmployee(targetId);
+    const alreadyAssigned = getAllAssignments("").some(
+      (assignment) =>
+        assignment.ref !== requesterSchedule.ref &&
+        assignment.date === requesterSchedule.date &&
+        assignment.personId === targetId &&
+        !isAllowedAdminPositionOverlap(targetId, assignment, requesterSchedule),
+    );
+    return alreadyAssigned ? `${target?.name || "받을 근무자"}님은 이미 ${formatDate(requesterSchedule.date)}에 근무가 있어 넘길 수 없습니다.` : "";
   }
 
   function isAllowedAdminPositionOverlap(employeeId, existingAssignment, incomingAssignment) {

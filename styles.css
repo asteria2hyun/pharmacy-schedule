@@ -696,6 +696,53 @@ input:disabled {
   align-items: center;
 }
 
+.mode-switch {
+  display: grid;
+  gap: 12px;
+}
+
+.mode-radio {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mode-toggle {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: #f6faf8;
+  padding: 5px;
+}
+
+.mode-toggle label {
+  display: grid;
+  place-items: center;
+  min-height: 40px;
+  border-radius: 7px;
+  color: var(--muted);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+#work-change-exchange:checked ~ .mode-toggle label[for="work-change-exchange"],
+#work-change-handoff:checked ~ .mode-toggle label[for="work-change-handoff"] {
+  background: var(--brand);
+  color: #fff;
+}
+
+.mode-panel {
+  display: none;
+}
+
+#work-change-exchange:checked ~ .mode-panels .exchange-panel,
+#work-change-handoff:checked ~ .mode-panels .handoff-panel {
+  display: grid;
+  gap: 10px;
+}
+
 .table-actions {
   display: grid;
   gap: 6px;
