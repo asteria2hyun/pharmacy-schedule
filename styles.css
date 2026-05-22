@@ -188,6 +188,26 @@ input:disabled {
   padding: 8px;
 }
 
+.password-notice {
+  background: #fff8dc;
+  color: #755000;
+}
+
+.password-notice span {
+  display: block;
+  color: #755000;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.password-notice strong {
+  display: block;
+  margin-top: 4px;
+  color: #231b08;
+  font-size: 1.1rem;
+  font-weight: 950;
+}
+
 .app-shell {
   min-height: 100svh;
   width: min(100%, 820px);
@@ -1173,9 +1193,156 @@ tr:last-child td {
   }
 }
 
+@media (max-width: 560px) {
+  .app-shell {
+    width: 100%;
+    padding-bottom: calc(70px + env(safe-area-inset-bottom));
+  }
+
+  .topbar {
+    padding: calc(8px + env(safe-area-inset-top)) 10px 8px;
+  }
+
+  .app-title strong {
+    font-size: 0.98rem;
+  }
+
+  .app-title span {
+    font-size: 0.76rem;
+  }
+
+  .content {
+    padding: 9px 8px;
+  }
+
+  .page-head {
+    margin-bottom: 8px;
+  }
+
+  .page-head h1 {
+    font-size: 1.42rem;
+  }
+
+  .page-head p {
+    font-size: 0.78rem;
+  }
+
+  .monthbar {
+    grid-template-columns: 36px 1fr 36px;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .icon-button {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+  }
+
+  .month-title {
+    min-height: 36px;
+    font-size: 0.96rem;
+  }
+
+  .weekdays,
+  .calendar-grid {
+    gap: 2px;
+  }
+
+  .weekday {
+    font-size: 0.66rem;
+  }
+
+  .day-cell {
+    --ten-section-height: 52px;
+    --eight-section-height: 68px;
+    --staff-section-height: 64px;
+    min-height: 218px;
+    border-radius: 6px;
+  }
+
+  .day-top {
+    min-height: 27px;
+    gap: 3px;
+    padding: 5px 4px;
+  }
+
+  .day-number {
+    font-size: 0.8rem;
+  }
+
+  .holiday-name {
+    max-width: 34px;
+    font-size: 0.46rem;
+  }
+
+  .day-content {
+    padding: 4px 3px;
+  }
+
+  .schedule-section {
+    padding-top: 4px;
+  }
+
+  .shift-block {
+    gap: 2px;
+  }
+
+  .shift-label {
+    border-radius: 4px;
+    padding: 1px 3px;
+    font-size: 0.55rem;
+    line-height: 1.1;
+  }
+
+  .staff-block {
+    padding-top: 4px;
+  }
+
+  .person-row {
+    min-height: 15px;
+    border-radius: 4px;
+    padding: 1px 2px;
+    font-size: 0.58rem;
+    line-height: 1.08;
+    overflow-wrap: normal;
+    word-break: keep-all;
+  }
+
+  .person-row.mine {
+    font-size: 0.57rem;
+  }
+
+  .person-time {
+    display: block;
+    margin-left: 0;
+    font-size: 0.5rem;
+  }
+
+  .bottom-tabs {
+    width: 100%;
+    gap: 2px;
+    padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
+  }
+
+  .tab-button {
+    min-height: 48px;
+    gap: 2px;
+    border-radius: 7px;
+    font-size: 0.62rem;
+    line-height: 1.05;
+    word-break: keep-all;
+  }
+
+  .tab-button .tab-icon {
+    width: 16px;
+    height: 16px;
+  }
+}
+
 @media (max-width: 390px) {
   .content {
-    padding: 10px;
+    padding: 8px 6px;
   }
 
   .employee-picker {
@@ -1183,19 +1350,19 @@ tr:last-child td {
   }
 
   .day-cell {
-    --ten-section-height: 60px;
-    --eight-section-height: 84px;
-    --staff-section-height: 74px;
-    min-height: 264px;
+    --ten-section-height: 50px;
+    --eight-section-height: 66px;
+    --staff-section-height: 62px;
+    min-height: 210px;
     padding: 0;
   }
 
   .person-row {
-    font-size: 0.68rem;
-    padding-inline: 4px;
+    font-size: 0.55rem;
+    padding-inline: 2px;
   }
 
   .shift-label {
-    font-size: 0.62rem;
+    font-size: 0.52rem;
   }
 }

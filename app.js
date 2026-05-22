@@ -1,7 +1,7 @@
 (() => {
   const STORAGE_KEY = "pharmacy-schedule-mvp-v12";
   const SESSION_KEY = "pharmacy-schedule-session-v12";
-  const INITIAL_PASSWORD = "1111";
+  const LEGACY_INITIAL_PASSWORD = "1".repeat(4);
 
   const SHIFT_META = {
     "10pm": { label: "10-10", detail: "10시 마감 · 12시간", className: "ten", hours: 12 },
@@ -56,6 +56,7 @@
   let selectedEmployeeId = "";
   let toast = "";
   let toastTimer = null;
+  let issuedPasswordNotice = "";
 
   document.addEventListener("submit", handleSubmit);
   document.addEventListener("click", handleClick);
@@ -146,7 +147,7 @@
       normalized.mustChangePassword =
         typeof normalized.mustChangePassword === "boolean"
           ? normalized.mustChangePassword
-          : normalized.password === INITIAL_PASSWORD && normalized.status === "active";
+          : normalized.password === LEGACY_INITIAL_PASSWORD && normalized.status === "active";
       return normalized;
     });
     applyScheduledResignations(base, false);
@@ -223,6 +224,7 @@
   function createInitialData() {
     const monthKey = DEFAULT_MONTH;
     const year = Number(monthKey.slice(0, 4));
+    const tempPassword = () => generateTemporaryPassword();
     const employees = [
       {
         id: "emp-bae",
@@ -243,7 +245,7 @@
         id: "emp-juna",
         name: "최준아",
         loginId: "junah",
-        password: "1111",
+        password: tempPassword(),
         role: "pharmacist",
         status: "active",
         mustChangePassword: true,
@@ -258,7 +260,7 @@
         id: "emp-juyeon",
         name: "황주연",
         loginId: "jooyeon",
-        password: "1111",
+        password: tempPassword(),
         role: "pharmacist",
         status: "active",
         mustChangePassword: true,
@@ -273,7 +275,7 @@
         id: "emp-jaehee",
         name: "박재희",
         loginId: "jaehee",
-        password: "1111",
+        password: tempPassword(),
         role: "pharmacist",
         status: "active",
         mustChangePassword: true,
@@ -288,7 +290,7 @@
         id: "emp-minji",
         name: "송민지",
         loginId: "minji",
-        password: "1111",
+        password: tempPassword(),
         role: "pharmacist",
         status: "active",
         mustChangePassword: true,
@@ -303,7 +305,7 @@
         id: "emp-yeongju",
         name: "원영주",
         loginId: "yongju",
-        password: "1111",
+        password: tempPassword(),
         role: "pharmacist",
         status: "active",
         mustChangePassword: true,
@@ -318,7 +320,7 @@
         id: "emp-hyeonju",
         name: "이현주",
         loginId: "hyeonju",
-        password: "1111",
+        password: tempPassword(),
         role: "pharmacist",
         status: "active",
         mustChangePassword: true,
@@ -333,7 +335,7 @@
         id: "emp-subin",
         name: "김수빈",
         loginId: "subin",
-        password: "1111",
+        password: tempPassword(),
         role: "staff",
         staffType: "staff1",
         status: "active",
@@ -349,7 +351,7 @@
         id: "emp-yuri",
         name: "유리구슬",
         loginId: "yuri",
-        password: "1111",
+        password: tempPassword(),
         role: "staff",
         staffType: "staff2",
         status: "active",
@@ -365,7 +367,7 @@
         id: "emp-hyojin",
         name: "윤효진",
         loginId: "hyojin",
-        password: "1111",
+        password: tempPassword(),
         role: "staff",
         staffType: "staff2",
         status: "active",
@@ -381,7 +383,7 @@
         id: "emp-sohyun",
         name: "박소현",
         loginId: "sohyun",
-        password: "1111",
+        password: tempPassword(),
         role: "staff",
         staffType: "staff2",
         status: "active",
@@ -397,7 +399,7 @@
         id: "emp-old",
         name: "퇴사자",
         loginId: "old",
-        password: "1111",
+        password: tempPassword(),
         role: "pharmacist",
         status: "resigned",
         mustChangePassword: true,
@@ -1014,7 +1016,7 @@
             <button class="primary-button" type="submit">비밀번호 설정</button>
             <button class="ghost-button" type="button" data-action="logout">로그아웃</button>
           </form>
-          <div class="notice" style="margin-top: 14px;">초기 비밀번호 1111은 계속 사용할 수 없습니다.</div>
+          <div class="notice" style="margin-top: 14px;">임시 비밀번호는 계속 사용할 수 없습니다.</div>
         </div>
       </section>
     `;
@@ -1608,7 +1610,8 @@
             <span>입사일</span>
             <input class="input" name="hireDate" type="date" value="${adminSelectedDate}" />
           </label>
-          <div class="notice full">신규 계정의 초기 비밀번호는 1111입니다. 첫 로그인 때 본인이 새 비밀번호를 설정합니다.</div>
+          <div class="notice full">신규 계정은 숫자 4자리 임시 비밀번호가 자동 발급됩니다. 등록 후 표시된 번호를 직원에게 알려주세요.</div>
+          ${issuedPasswordNotice ? `<div class="notice password-notice full"><span>최근 발급 임시 비밀번호</span><strong>${escapeHtml(issuedPasswordNotice)}</strong></div>` : ""}
           <label class="field">
             <span>구분</span>
             <select class="select" name="roleKind">
@@ -2148,8 +2151,8 @@
       app.innerHTML = renderPasswordSetup(user, "새 비밀번호와 확인값이 다릅니다.");
       return;
     }
-    if (newPassword === INITIAL_PASSWORD) {
-      app.innerHTML = renderPasswordSetup(user, "초기 비밀번호 1111은 새 비밀번호로 사용할 수 없습니다.");
+    if (user.mustChangePassword && newPassword === user.password) {
+      app.innerHTML = renderPasswordSetup(user, "임시 비밀번호는 새 비밀번호로 사용할 수 없습니다.");
       return;
     }
     user.password = newPassword;
@@ -2427,11 +2430,12 @@
     }
     const roleKind = normalizeRoleKind(data.roleKind, "pharmacist");
     const roleInfo = roleKindToRoleInfo(roleKind);
+    const temporaryPassword = generateTemporaryPassword();
     const employee = {
       id: makeId("emp"),
       name: String(data.name || "").trim(),
       loginId,
-      password: INITIAL_PASSWORD,
+      password: temporaryPassword,
       role: roleInfo.role,
       staffType: roleInfo.staffType,
       status: "active",
@@ -2464,6 +2468,7 @@
     }
     employee.firstWorkStartDate = minDate(employee.firstWorkStartDate, findFirstEmployeeWorkDate(employee.id), employee.workStartDate);
     selectedEmployeeId = employee.id;
+    issuedPasswordNotice = `${employee.name} / ${temporaryPassword}`;
     addAudit(
       user.id,
       `${employee.name} 직원을 등록했습니다.`,
@@ -2472,7 +2477,11 @@
         : "",
     );
     saveDb();
-    showToast(result.attempted ? `직원을 등록하고 근무 ${result.added}건을 배치했습니다.` : "직원을 등록했습니다.");
+    showToast(
+      result.attempted
+        ? `${employee.name}님 임시 비밀번호는 ${temporaryPassword}입니다. 근무 ${result.added}건을 배치했습니다.`
+        : `${employee.name}님 임시 비밀번호는 ${temporaryPassword}입니다.`,
+    );
   }
 
   function saveEmployee(id, user) {
@@ -2539,11 +2548,13 @@
   function resetEmployeePassword(id, user) {
     const employee = getEmployee(id);
     if (!employee) return showToast("직원을 찾을 수 없습니다.");
-    employee.password = INITIAL_PASSWORD;
+    const temporaryPassword = generateTemporaryPassword();
+    employee.password = temporaryPassword;
     employee.mustChangePassword = true;
-    addAudit(user.id, `${employee.name}님 계정의 비밀번호를 초기화했습니다.`);
+    issuedPasswordNotice = `${employee.name} / ${temporaryPassword}`;
+    addAudit(user.id, `${employee.name}님 계정의 임시 비밀번호를 재발급했습니다.`);
     saveDb();
-    showToast(`${employee.name}님 비밀번호를 1111로 초기화했습니다.`);
+    showToast(`${employee.name}님 임시 비밀번호는 ${temporaryPassword}입니다.`);
   }
 
   function addSchedule(data, user) {
@@ -3941,6 +3952,13 @@
   function makeId(prefix) {
     if (window.crypto?.randomUUID) return `${prefix}-${window.crypto.randomUUID()}`;
     return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  }
+
+  function generateTemporaryPassword() {
+    const random = window.crypto?.getRandomValues
+      ? window.crypto.getRandomValues(new Uint32Array(1))[0] / 4294967296
+      : Math.random();
+    return String(Math.floor(1000 + random * 9000));
   }
 
   function escapeHtml(value) {
