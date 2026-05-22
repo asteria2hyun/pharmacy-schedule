@@ -40,7 +40,7 @@
   };
   const LOGIN_ID_OVERRIDES = {
     "emp-bae": "swstarp",
-    "emp-yeongju": "yongju",
+    "emp-yeongju": "youngju",
     "emp-juna": "junah",
     "emp-juyeon": "jooyeon",
   };
@@ -324,7 +324,7 @@
       {
         id: "emp-yeongju",
         name: "원영주",
-        loginId: "yongju",
+        loginId: "youngju",
         password: ASSIGNED_INITIAL_PASSWORDS["emp-yeongju"],
         role: "pharmacist",
         status: "active",
