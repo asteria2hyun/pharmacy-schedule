@@ -338,6 +338,21 @@ input:disabled {
   line-height: 1.45;
 }
 
+.calendar-sticky-head {
+  position: sticky;
+  top: calc(63px + env(safe-area-inset-top));
+  z-index: 16;
+  margin: -6px -14px 4px;
+  padding: 8px 14px 5px;
+  background: linear-gradient(180deg, rgba(236, 248, 242, 0.98), rgba(247, 251, 249, 0.96));
+  border-bottom: 1px solid rgba(216, 229, 223, 0.9);
+  backdrop-filter: blur(14px);
+}
+
+.calendar-sticky-head .page-head {
+  margin-bottom: 8px;
+}
+
 .monthbar {
   display: grid;
   grid-template-columns: 44px 1fr 44px;
@@ -1300,6 +1315,16 @@ tr:last-child td {
 
   .page-head p {
     font-size: 0.78rem;
+  }
+
+  .calendar-sticky-head {
+    top: calc(56px + env(safe-area-inset-top));
+    margin: -5px -8px 4px;
+    padding: 7px 8px 4px;
+  }
+
+  .calendar-sticky-head .page-head {
+    margin-bottom: 7px;
   }
 
   .monthbar {

@@ -7,7 +7,15 @@
   const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_k8EqPOzPYr6itPaOgFYwCA_39-Zi182";
   const SUPABASE_STATE_ID = "shared_schedule";
   const REMOTE_SYNC_INTERVAL_MS = 30000;
-  const SHARED_STATE_KEYS = ["employees", "schedules", "staffSchedules", "swapRequests", "holidays"];
+  const SHARED_STATE_KEYS = [
+    "employees",
+    "schedules",
+    "staffSchedules",
+    "swapRequests",
+    "holidays",
+    "deletedScheduleSeedIds",
+    "deletedStaffScheduleSeedIds",
+  ];
 
   const SHIFT_META = {
     "10pm": { label: "10-10", detail: "10시 마감 · 12시간", className: "ten", hours: 12 },
@@ -139,7 +147,7 @@
   function normalizeDb(value, shouldPersist = true) {
     const base = value && typeof value === "object" ? value : createInitialData();
     const previousSchemaVersion = Number(base.schemaVersion || 0);
-    base.schemaVersion = 17;
+    base.schemaVersion = 18;
     base.meta = {
       storageScope: "browser",
       ...(base.meta || {}),
@@ -154,6 +162,8 @@
     base.swapRequests = Array.isArray(base.swapRequests) ? base.swapRequests : [];
     base.holidays = Array.isArray(base.holidays) ? base.holidays : [];
     base.auditLogs = Array.isArray(base.auditLogs) ? base.auditLogs : [];
+    base.deletedScheduleSeedIds = uniqueStrings(base.deletedScheduleSeedIds);
+    base.deletedStaffScheduleSeedIds = uniqueStrings(base.deletedStaffScheduleSeedIds);
     base.employees = base.employees.map((employee) => {
       const normalized = {
         weekdayHourlyRate: Number(employee.weekdayHourlyRate || employee.shiftRate8pm / 10 || 10000),
@@ -264,6 +274,10 @@
     salaryStatsCache = new Map();
     monthlyPayCache = new Map();
     assignmentsCache = new Map();
+  }
+
+  function uniqueStrings(values) {
+    return Array.from(new Set((Array.isArray(values) ? values : []).map((value) => String(value || "").trim()).filter(Boolean)));
   }
 
   function loadSession() {
@@ -479,6 +493,8 @@
         staffSchedules: Array.isArray(source.staffSchedules) ? source.staffSchedules : [],
         swapRequests: Array.isArray(source.swapRequests) ? source.swapRequests : [],
         holidays: Array.isArray(source.holidays) ? source.holidays : [],
+        deletedScheduleSeedIds: uniqueStrings(source.deletedScheduleSeedIds),
+        deletedStaffScheduleSeedIds: uniqueStrings(source.deletedStaffScheduleSeedIds),
       }),
     );
   }
@@ -519,7 +535,7 @@
     if (Array.isArray(shared.employees)) {
       db.employees = mergeRemoteEmployees(nextShared.employees);
     }
-    ["schedules", "staffSchedules", "swapRequests", "holidays"].forEach((key) => {
+    ["schedules", "staffSchedules", "swapRequests", "holidays", "deletedScheduleSeedIds", "deletedStaffScheduleSeedIds"].forEach((key) => {
       if (Array.isArray(shared[key])) db[key] = nextShared[key];
     });
     db = normalizeDb(db, false);
@@ -722,7 +738,7 @@
     const schedules = createMay2026Schedules().concat(createJune2026Schedules(), createJuly2026Schedules());
     const staffSchedules = createMay2026StaffSchedules().concat(createJune2026StaffSchedules(), createJuly2026StaffSchedules());
     return {
-      schemaVersion: 17,
+      schemaVersion: 18,
       settings: {
         defaultMonth: monthKey,
       },
@@ -739,6 +755,8 @@
           createdAt: nowIso(),
         },
       ],
+      deletedScheduleSeedIds: [],
+      deletedStaffScheduleSeedIds: [],
     };
   }
 
@@ -1170,9 +1188,13 @@
 
   function mergeScheduleSeeds(targetDb, seeds, collectionName) {
     const collection = targetDb[collectionName];
+    const deletedIds =
+      collectionName === "staffSchedules"
+        ? new Set(targetDb.deletedStaffScheduleSeedIds || [])
+        : new Set(targetDb.deletedScheduleSeedIds || []);
     let changed = false;
     seeds.forEach((seed) => {
-      if (!collection.some((item) => item.id === seed.id)) {
+      if (!deletedIds.has(seed.id) && !collection.some((item) => item.id === seed.id)) {
         collection.push(seed);
         changed = true;
       }
@@ -1398,20 +1420,22 @@
     }
     return `
       <section>
-        <div class="page-head">
-          <div>
-            <h1>월별 근무표</h1>
+        <div class="calendar-sticky-head">
+          <div class="page-head">
+            <div>
+              <h1>월별 근무표</h1>
+            </div>
           </div>
-        </div>
-        ${renderMonthbar()}
-        <div class="weekdays" aria-hidden="true">
-          <div class="weekday sun">일</div>
-          <div class="weekday">월</div>
-          <div class="weekday">화</div>
-          <div class="weekday">수</div>
-          <div class="weekday">목</div>
-          <div class="weekday">금</div>
-          <div class="weekday sat">토</div>
+          ${renderMonthbar()}
+          <div class="weekdays" aria-hidden="true">
+            <div class="weekday sun">일</div>
+            <div class="weekday">월</div>
+            <div class="weekday">화</div>
+            <div class="weekday">수</div>
+            <div class="weekday">목</div>
+            <div class="weekday">금</div>
+            <div class="weekday sat">토</div>
+          </div>
         </div>
         <div class="calendar-grid">
           ${blanks.join("")}
@@ -3120,6 +3144,7 @@
     const schedule = getSchedule(id);
     if (!schedule) return showToast("근무를 찾을 수 없습니다.");
     db.schedules = db.schedules.filter((item) => item.id !== id);
+    rememberDeletedSeed("schedules", id);
     addAudit(user.id, `${formatDate(schedule.date)} ${SHIFT_META[schedule.shiftType].label} 근무를 삭제했습니다.`);
     saveDb();
     showToast("근무를 삭제했습니다.");
@@ -3158,9 +3183,15 @@
     const schedule = getStaffSchedule(id);
     if (!schedule) return showToast("직원근무를 찾을 수 없습니다.");
     db.staffSchedules = db.staffSchedules.filter((item) => item.id !== id);
+    rememberDeletedSeed("staffSchedules", id);
     addAudit(user.id, `${formatDate(schedule.date)} ${STAFF_SHIFT_META.label} 근무를 삭제했습니다.`);
     saveDb();
     showToast("직원근무를 삭제했습니다.");
+  }
+
+  function rememberDeletedSeed(collectionName, id) {
+    const key = collectionName === "staffSchedules" ? "deletedStaffScheduleSeedIds" : "deletedScheduleSeedIds";
+    db[key] = uniqueStrings([...(db[key] || []), id]);
   }
 
   function addHoliday(data, user) {
