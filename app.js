@@ -20,6 +20,7 @@
   const SHIFT_META = {
     "10pm": { label: "10-10", detail: "10시 마감 · 12시간", className: "ten", hours: 12 },
     "8pm": { label: "10-8", detail: "8시 마감 · 10시간", className: "eight", hours: 10 },
+    irregular: { label: "비정규", detail: "시간 직접 입력", className: "irregular", hours: 0 },
   };
   const STAFF_SHIFT_META = { label: "직원(10-8:30)", hours: 10.5 };
   const SHIFT_ORDER = ["10pm", "8pm"];
@@ -109,6 +110,7 @@
   let toast = "";
   let toastTimer = null;
   let issuedPasswordNotice = "";
+  let shouldFocusTodayAfterRender = true;
 
   document.addEventListener("submit", handleSubmit);
   document.addEventListener("click", handleClick);
@@ -1326,6 +1328,7 @@
       </div>
       ${toast ? `<div class="toast" role="status">${escapeHtml(toast)}</div>` : ""}
     `;
+    focusTodayAfterCalendarRender();
   }
 
   function renderRemoteSyncBadge() {
@@ -1453,18 +1456,21 @@
     const hasPendingSwap = hasPendingSwapOnDate(date);
     const color = holiday || weekday === 0 ? "red" : weekday === 6 ? "blue" : "";
     const dateTone = holiday || weekday === 0 ? "red-line" : weekday === 6 ? "blue-line" : "";
-    const schedules = getSchedulesByDate(date);
+    const schedules = getSchedulesByDate(date).filter((schedule) => shouldShowRxScheduleOnCalendar(user, schedule));
+    const hasIrregular = schedules.some((schedule) => schedule.shiftType === "irregular");
     return `
-      <article class="day-cell ${dateTone} ${isToday ? "today" : ""} ${hasPendingSwap ? "pending-swap-day" : ""}" aria-label="${month}월 ${day}일">
+      <article class="day-cell ${dateTone} ${isToday ? "today" : ""} ${hasPendingSwap ? "pending-swap-day" : ""}" data-date="${date}" aria-label="${month}월 ${day}일">
         <div class="day-top">
           <span class="day-number ${color}">${day}</span>
           <span class="day-flags">
+            ${isToday ? `<span class="today-badge">오늘</span>` : ""}
             ${holiday ? `<span class="holiday-name" title="${escapeHtml(holiday.name)}">${escapeHtml(displayHolidayName(holiday.name))}</span>` : ""}
             ${hasPendingSwap ? `<span class="pending-swap-flag">교체대기</span>` : ""}
           </span>
         </div>
-        <div class="day-content">
+        <div class="day-content ${hasIrregular ? "has-irregular" : ""}">
           ${SHIFT_ORDER.map((shiftType) => renderShiftBlock(user, schedules, shiftType)).join("")}
+          ${renderIrregularBlock(user, schedules)}
           ${renderStaffBlock(user, date)}
         </div>
       </article>
@@ -1486,6 +1492,19 @@
     `;
   }
 
+  function renderIrregularBlock(user, schedules) {
+    if (!canSeeAdminPrivateSchedule(user)) return "";
+    const shiftSchedules = schedules.filter((schedule) => schedule.shiftType === "irregular");
+    if (!shiftSchedules.length) return "";
+    const meta = SHIFT_META.irregular;
+    return `
+      <div class="shift-block schedule-section shift-section irregular-block">
+        <span class="shift-label ${meta.className}" title="${meta.detail}">${meta.label}</span>
+        ${shiftSchedules.map((schedule) => renderPersonRow(user, schedule)).join("")}
+      </div>
+    `;
+  }
+
   function renderPersonRow(user, schedule) {
     const employee = getEmployee(schedule.pharmacistId);
     const isMine = schedule.pharmacistId === user.id;
@@ -1493,15 +1512,18 @@
     const pendingForMe = pendingSwap && pendingSwap.targetId === user.id;
     const name = employee ? employee.name : "알 수 없음";
     const statusMark = employee && employee.status === "resigned" ? " (퇴사)" : "";
-    const timeLabel = getScheduleTimeLabel(schedule);
-    const timeMark = timeLabel !== SHIFT_META[schedule.shiftType]?.label ? `<span class="person-time">${escapeHtml(timeLabel)}</span>` : "";
+    const timeLabel = schedule.pharmacistId === "emp-bae" ? SHIFT_META[schedule.shiftType]?.label : getScheduleTimeLabel(schedule);
+    const timeMark =
+      schedule.pharmacistId !== "emp-bae" && timeLabel !== SHIFT_META[schedule.shiftType]?.label
+        ? `<span class="person-time">${escapeHtml(timeLabel)}</span>`
+        : "";
     return `<div class="person-row ${isMine ? "mine" : ""} ${pendingSwap ? "pending-swap-person" : ""} ${pendingForMe ? "needs-my-approval" : ""}">
       ${escapeHtml(name)}${statusMark}${timeMark}${pendingSwap ? `<span class="swap-badge">${pendingForMe ? "승인필요" : "교체대기"}</span>` : ""}
     </div>`;
   }
 
   function renderStaffBlock(user, date) {
-    const schedules = getStaffSchedulesByDate(date);
+    const schedules = getStaffSchedulesByDate(date).filter((schedule) => shouldShowStaffScheduleOnCalendar(user, schedule));
     if (!schedules.length) return "";
     return `
       <div class="shift-block schedule-section staff-block">
@@ -1521,6 +1543,29 @@
     return `<div class="person-row staff-person ${isMine ? "mine" : ""} ${pendingSwap ? "pending-swap-person" : ""} ${pendingForMe ? "needs-my-approval" : ""}">
       ${escapeHtml(name)}${statusMark}${pendingSwap ? `<span class="swap-badge">${pendingForMe ? "승인필요" : "교체대기"}</span>` : ""}
     </div>`;
+  }
+
+  function shouldShowRxScheduleOnCalendar(user, schedule) {
+    if (schedule?.shiftType === "irregular") return canSeeAdminPrivateSchedule(user);
+    if (schedule?.pharmacistId !== "emp-bae") return true;
+    if (canSeeAdminPrivateSchedule(user)) return true;
+    return isDefaultScheduleTime(schedule, schedule.shiftType);
+  }
+
+  function shouldShowStaffScheduleOnCalendar(user, schedule) {
+    if (schedule?.staffId !== "emp-bae") return true;
+    if (canSeeAdminPrivateSchedule(user)) return true;
+    return isDefaultScheduleTime(schedule, "staff");
+  }
+
+  function canSeeAdminPrivateSchedule(user) {
+    return user?.id === "emp-bae" || user?.role === "admin";
+  }
+
+  function isDefaultScheduleTime(schedule, fallbackType) {
+    const actual = getScheduleTimeRange(schedule, fallbackType);
+    const defaults = getDefaultTimeRange(fallbackType);
+    return actual.start === defaults.start && actual.end === defaults.end;
   }
 
   function renderMonthbar() {
@@ -2167,11 +2212,58 @@
             <input class="mini-input" name="resignationDate" type="date" value="${escapeAttr(employee.resignationDate || "")}" />
           </label>
         </div>
+        ${renderEmployeeLeaveAdmin(employee)}
         <div class="employee-card-actions">
           <button class="secondary-button" type="button" data-action="save-employee" data-id="${employee.id}">설정 저장</button>
           <button class="danger-button" type="button" data-action="reset-password" data-id="${employee.id}">비밀번호 초기화</button>
         </div>
       </article>
+    `;
+  }
+
+  function renderEmployeeLeaveAdmin(employee) {
+    if (getEmployeeRoleKind(employee) !== "staff1") return "";
+    const periodStart = getLeavePeriodStart(employee);
+    const leaveDates = getLeaveDatesInCurrentPeriod(employee);
+    const pendingLeaves = getLeaveRequests(employee.id, "pending", periodStart);
+    const used = leaveDates.length;
+    const pending = pendingLeaves.length;
+    const remaining = Math.max(Number(employee.leaveAllowance || 0) - used - pending, 0);
+    return `
+      <div class="employee-leave-admin">
+        <div class="employee-leave-head">
+          <div>
+            <strong>직원1 연차 직접 관리</strong>
+            <span>사용 ${used}개 · 승인대기 ${pending}개 · 잔여 ${remaining}개</span>
+          </div>
+          <span class="status-pill">기준 ${periodStart ? formatDate(periodStart) : "-"}</span>
+        </div>
+        <div class="form-grid compact-grid">
+          <label class="field leave-allowance-field">
+            <span>연차 기준 시작일</span>
+            <input class="mini-input" name="leaveCycleStartDate" type="date" value="${escapeAttr(employee.leaveCycleStartDate || employee.workStartDate || employee.hireDate || "")}" />
+          </label>
+          <label class="field">
+            <span>연차 사용 날짜</span>
+            <input class="mini-input" data-admin-leave-date="${employee.id}" type="date" value="${getKoreaDateString()}" />
+          </label>
+          <button class="secondary-button" type="button" data-action="admin-add-leave" data-id="${employee.id}">연차 추가</button>
+        </div>
+        ${
+          leaveDates.length
+            ? `<div class="leave-chip-list">${leaveDates
+                .map(
+                  (date) => `
+                    <span class="leave-chip">
+                      ${formatDate(date)}
+                      <button type="button" data-action="admin-delete-leave" data-id="${employee.id}" data-date="${date}" aria-label="${formatDate(date)} 연차 삭제">×</button>
+                    </span>
+                  `,
+                )
+                .join("")}</div>`
+            : `<div class="empty-state compact">등록된 연차 사용일이 없습니다.</div>`
+        }
+      </div>
     `;
   }
 
@@ -2193,6 +2285,7 @@
             <select class="select" name="shiftType" required>
               <option value="10pm">10-10 (10시 마감 · 12시간)</option>
               <option value="8pm">10-8 (8시 마감 · 10시간)</option>
+              <option value="irregular">비정규 근무(시간 직접 입력)</option>
               <option value="staff">${STAFF_SHIFT_META.label}</option>
             </select>
           </label>
@@ -2239,6 +2332,7 @@
                           <select class="select" data-schedule-shift="${schedule.id}">
                             <option value="10pm" ${schedule.shiftType === "10pm" ? "selected" : ""}>10-10</option>
                             <option value="8pm" ${schedule.shiftType === "8pm" ? "selected" : ""}>10-8</option>
+                            <option value="irregular" ${schedule.shiftType === "irregular" ? "selected" : ""}>비정규 근무</option>
                           </select>
                         </label>
                         <label class="field">
@@ -2444,6 +2538,11 @@
     const tabButton = event.target.closest("[data-tab]");
     if (tabButton && app.contains(tabButton)) {
       currentTab = tabButton.dataset.tab;
+      if (currentTab === "calendar") {
+        monthCursor = getKoreaMonthKey();
+        adminSelectedDate = getKoreaDateString();
+        requestTodayFocus();
+      }
       render();
       return;
     }
@@ -2461,18 +2560,21 @@
     if (action === "month-prev") {
       monthCursor = shiftMonth(monthCursor, -1);
       adminSelectedDate = `${monthCursor}-01`;
+      if (monthCursor === getKoreaMonthKey()) requestTodayFocus();
       render();
       return;
     }
     if (action === "month-next") {
       monthCursor = shiftMonth(monthCursor, 1);
       adminSelectedDate = `${monthCursor}-01`;
+      if (monthCursor === getKoreaMonthKey()) requestTodayFocus();
       render();
       return;
     }
     if (action === "month-today") {
       monthCursor = getKoreaMonthKey();
       adminSelectedDate = getKoreaDateString();
+      requestTodayFocus();
       render();
       return;
     }
@@ -2489,6 +2591,8 @@
     }
     if (action === "reset-password") return resetEmployeePassword(id, user);
     if (action === "save-employee") return saveEmployee(id, user);
+    if (action === "admin-add-leave") return adminAddEmployeeLeaveDate(id, user);
+    if (action === "admin-delete-leave") return adminDeleteEmployeeLeaveDate(id, actionButton.dataset.date, user);
     if (action === "save-schedule") return saveSchedule(id, user);
     if (action === "delete-schedule") return deleteSchedule(id, user);
     if (action === "save-staff-schedule") return saveStaffSchedule(id, user);
@@ -2553,6 +2657,7 @@
     currentTab = "calendar";
     monthCursor = getKoreaMonthKey();
     adminSelectedDate = getKoreaDateString();
+    requestTodayFocus();
     if (employee.mustChangePassword) {
       render();
       return;
@@ -2909,6 +3014,34 @@
     showToast("연차 사용일을 삭제했습니다.");
   }
 
+  function adminAddEmployeeLeaveDate(id, user) {
+    const employee = getEmployee(id);
+    const input = app.querySelector(`[data-admin-leave-date="${cssEscape(id)}"]`);
+    const leaveDate = input?.value || "";
+    if (!employee || getEmployeeRoleKind(employee) !== "staff1") return showToast("직원1만 연차를 직접 관리할 수 있습니다.");
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(leaveDate)) return showToast("연차 사용 날짜를 선택해주세요.");
+    const leavePeriodStart = getLeavePeriodStart(employee);
+    if (leavePeriodStart && leaveDate < leavePeriodStart) {
+      return showToast("현재 연차 기준일 이후 날짜만 추가할 수 있습니다.");
+    }
+    employee.leaveDates = Array.isArray(employee.leaveDates) ? employee.leaveDates : [];
+    if (employee.leaveDates.includes(leaveDate)) return showToast("이미 등록된 연차 날짜입니다.");
+    employee.leaveDates.push(leaveDate);
+    employee.leaveDates.sort();
+    addAudit(user.id, `${employee.name}님 ${formatFullDate(leaveDate)} 연차를 관리자가 직접 추가했습니다.`);
+    saveDb();
+    showToast("연차 사용일을 추가했습니다.");
+  }
+
+  function adminDeleteEmployeeLeaveDate(id, leaveDate, user) {
+    const employee = getEmployee(id);
+    if (!employee || getEmployeeRoleKind(employee) !== "staff1") return showToast("직원1만 연차를 직접 관리할 수 있습니다.");
+    employee.leaveDates = (employee.leaveDates || []).filter((date) => date !== leaveDate);
+    addAudit(user.id, `${employee.name}님 ${formatFullDate(leaveDate)} 연차를 관리자가 직접 삭제했습니다.`);
+    saveDb();
+    showToast("연차 사용일을 삭제했습니다.");
+  }
+
   function addEmployee(data, user) {
     const loginId = String(data.loginId || "").trim();
     if (db.employees.some((employee) => employee.loginId === loginId)) {
@@ -2935,6 +3068,7 @@
       resignationDate: "",
       leaveAllowance: roleKind === "staff1" ? Number(data.leaveAllowance || 0) : 0,
       leaveDates: [],
+      leaveCycleStartDate: roleKind === "staff1" ? data.workStartDate || data.hireDate || adminSelectedDate : "",
       hireDate: data.hireDate || data.workStartDate || adminSelectedDate,
       firstWorkStartDate: data.workStartDate || data.hireDate || adminSelectedDate,
       lastModifiedStartDate: data.workStartDate || adminSelectedDate,
@@ -2995,6 +3129,8 @@
     employee.resignationDate = resignationDate;
     employee.status = getEmployeeStatusAfterResignationSave(requestedStatus, resignationDate);
     employee.leaveAllowance = roleKind === "staff1" ? Number(getRowValue(row, "leaveAllowance") || 0) : 0;
+    employee.leaveCycleStartDate =
+      roleKind === "staff1" ? getRowValue(row, "leaveCycleStartDate") || employee.leaveCycleStartDate || effectiveStartDate : "";
     employee.workStartDate = effectiveStartDate;
     employee.lastModifiedStartDate = effectiveStartDate;
     employee.workPatterns = readWorkPatternsFromContainer(row);
@@ -3697,6 +3833,7 @@
   function getDefaultTimeRange(type) {
     if (type === "8pm") return { start: 10, end: 8 };
     if (type === "staff") return { start: 10, end: 8.5 };
+    if (type === "irregular") return { start: 10, end: 8 };
     return { start: 10, end: 10 };
   }
 
@@ -4341,16 +4478,41 @@
     }, 2800);
   }
 
+  function requestTodayFocus() {
+    shouldFocusTodayAfterRender = true;
+  }
+
+  function focusTodayAfterCalendarRender() {
+    if (!shouldFocusTodayAfterRender || currentTab !== "calendar" || monthCursor !== getKoreaMonthKey()) return;
+    shouldFocusTodayAfterRender = false;
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        const todayCell = app.querySelector(`[data-date="${getKoreaDateString()}"]`);
+        if (!todayCell) return;
+        const topbarHeight = app.querySelector(".topbar")?.getBoundingClientRect().height || 0;
+        const calendarHeadHeight = app.querySelector(".calendar-sticky-head")?.getBoundingClientRect().height || 0;
+        const targetTop = todayCell.getBoundingClientRect().top + window.scrollY;
+        const offset = topbarHeight + calendarHeadHeight + 10;
+        window.scrollTo({ top: Math.max(0, targetTop - offset), behavior: "auto" });
+      });
+    });
+  }
+
   function sortSchedules(a, b) {
     const dateOrder = a.date.localeCompare(b.date);
     if (dateOrder !== 0) return dateOrder;
-    return SHIFT_ORDER.indexOf(a.shiftType) - SHIFT_ORDER.indexOf(b.shiftType);
+    return getShiftSortIndex(a.shiftType) - getShiftSortIndex(b.shiftType);
   }
 
   function sortSchedulesByMonthlyPay(a, b, monthKey) {
-    const shiftOrder = SHIFT_ORDER.indexOf(a.shiftType) - SHIFT_ORDER.indexOf(b.shiftType);
+    const shiftOrder = getShiftSortIndex(a.shiftType) - getShiftSortIndex(b.shiftType);
     if (shiftOrder !== 0) return shiftOrder;
     return sortEmployeeIdsByMonthlyPay(a.pharmacistId, b.pharmacistId, monthKey);
+  }
+
+  function getShiftSortIndex(shiftType) {
+    const index = SHIFT_ORDER.indexOf(shiftType);
+    return index >= 0 ? index : SHIFT_ORDER.length;
   }
 
   function sortStaffSchedulesByCalendarOrder(a, b) {

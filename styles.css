@@ -449,8 +449,8 @@ input:disabled {
 }
 
 .day-cell.today {
-  border-color: var(--line);
-  box-shadow: none;
+  border-color: #e2b33a;
+  box-shadow: 0 0 0 2px rgba(226, 179, 58, 0.14);
 }
 
 .day-cell.pending-swap-day {
@@ -483,12 +483,20 @@ input:disabled {
 }
 
 .day-cell.today .day-top {
-  box-shadow: inset 0 0 0 1px rgba(15, 122, 90, 0.45);
+  border-bottom-color: rgba(226, 179, 58, 0.52);
+  background: #fff2bf;
+  box-shadow: inset 0 0 0 1px rgba(226, 179, 58, 0.65);
 }
 
 .day-cell.pending-swap-day .day-top {
   border-bottom-color: rgba(213, 149, 34, 0.35);
   box-shadow: inset 0 0 0 1px rgba(213, 149, 34, 0.5);
+}
+
+.day-cell.today.pending-swap-day .day-top {
+  border-bottom-color: rgba(226, 179, 58, 0.52);
+  background: #fff2bf;
+  box-shadow: inset 0 0 0 1px rgba(226, 179, 58, 0.65);
 }
 
 .day-number {
@@ -537,6 +545,17 @@ input:disabled {
   white-space: nowrap;
 }
 
+.today-badge {
+  border-radius: 999px;
+  background: #d99a12;
+  color: #fff;
+  padding: 1px 5px;
+  font-size: 0.58rem;
+  font-weight: 950;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
 .shift-block {
   display: grid;
   align-content: start;
@@ -554,6 +573,14 @@ input:disabled {
     var(--eight-section-height)
     minmax(var(--staff-section-height), 1fr);
   padding: 6px;
+}
+
+.day-content.has-irregular {
+  grid-template-rows:
+    var(--ten-section-height)
+    var(--eight-section-height)
+    minmax(44px, max-content)
+    minmax(var(--staff-section-height), 1fr);
 }
 
 .schedule-section {
@@ -591,6 +618,15 @@ input:disabled {
 .shift-label.staff {
   background: #ece9ff;
   color: #4f3aa8;
+}
+
+.shift-label.irregular {
+  background: #ffe8d8;
+  color: #9a3f12;
+}
+
+.irregular-block {
+  min-height: 0;
 }
 
 .staff-block {
@@ -1175,6 +1211,82 @@ tr:last-child td {
   margin-top: 12px;
 }
 
+.employee-leave-admin {
+  margin-top: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #f7fbf9;
+  padding: 10px;
+}
+
+.employee-leave-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.employee-leave-head strong,
+.employee-leave-head span {
+  display: block;
+}
+
+.employee-leave-head span:not(.status-pill) {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.compact-grid {
+  grid-template-columns: 1fr 1fr auto;
+  align-items: end;
+}
+
+.compact-grid .secondary-button {
+  min-height: 42px;
+}
+
+.leave-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.leave-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid rgba(15, 122, 90, 0.18);
+  border-radius: 999px;
+  background: #fff;
+  padding: 5px 8px;
+  color: var(--brand-strong);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.leave-chip button {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: 0;
+  border-radius: 999px;
+  background: #ffe3e3;
+  color: #9d1d1d;
+  font-size: 0.82rem;
+  font-weight: 950;
+}
+
+.empty-state.compact {
+  margin-top: 8px;
+  padding: 10px;
+  font-size: 0.8rem;
+}
+
 [data-role-kind]:not([data-role-kind="staff1"]) .leave-allowance-field {
   display: none;
 }
@@ -1380,6 +1492,14 @@ tr:last-child td {
     padding: 4px 3px;
   }
 
+  .day-content.has-irregular {
+    grid-template-rows:
+      var(--ten-section-height)
+      var(--eight-section-height)
+      minmax(34px, max-content)
+      minmax(var(--staff-section-height), 1fr);
+  }
+
   .schedule-section {
     padding-top: 4px;
   }
@@ -1464,5 +1584,9 @@ tr:last-child td {
 
   .shift-label {
     font-size: 0.52rem;
+  }
+
+  .compact-grid {
+    grid-template-columns: 1fr;
   }
 }
