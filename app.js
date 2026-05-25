@@ -149,7 +149,7 @@
   function normalizeDb(value, shouldPersist = true) {
     const base = value && typeof value === "object" ? value : createInitialData();
     const previousSchemaVersion = Number(base.schemaVersion || 0);
-    base.schemaVersion = 18;
+    base.schemaVersion = 20;
     base.meta = {
       storageScope: "browser",
       ...(base.meta || {}),
@@ -191,11 +191,11 @@
       if (LOGIN_ID_OVERRIDES[normalized.id]) {
         normalized.loginId = LOGIN_ID_OVERRIDES[normalized.id];
       }
-      if (previousSchemaVersion < 15 && ASSIGNED_INITIAL_PASSWORDS[normalized.id] && employee.mustChangePassword !== false) {
+      if (previousSchemaVersion < 15 && ASSIGNED_INITIAL_PASSWORDS[normalized.id] && !normalized.password) {
         normalized.password = ASSIGNED_INITIAL_PASSWORDS[normalized.id];
       }
       if (previousSchemaVersion < 16 && normalized.id === "emp-bae") {
-        normalized.password = ADMIN_PASSWORD;
+        if (!normalized.password || normalized.password === LEGACY_INITIAL_PASSWORD) normalized.password = ADMIN_PASSWORD;
         normalized.mustChangePassword = false;
       }
       if (previousSchemaVersion < 17) {
@@ -226,6 +226,16 @@
         typeof normalized.mustChangePassword === "boolean"
           ? normalized.mustChangePassword
           : normalized.password === LEGACY_INITIAL_PASSWORD && normalized.status === "active";
+      if (normalized.id === "emp-bae") {
+        normalized.mustChangePassword = false;
+      }
+      if (
+        ASSIGNED_INITIAL_PASSWORDS[normalized.id] &&
+        normalized.password &&
+        normalized.password !== ASSIGNED_INITIAL_PASSWORDS[normalized.id]
+      ) {
+        normalized.mustChangePassword = false;
+      }
       return normalized;
     });
     applyScheduledResignations(base, false);
@@ -514,16 +524,24 @@
         remoteEmployee.id === "emp-bae"
           ? ADMIN_PASSWORD
           : ASSIGNED_INITIAL_PASSWORDS[remoteEmployee.id] || generateTemporaryPassword();
+      const password = localEmployee?.password || fallbackPassword;
+      let mustChangePassword =
+        typeof localEmployee?.mustChangePassword === "boolean"
+          ? localEmployee.mustChangePassword
+          : remoteEmployee.id === "emp-bae"
+            ? false
+            : true;
+      if (remoteEmployee.id === "emp-bae") {
+        mustChangePassword = false;
+      }
+      if (ASSIGNED_INITIAL_PASSWORDS[remoteEmployee.id] && password !== ASSIGNED_INITIAL_PASSWORDS[remoteEmployee.id]) {
+        mustChangePassword = false;
+      }
       return {
         ...(localEmployee || {}),
         ...remoteEmployee,
-        password: localEmployee?.password || fallbackPassword,
-        mustChangePassword:
-          typeof localEmployee?.mustChangePassword === "boolean"
-            ? localEmployee.mustChangePassword
-            : remoteEmployee.id === "emp-bae"
-              ? false
-              : true,
+        password,
+        mustChangePassword,
       };
     });
   }
@@ -740,7 +758,7 @@
     const schedules = createMay2026Schedules().concat(createJune2026Schedules(), createJuly2026Schedules());
     const staffSchedules = createMay2026StaffSchedules().concat(createJune2026StaffSchedules(), createJuly2026StaffSchedules());
     return {
-      schemaVersion: 18,
+      schemaVersion: 20,
       settings: {
         defaultMonth: monthKey,
       },
@@ -1463,7 +1481,6 @@
         <div class="day-top">
           <span class="day-number ${color}">${day}</span>
           <span class="day-flags">
-            ${isToday ? `<span class="today-badge">오늘</span>` : ""}
             ${holiday ? `<span class="holiday-name" title="${escapeHtml(holiday.name)}">${escapeHtml(displayHolidayName(holiday.name))}</span>` : ""}
             ${hasPendingSwap ? `<span class="pending-swap-flag">교체대기</span>` : ""}
           </span>
@@ -1901,6 +1918,7 @@
         if (b.employee.id === "emp-bae") return 1;
         return b.stats.totalPay - a.stats.totalPay;
       });
+    const totalPayroll = workers.reduce((sum, row) => sum + row.stats.totalPay, 0);
     return `
       <section>
         <div class="page-head">
@@ -1910,6 +1928,13 @@
           </div>
         </div>
         ${renderMonthbar()}
+        <div class="salary-hero payroll-total-hero">
+          <div>
+            <span>전체 예상 급여</span>
+            <strong>${formatWon(totalPayroll)}</strong>
+          </div>
+          <p>관리자 포함 ${workers.length}명 합산</p>
+        </div>
         <div class="panel">
           <h2>직원별 급여 계산</h2>
           <div class="payroll-list">
@@ -2144,9 +2169,8 @@
       <article class="employee-card" data-employee-row="${employee.id}" data-role-kind="${getEmployeeRoleKind(employee)}">
         <div class="employee-card-head">
           <div>
-            <strong>${escapeHtml(employee.name)} <small>${escapeHtml(employeeTenureText(employee))}</small></strong>
-            <span>${escapeHtml(employee.loginId)}${employee.mustChangePassword ? " · 비밀번호 설정 필요" : ""}${employee.workStartDate ? ` · ${escapeHtml(workPatternSummary(employee))}` : ""}</span>
-            <span>${escapeHtml(employeeRecentStartText(employee))}</span>
+            <strong>${escapeHtml(employee.name)}</strong>
+            ${renderEmployeeCardSummary(employee)}
           </div>
           <span class="status-pill ${employee.status === "active" ? "status-active" : "status-resigned"}">${employeeStatusText(employee)}</span>
         </div>
@@ -2218,6 +2242,29 @@
           <button class="danger-button" type="button" data-action="reset-password" data-id="${employee.id}">비밀번호 초기화</button>
         </div>
       </article>
+    `;
+  }
+
+  function renderEmployeeCardSummary(employee) {
+    const hireDate = getEmployeeHireDate(employee);
+    const firstWorkDate = getEmployeeFirstWorkStartDate(employee);
+    const tenureText = firstWorkDate ? formatTenureFrom(firstWorkDate) : "";
+    const workSummary = workPatternSummary(employee);
+    return `
+      <div class="employee-card-meta">
+        <span class="employee-meta-chip">ID ${escapeHtml(employee.loginId)}</span>
+        <span class="employee-meta-chip">${escapeHtml(employeeDisplayRole(employee))}</span>
+        ${employee.mustChangePassword ? `<span class="employee-meta-chip warning">비밀번호 설정 필요</span>` : ""}
+      </div>
+      <div class="employee-card-info">
+        ${hireDate ? `<span>입사 ${escapeHtml(formatDate(hireDate))}</span>` : ""}
+        ${firstWorkDate ? `<span>첫 근무 ${escapeHtml(formatDate(firstWorkDate))}</span>` : ""}
+        ${tenureText ? `<span>${escapeHtml(tenureText)}</span>` : ""}
+      </div>
+      <div class="employee-card-info subtle">
+        <span>${escapeHtml(employeeRecentStartText(employee))}</span>
+      </div>
+      ${workSummary ? `<div class="employee-work-summary">${escapeHtml(workSummary)}</div>` : ""}
     `;
   }
 

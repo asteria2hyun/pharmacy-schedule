@@ -545,17 +545,6 @@ input:disabled {
   white-space: nowrap;
 }
 
-.today-badge {
-  border-radius: 999px;
-  background: #d99a12;
-  color: #fff;
-  padding: 1px 5px;
-  font-size: 0.58rem;
-  font-weight: 950;
-  line-height: 1.25;
-  white-space: nowrap;
-}
-
 .shift-block {
   display: grid;
   align-content: start;
@@ -873,6 +862,22 @@ input:disabled {
   font-size: clamp(2.2rem, 10vw, 3.2rem);
 }
 
+.payroll-total-hero {
+  grid-template-columns: minmax(0, 1fr);
+  margin-bottom: 12px;
+}
+
+.payroll-total-hero p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 850;
+}
+
+.payroll-total-hero strong {
+  font-size: clamp(2.1rem, 8vw, 3rem);
+}
+
 .payroll-list {
   display: grid;
   gap: 8px;
@@ -1154,13 +1159,8 @@ tr:last-child td {
 
 .employee-card-head strong {
   display: block;
-  font-size: 1rem;
-}
-
-.employee-card-head small {
-  color: var(--muted);
-  font-size: 0.72rem;
-  font-weight: 800;
+  font-size: 1.08rem;
+  line-height: 1.2;
 }
 
 .employee-picker-button strong {
@@ -1192,12 +1192,57 @@ tr:last-child td {
   gap: 10px;
 }
 
-.employee-card-head span:not(.status-pill) {
-  display: block;
-  margin-top: 4px;
+.employee-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.employee-meta-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: #eef6f2;
+  color: var(--brand-strong);
+  padding: 3px 7px;
+  font-size: 0.72rem;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.employee-meta-chip.warning {
+  background: #fff1d2;
+  color: #915600;
+}
+
+.employee-card-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 10px;
+  margin-top: 7px;
   color: var(--muted);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.employee-card-info span {
+  white-space: nowrap;
+}
+
+.employee-card-info.subtle {
+  color: #7b8b83;
+}
+
+.employee-work-summary {
+  margin-top: 7px;
+  border-radius: 6px;
+  background: #f7fbf9;
+  padding: 6px 8px;
+  color: var(--muted);
+  font-size: 0.75rem;
   font-weight: 800;
+  line-height: 1.35;
 }
 
 .employee-edit-grid {
