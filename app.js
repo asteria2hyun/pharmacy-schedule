@@ -2786,7 +2786,7 @@
     const target = getEmployee(data.targetEmployeeId);
     if (!target || target.id === user.id) return showToast("받을 근무자를 선택해주세요.");
     if (!canHandoffEmployee(target)) return showToast("관리자 또는 근무약사에게만 넘길 수 있습니다.");
-    if (!isEmployeeEmployedOnDate(target, ownSchedule.date)) return showToast("해당 날짜에 재직중인 근무자에게만 넘길 수 있습니다.");
+    if (!isEmployeeAvailableForScheduleDate(target, ownSchedule.date)) return showToast("해당 날짜에 근무 가능한 사람에게만 넘길 수 있습니다.");
     const duplicateMessage = getHandoffDuplicateMessage(target.id, ownSchedule);
     if (duplicateMessage) return showToast(duplicateMessage);
     const request = {
@@ -2875,7 +2875,7 @@
     if (request.type === "handoff") {
       const requester = getEmployee(request.requesterId);
       const target = getEmployee(request.targetId);
-      if (!canHandoffEmployee(requester) || !canHandoffEmployee(target) || !isEmployeeEmployedOnDate(target, requesterSchedule.date)) {
+      if (!canHandoffEmployee(requester) || !canHandoffEmployee(target) || !isEmployeeAvailableForScheduleDate(target, requesterSchedule.date)) {
         request.status = "rejected";
         request.rejectedAt = nowIso();
         addAudit(user.id, "근무 넘기기 가능한 조합이 아니어서 요청을 자동 거절했습니다.");
@@ -3232,6 +3232,7 @@
     if (!target || !isEmployeeAccessActive(target) || !isEmployeeEmployedOnDate(target, data.date)) {
       return showToast("선택한 날짜에 재직중인 직원만 배정할 수 있습니다.");
     }
+    if (isEmployeeOnLeave(target.id, data.date)) return showToast("연차 사용일에는 근무를 배정할 수 없습니다.");
     const sameDateSchedules = db.schedules.filter((schedule) => schedule.date === data.date);
     if (sameDateSchedules.some((schedule) => schedule.pharmacistId === data.pharmacistId)) {
       return showToast("같은 날짜에 같은 직원을 중복 배정할 수 없습니다.");
@@ -3264,6 +3265,7 @@
       return showToast("선택한 날짜에 재직중인 직원만 배정할 수 있습니다.");
     }
     if (!canWorkStaffPosition(target)) return showToast("직원근무는 관리자 또는 직원에게만 배정할 수 있습니다.");
+    if (isEmployeeOnLeave(target.id, data.date)) return showToast("연차 사용일에는 근무를 배정할 수 없습니다.");
     const sameDateSchedules = db.staffSchedules.filter((schedule) => schedule.date === data.date);
     if (sameDateSchedules.some((schedule) => schedule.staffId === data.staffId)) {
       return showToast("같은 날짜에 같은 직원을 중복 배정할 수 없습니다.");
@@ -3300,6 +3302,7 @@
     if (!target || !isEmployeeAccessActive(target) || !isEmployeeEmployedOnDate(target, schedule.date)) {
       return showToast("선택한 날짜에 재직중인 직원만 배정할 수 있습니다.");
     }
+    if (isEmployeeOnLeave(target.id, schedule.date)) return showToast("연차 사용일에는 근무를 배정할 수 없습니다.");
     const nextShiftType = shiftSelect?.value || schedule.shiftType;
     const duplicate = db.schedules.some(
       (item) => item.id !== id && item.date === schedule.date && item.pharmacistId === select.value,
@@ -3344,6 +3347,7 @@
       return showToast("선택한 날짜에 재직중인 직원만 배정할 수 있습니다.");
     }
     if (!canWorkStaffPosition(target)) return showToast("직원근무는 관리자 또는 직원에게만 배정할 수 있습니다.");
+    if (isEmployeeOnLeave(target.id, schedule.date)) return showToast("연차 사용일에는 근무를 배정할 수 없습니다.");
     const duplicate = db.staffSchedules.some(
       (item) => item.id !== id && item.date === schedule.date && item.staffId === select.value,
     );
@@ -3476,6 +3480,15 @@
     return true;
   }
 
+  function isEmployeeOnLeave(employeeId, date) {
+    const employee = getEmployee(employeeId);
+    return Boolean(employee && date && Array.isArray(employee.leaveDates) && employee.leaveDates.includes(date));
+  }
+
+  function isEmployeeAvailableForScheduleDate(employee, date) {
+    return isEmployeeEmployedOnDate(employee, date) && !isEmployeeOnLeave(employee?.id, date);
+  }
+
   function getEmployeeScheduleCutoff(employee) {
     if (!employee) return "";
     if (employee.resignationDate) return employee.resignationDate;
@@ -3533,11 +3546,11 @@
   }
 
   function getSchedulableEmployees(date = adminSelectedDate) {
-    return db.employees.filter((employee) => isEmployeeAccessActive(employee) && isEmployeeEmployedOnDate(employee, date));
+    return db.employees.filter((employee) => isEmployeeAccessActive(employee) && isEmployeeAvailableForScheduleDate(employee, date));
   }
 
   function getStaffSchedulableEmployees(date = adminSelectedDate) {
-    return db.employees.filter((employee) => canWorkStaffPosition(employee) && isEmployeeAccessActive(employee) && isEmployeeEmployedOnDate(employee, date));
+    return db.employees.filter((employee) => canWorkStaffPosition(employee) && isEmployeeAccessActive(employee) && isEmployeeAvailableForScheduleDate(employee, date));
   }
 
   function canWorkStaffPosition(employee) {
@@ -3820,7 +3833,7 @@
       const pattern = workPatterns.find((item) => item.weekday === getWeekday(year, month, day));
       if (!pattern) continue;
       const date = toDateString(year, month, day);
-      if (!isEmployeeEmployedOnDate(employee, date)) continue;
+      if (!isEmployeeAvailableForScheduleDate(employee, date)) continue;
       if (addEmployeeScheduleForDate(targetDb, employee, date, pattern.startHour, pattern.endHour)) {
         added += 1;
       } else {
@@ -3841,7 +3854,7 @@
   }
 
   function addEmployeeScheduleForDate(targetDb, employee, date, startHour, endHour) {
-    if (!isEmployeeEmployedOnDate(employee, date)) return false;
+    if (!isEmployeeAvailableForScheduleDate(employee, date)) return false;
     if (employee.role === "staff") {
       const sameDateSchedules = targetDb.staffSchedules.filter((schedule) => schedule.date === date);
       if (sameDateSchedules.some((schedule) => schedule.staffId === employee.id) || sameDateSchedules.length >= 2) return false;
@@ -3987,14 +4000,14 @@
   function getSchedulesByDate(date) {
     return db.schedules
       .filter((schedule) => schedule.date === date)
-      .filter((schedule) => isEmployeeEmployedOnDate(getEmployee(schedule.pharmacistId), schedule.date))
+      .filter((schedule) => isEmployeeAvailableForScheduleDate(getEmployee(schedule.pharmacistId), schedule.date))
       .sort((a, b) => sortSchedulesByMonthlyPay(a, b, date.slice(0, 7)));
   }
 
   function getStaffSchedulesByDate(date) {
     return db.staffSchedules
       .filter((schedule) => schedule.date === date)
-      .filter((schedule) => isEmployeeEmployedOnDate(getEmployee(schedule.staffId), schedule.date))
+      .filter((schedule) => isEmployeeAvailableForScheduleDate(getEmployee(schedule.staffId), schedule.date))
       .sort(sortStaffSchedulesByCalendarOrder);
   }
 
@@ -4212,7 +4225,7 @@
     const assignments = rxAssignments
       .concat(staffAssignments)
       .filter(Boolean)
-      .filter((assignment) => isEmployeeEmployedOnDate(getEmployee(assignment.personId), assignment.date))
+      .filter((assignment) => isEmployeeAvailableForScheduleDate(getEmployee(assignment.personId), assignment.date))
       .sort(sortAssignments);
     assignmentsCache.set(cacheKey, assignments);
     return assignments.slice();
