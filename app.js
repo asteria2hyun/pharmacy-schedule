@@ -13,6 +13,7 @@
     "staffSchedules",
     "swapRequests",
     "holidays",
+    "authAccounts",
     "deletedScheduleSeedIds",
     "deletedStaffScheduleSeedIds",
   ];
@@ -86,6 +87,11 @@
     leaveCycleStartDate: "2025-11-01",
     leaveDates: ["2025-11-07", "2026-03-09", "2026-03-30", "2026-05-25"],
   };
+  const VIEWER_LOGIN = {
+    loginId: "1111",
+    password: "1111",
+    employeeId: "emp-minji",
+  };
 
   const app = document.querySelector("#app");
   let salaryStatsCache = new Map();
@@ -101,6 +107,7 @@
   let lastRemoteUpdatedAt = "";
   let lastRemotePayloadSnapshot = "";
   let pendingRemotePayloadSnapshot = "";
+  let pendingAuthPublish = false;
   let db = loadDb();
   let session = loadSession();
   let currentTab = "calendar";
@@ -164,6 +171,7 @@
     base.staffSchedules = Array.isArray(base.staffSchedules) ? base.staffSchedules : [];
     base.swapRequests = Array.isArray(base.swapRequests) ? base.swapRequests : [];
     base.holidays = Array.isArray(base.holidays) ? base.holidays : [];
+    base.authAccounts = normalizeAuthAccounts(base.authAccounts);
     base.auditLogs = Array.isArray(base.auditLogs) ? base.auditLogs : [];
     base.deletedScheduleSeedIds = uniqueStrings(base.deletedScheduleSeedIds);
     base.deletedStaffScheduleSeedIds = uniqueStrings(base.deletedStaffScheduleSeedIds);
@@ -202,6 +210,7 @@
       if (previousSchemaVersion < 17) {
         applyEmployeeSeedDetails(normalized);
       }
+      applyEmployeeAuthAccount(normalized, base.authAccounts[normalized.id]);
       if (!/^\d{4}-\d{2}-\d{2}$/.test(normalized.salaryEffectiveDate || "") || normalized.salaryEffectiveDate === "0000-00-00") {
         normalized.salaryEffectiveDate = "";
       }
@@ -252,8 +261,8 @@
       updatedAt: holiday.updatedAt || nowIso(),
       ...holiday,
     }));
-    ensureMonthData("2026-05", base, false);
-    ensureMonthData("2026-07", base, false);
+    ensureMonthData("2026-05", base, false, { preserveExisting: true });
+    ensureMonthData("2026-07", base, false, { preserveExisting: true });
     removeSchedulesAfterResignations(base);
     base.employees = base.employees.map((employee) => {
       employee.firstWorkStartDate = minDate(employee.firstWorkStartDate, findFirstEmployeeWorkDate(employee.id, base), employee.workStartDate);
@@ -291,6 +300,87 @@
 
   function uniqueStrings(values) {
     return Array.from(new Set((Array.isArray(values) ? values : []).map((value) => String(value || "").trim()).filter(Boolean)));
+  }
+
+  function normalizeAuthAccounts(value = {}) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+    return Object.fromEntries(
+      Object.entries(value)
+        .filter(([employeeId, auth]) => employeeId && auth && typeof auth === "object" && typeof auth.password === "string")
+        .map(([employeeId, auth]) => [
+          employeeId,
+          {
+            password: String(auth.password || ""),
+            mustChangePassword: Boolean(auth.mustChangePassword),
+            updatedAt: auth.updatedAt || "",
+          },
+        ]),
+    );
+  }
+
+  function getAuthAccountsSnapshot(authAccounts = {}) {
+    const normalized = normalizeAuthAccounts(authAccounts);
+    return JSON.stringify(Object.keys(normalized).sort().map((employeeId) => [employeeId, normalized[employeeId]]));
+  }
+
+  function mergeAuthAccounts(localAuth = {}, remoteAuth = {}) {
+    const merged = normalizeAuthAccounts(localAuth);
+    Object.entries(normalizeAuthAccounts(remoteAuth)).forEach(([employeeId, auth]) => {
+      const current = merged[employeeId];
+      if (!current || !current.updatedAt || !auth.updatedAt || auth.updatedAt >= current.updatedAt) {
+        merged[employeeId] = auth;
+      }
+    });
+    return merged;
+  }
+
+  function applyEmployeeAuthAccount(employee, auth) {
+    if (!employee || !auth?.password) return employee;
+    const localUpdatedAt = employee.passwordUpdatedAt || "";
+    const remoteUpdatedAt = auth.updatedAt || "";
+    if (!employee.password || !localUpdatedAt || !remoteUpdatedAt || remoteUpdatedAt >= localUpdatedAt) {
+      employee.password = auth.password;
+      employee.mustChangePassword = Boolean(auth.mustChangePassword);
+      employee.passwordUpdatedAt = remoteUpdatedAt || localUpdatedAt || nowIso();
+    }
+    return employee;
+  }
+
+  function setEmployeeAuth(employee, password, mustChangePassword) {
+    if (!employee?.id || !password) return;
+    const updatedAt = nowIso();
+    employee.password = password;
+    employee.mustChangePassword = Boolean(mustChangePassword);
+    employee.passwordUpdatedAt = updatedAt;
+    db.authAccounts = normalizeAuthAccounts(db.authAccounts);
+    db.authAccounts[employee.id] = {
+      password,
+      mustChangePassword: Boolean(mustChangePassword),
+      updatedAt,
+    };
+    pendingAuthPublish = true;
+  }
+
+  function syncAuthAccountFromEmployee(employee) {
+    if (!employee?.id || !employee.password) return false;
+    db.authAccounts = normalizeAuthAccounts(db.authAccounts);
+    const existing = db.authAccounts[employee.id];
+    if (
+      existing &&
+      existing.password === employee.password &&
+      existing.mustChangePassword === Boolean(employee.mustChangePassword)
+    ) {
+      return false;
+    }
+    const updatedAt = employee.passwordUpdatedAt || nowIso();
+    employee.passwordUpdatedAt = updatedAt;
+    db.authAccounts[employee.id] = {
+      password: employee.password,
+      mustChangePassword: Boolean(employee.mustChangePassword),
+      updatedAt,
+    };
+    pendingAuthPublish = true;
+    return true;
   }
 
   function loadSession() {
@@ -348,16 +438,15 @@
         lastRemoteUpdatedAt = row.updated_at || "";
         lastRemotePayloadSnapshot = getSharedDataSnapshot(row.data);
         saveDb(db, { skipRemote: true });
-        const currentSharedSnapshot = getSharedStateSnapshot(db);
-        if (currentSharedSnapshot !== lastRemotePayloadSnapshot) {
-          pendingRemotePayloadSnapshot = currentSharedSnapshot;
-          await pushRemoteScheduleState(true);
-        }
+        lastRemotePayloadSnapshot = getSharedStateSnapshot(db);
       } else {
         lastRemotePayloadSnapshot = getSharedStateSnapshot(db);
         await pushRemoteScheduleState(true);
       }
       remoteSyncReady = true;
+      if (pendingAuthPublish) {
+        scheduleRemoteScheduleSave(getSharedStateSnapshot(db));
+      }
       remoteSyncStatus = "공유중";
       startRemoteSchedulePolling();
       render();
@@ -436,6 +525,7 @@
       lastRemoteUpdatedAt = row?.updated_at || payload.savedAt || nowIso();
       lastRemotePayloadSnapshot = snapshot;
       pendingRemotePayloadSnapshot = "";
+      pendingAuthPublish = false;
       remoteSyncReady = true;
       remoteSyncStatus = "공유중";
       remoteSyncErrorShown = false;
@@ -506,6 +596,7 @@
         staffSchedules: Array.isArray(source.staffSchedules) ? source.staffSchedules : [],
         swapRequests: Array.isArray(source.swapRequests) ? source.swapRequests : [],
         holidays: Array.isArray(source.holidays) ? source.holidays : [],
+        authAccounts: normalizeAuthAccounts(source.authAccounts),
         deletedScheduleSeedIds: uniqueStrings(source.deletedScheduleSeedIds),
         deletedStaffScheduleSeedIds: uniqueStrings(source.deletedStaffScheduleSeedIds),
       }),
@@ -513,7 +604,7 @@
   }
 
   function cloneEmployeeForSharedState(employee = {}) {
-    const { password, mustChangePassword, ...sharedEmployee } = employee || {};
+    const { password, mustChangePassword, passwordUpdatedAt, ...sharedEmployee } = employee || {};
     return sharedEmployee;
   }
 
@@ -521,38 +612,54 @@
     const localEmployeesById = new Map((db.employees || []).map((employee) => [employee.id, employee]));
     return remoteEmployees.map((remoteEmployee) => {
       const localEmployee = localEmployeesById.get(remoteEmployee.id);
+      const auth = db.authAccounts?.[remoteEmployee.id];
       const fallbackPassword =
         remoteEmployee.id === "emp-bae"
           ? ADMIN_PASSWORD
-          : ASSIGNED_INITIAL_PASSWORDS[remoteEmployee.id] || generateTemporaryPassword();
+          : ASSIGNED_INITIAL_PASSWORDS[remoteEmployee.id] || LEGACY_INITIAL_PASSWORD;
       const password = localEmployee?.password || fallbackPassword;
+      const passwordUpdatedAt = localEmployee?.passwordUpdatedAt || "";
       let mustChangePassword =
         typeof localEmployee?.mustChangePassword === "boolean"
           ? localEmployee.mustChangePassword
           : remoteEmployee.id === "emp-bae"
             ? false
             : true;
-      if (remoteEmployee.id === "emp-bae") {
-        mustChangePassword = false;
-      }
-      if (ASSIGNED_INITIAL_PASSWORDS[remoteEmployee.id] && password !== ASSIGNED_INITIAL_PASSWORDS[remoteEmployee.id]) {
-        mustChangePassword = false;
-      }
-      return {
+      const mergedEmployee = {
         ...(localEmployee || {}),
         ...remoteEmployee,
         password,
         mustChangePassword,
+        passwordUpdatedAt,
       };
+      applyEmployeeAuthAccount(mergedEmployee, auth);
+      if (remoteEmployee.id === "emp-bae") {
+        mergedEmployee.mustChangePassword = false;
+      }
+      if (ASSIGNED_INITIAL_PASSWORDS[remoteEmployee.id] && mergedEmployee.password !== ASSIGNED_INITIAL_PASSWORDS[remoteEmployee.id]) {
+        mergedEmployee.mustChangePassword = false;
+      }
+      return mergedEmployee;
     });
   }
 
   function hasRemoteSharedState(data) {
-    return Boolean(data && SHARED_STATE_KEYS.some((key) => Array.isArray(data[key])));
+    return Boolean(
+      data &&
+        SHARED_STATE_KEYS.some((key) =>
+          key === "authAccounts" ? data[key] && typeof data[key] === "object" && !Array.isArray(data[key]) : Array.isArray(data[key]),
+        ),
+    );
   }
 
   function applyRemoteSharedState(shared) {
     const nextShared = cloneSharedStateCore(shared);
+    const remoteAuthAccounts = normalizeAuthAccounts(nextShared.authAccounts);
+    const mergedAuthAccounts = mergeAuthAccounts(db.authAccounts, remoteAuthAccounts);
+    if (getAuthAccountsSnapshot(mergedAuthAccounts) !== getAuthAccountsSnapshot(remoteAuthAccounts)) {
+      pendingAuthPublish = true;
+    }
+    db.authAccounts = mergedAuthAccounts;
     if (Array.isArray(shared.employees)) {
       db.employees = mergeRemoteEmployees(nextShared.employees);
     }
@@ -562,7 +669,7 @@
     db = normalizeDb(db, false);
     clearComputedCaches();
     removeSchedulesAfterResignations(db);
-    ensureMonthData(monthCursor, db, false);
+    ensureMonthData(monthCursor, db, false, { preserveExisting: true });
   }
 
   function createInitialData() {
@@ -1185,22 +1292,32 @@
     return Array.from(map, ([date, staffIds]) => ({ date, staffIds })).sort((a, b) => a.date.localeCompare(b.date));
   }
 
-  function ensureMonthData(monthKey, targetDb = db, shouldSave = true) {
+  function hasAnyScheduleInMonth(monthKey, targetDb = db) {
+    return (
+      (targetDb.schedules || []).some((schedule) => schedule.date?.startsWith(monthKey)) ||
+      (targetDb.staffSchedules || []).some((schedule) => schedule.date?.startsWith(monthKey))
+    );
+  }
+
+  function ensureMonthData(monthKey, targetDb = db, shouldSave = true, options = {}) {
     if (!monthKey) return false;
     let changed = false;
-    if (monthKey === "2026-05") {
+    const shouldPreserveExisting = Boolean(options.preserveExisting && hasAnyScheduleInMonth(monthKey, targetDb));
+    if (!shouldPreserveExisting && monthKey === "2026-05") {
       changed = mergeScheduleSeeds(targetDb, createMay2026Schedules(), "schedules") || changed;
       changed = mergeScheduleSeeds(targetDb, createMay2026StaffSchedules(), "staffSchedules") || changed;
     }
-    if (monthKey === "2026-07") {
+    if (!shouldPreserveExisting && monthKey === "2026-07") {
       changed = mergeScheduleSeeds(targetDb, createJuly2026Schedules(), "schedules") || changed;
       changed = mergeScheduleSeeds(targetDb, createJuly2026StaffSchedules(), "staffSchedules") || changed;
     }
-    if (monthKey >= "2026-08") {
+    if (!shouldPreserveExisting && monthKey >= "2026-08") {
       changed = ensureBaseMonthTemplates(monthKey, targetDb) || changed;
     }
-    const patternResult = applyEmployeePatternsForMonth(monthKey, targetDb);
-    if (patternResult.added > 0) changed = true;
+    if (!shouldPreserveExisting) {
+      const patternResult = applyEmployeePatternsForMonth(monthKey, targetDb);
+      if (patternResult.added > 0) changed = true;
+    }
     const removedByResignation = removeSchedulesAfterResignations(targetDb);
     if (removedByResignation > 0) changed = true;
     if (changed && shouldSave) saveDb(targetDb);
@@ -1308,7 +1425,7 @@
       app.innerHTML = renderPasswordSetup(user);
       return;
     }
-    ensureMonthData(monthCursor);
+    ensureMonthData(monthCursor, db, true, { preserveExisting: true });
     if ((currentTab === "admin" || currentTab === "employees") && user.role !== "admin") {
       currentTab = "calendar";
     }
@@ -2111,7 +2228,7 @@
             <span>입사일</span>
             <input class="input" name="hireDate" type="date" value="${adminSelectedDate}" />
           </label>
-          <div class="notice full">기본 직원 계정은 계정별 4자리 초기 비밀번호를 사용합니다. 신규 계정은 등록 후 표시된 번호를 직원에게 알려주세요.</div>
+          <div class="notice full">신규 직원 초기비밀번호는 1111로 설정됩니다. 첫 로그인 때 본인이 새 비밀번호를 설정합니다.</div>
           ${issuedPasswordNotice ? `<div class="notice password-notice full"><span>최근 발급 비밀번호</span><strong>${escapeHtml(issuedPasswordNotice)}</strong></div>` : ""}
           <label class="field">
             <span>구분</span>
@@ -2710,7 +2827,12 @@
     applyScheduledResignations();
     const loginId = String(data.loginId || "").trim();
     const password = String(data.password || "");
-    const employee = db.employees.find((item) => item.loginId === loginId && item.password === password);
+    let isViewerLogin = false;
+    let employee = db.employees.find((item) => item.loginId === loginId && item.password === password);
+    if (!employee && loginId === VIEWER_LOGIN.loginId && password === VIEWER_LOGIN.password) {
+      employee = getEmployee(VIEWER_LOGIN.employeeId);
+      isViewerLogin = true;
+    }
     if (!employee) {
       app.innerHTML = renderLogin("아이디 또는 비밀번호가 올바르지 않습니다.");
       return;
@@ -2718,6 +2840,9 @@
     if (!isEmployeeAccessActive(employee)) {
       app.innerHTML = renderLogin("퇴사자는 로그인 및 서비스 접근이 불가능합니다.");
       return;
+    }
+    if (!isViewerLogin && syncAuthAccountFromEmployee(employee)) {
+      saveDb();
     }
     saveSession({ userId: employee.id, loginAt: nowIso() });
     currentTab = "calendar";
@@ -2746,8 +2871,7 @@
       app.innerHTML = renderPasswordSetup(user, "임시 비밀번호는 새 비밀번호로 사용할 수 없습니다.");
       return;
     }
-    user.password = newPassword;
-    user.mustChangePassword = false;
+    setEmployeeAuth(user, newPassword, false);
     saveSession({ userId: user.id, loginAt: nowIso() });
     addAudit(user.id, `${user.name}님이 비밀번호를 설정했습니다.`);
     saveDb();
@@ -3116,7 +3240,7 @@
     }
     const roleKind = normalizeRoleKind(data.roleKind, "pharmacist");
     const roleInfo = roleKindToRoleInfo(roleKind);
-    const temporaryPassword = generateTemporaryPassword();
+    const temporaryPassword = LEGACY_INITIAL_PASSWORD;
     const employee = {
       id: makeId("emp"),
       name: String(data.name || "").trim(),
@@ -3147,6 +3271,7 @@
     employee.workStartHour = employee.workPatterns[0]?.startHour ?? 10;
     employee.workEndHour = employee.workPatterns[0]?.endHour ?? (roleInfo.role === "staff" ? 8.5 : 8);
     db.employees.push(employee);
+    setEmployeeAuth(employee, temporaryPassword, true);
     if (employee.workStartDate) ensureBaseMonthTemplates(employee.workStartDate.slice(0, 7), db);
     const result = applyEmployeeWorkPattern(employee, employee.workStartDate, employee.workPatterns);
     if (result.attempted && employee.workStartDate) {
@@ -3237,9 +3362,8 @@
   function resetEmployeePassword(id, user) {
     const employee = getEmployee(id);
     if (!employee) return showToast("직원을 찾을 수 없습니다.");
-    const temporaryPassword = ASSIGNED_INITIAL_PASSWORDS[employee.id] || generateTemporaryPassword();
-    employee.password = temporaryPassword;
-    employee.mustChangePassword = true;
+    const temporaryPassword = ASSIGNED_INITIAL_PASSWORDS[employee.id] || LEGACY_INITIAL_PASSWORD;
+    setEmployeeAuth(employee, temporaryPassword, true);
     issuedPasswordNotice = `${employee.name} / ${temporaryPassword}`;
     addAudit(user.id, `${employee.name}님 계정의 초기 비밀번호를 재설정했습니다.`);
     saveDb();
