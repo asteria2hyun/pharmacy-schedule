@@ -158,6 +158,14 @@ input:disabled {
   color: #9f1f1f;
 }
 
+.request-cancel-button.admin-cancel-button {
+  min-height: 30px;
+  border-radius: 7px;
+  padding: 5px 9px;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
 .demo-box,
 .notice,
 .empty-state {
@@ -867,15 +875,24 @@ input:disabled {
   margin-bottom: 12px;
 }
 
+.payroll-total-hero > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 10px;
+}
+
 .payroll-total-hero p {
   margin: 0;
   color: var(--muted);
   font-size: 0.82rem;
   font-weight: 850;
+  text-align: right;
 }
 
 .payroll-total-hero strong {
-  font-size: clamp(2.1rem, 8vw, 3rem);
+  text-align: right;
+  font-size: clamp(1.6rem, 6vw, 2.5rem);
 }
 
 .payroll-list {

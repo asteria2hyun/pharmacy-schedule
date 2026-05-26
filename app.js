@@ -107,6 +107,7 @@
   let monthCursor = getInitialMonthCursor();
   let adminSelectedDate = `${monthCursor}-01`;
   let selectedEmployeeId = "";
+  let selectedSwapTargetEmployeeId = "";
   let toast = "";
   let toastTimer = null;
   let issuedPasswordNotice = "";
@@ -1631,7 +1632,14 @@
     const ownOptions = getAvailableOwnSchedules(user.id)
       .map((assignment) => `<option value="${assignment.ref}">${escapeHtml(assignmentOptionLabel(assignment))}</option>`)
       .join("");
-    const targetOptions = getAvailableTargetSchedules(user.id)
+    const targetEmployees = getAvailableSwapTargetEmployees(user.id);
+    if (!targetEmployees.some((employee) => employee.id === selectedSwapTargetEmployeeId)) {
+      selectedSwapTargetEmployeeId = targetEmployees[0]?.id || "";
+    }
+    const targetEmployeeOptions = targetEmployees
+      .map((employee) => `<option value="${employee.id}" ${employee.id === selectedSwapTargetEmployeeId ? "selected" : ""}>${escapeHtml(workerOptionLabel(employee))}</option>`)
+      .join("");
+    const targetOptions = getAvailableTargetSchedules(user.id, selectedSwapTargetEmployeeId)
       .map((assignment) => `<option value="${assignment.ref}">${escapeHtml(assignmentOptionLabel(assignment, true))}</option>`)
       .join("");
     const handoffOwnOptions = getAvailableHandoffOwnSchedules(user.id)
@@ -1661,8 +1669,14 @@
                   </select>
                 </label>
                 <label class="field">
+                  <span>바꿀 상대</span>
+                  <select class="select" name="targetEmployeeId" ${targetEmployeeOptions ? "" : "disabled"} required>
+                    ${targetEmployeeOptions || `<option>선택 가능한 상대가 없습니다</option>`}
+                  </select>
+                </label>
+                <label class="field">
                   <span>바꿀 상대 근무일</span>
-                  <select class="select" name="targetScheduleId" ${targetOptions ? "" : "disabled"} required>
+                  <select class="select" name="targetScheduleId" ${targetEmployeeOptions && targetOptions ? "" : "disabled"} required>
                     ${targetOptions || `<option>선택 가능한 상대 근무가 없습니다</option>`}
                   </select>
                 </label>
@@ -1859,7 +1873,7 @@
         ${
           canCancel
             ? `<div class="button-row" style="margin-top: 10px;">
-                <button class="danger-button" type="button" data-action="cancel-request" data-id="${request.id}">${cancelLabel}</button>
+                <button class="danger-button request-cancel-button ${canAdminCancel ? "admin-cancel-button" : ""}" type="button" data-action="cancel-request" data-id="${request.id}">${cancelLabel}</button>
               </div>`
             : ""
         }
@@ -2659,6 +2673,11 @@
       syncScheduleKindFields(event.target.closest("[data-schedule-kind]"));
       return;
     }
+    if (event.target.matches('form[data-form="swap-request"] select[name="targetEmployeeId"]')) {
+      selectedSwapTargetEmployeeId = event.target.value;
+      render();
+      return;
+    }
     if (event.target.matches("[data-schedule-shift]")) {
       const id = event.target.dataset.scheduleShift;
       const range = getDefaultTimeRange(event.target.value);
@@ -2744,6 +2763,7 @@
     }
     const ownSchedule = getSwapAssignment(data.ownScheduleId);
     const targetSchedule = getSwapAssignment(data.targetScheduleId);
+    if (targetSchedule && data.targetEmployeeId && targetSchedule.personId !== data.targetEmployeeId) return showToast("선택한 상대의 근무일을 다시 선택해주세요.");
     if (!ownSchedule || !targetSchedule) return showToast("선택한 근무를 찾을 수 없습니다.");
     if (ownSchedule.personId !== user.id) return showToast("내 근무만 요청할 수 있습니다.");
     if (targetSchedule.personId === user.id) return showToast("상대 근무를 선택해주세요.");
@@ -4264,12 +4284,36 @@
       .sort(sortAssignments);
   }
 
-  function getAvailableTargetSchedules(userId) {
+  function getAvailableSwapTargetEmployees(userId) {
     const user = getEmployee(userId);
-    const assignments = getAllAssignments(monthCursor);
+    return db.employees
+      .filter((employee) => employee.id !== userId)
+      .filter((employee) => isEmployeeAccessActive(employee) && canSwapEmployees(user, employee))
+      .filter((employee) => getAvailableTargetSchedules(userId, employee.id).length)
+      .sort((a, b) => {
+        if (a.role === "admin" && b.role !== "admin") return -1;
+        if (b.role === "admin" && a.role !== "admin") return 1;
+        return a.name.localeCompare(b.name, "ko");
+      });
+  }
+
+  function getFutureSwapDateWindow() {
+    const start = getKoreaDateString();
+    const [year, month, day] = start.split("-").map(Number);
+    const endBase = new Date(Date.UTC(year, month - 1 + 2, day));
+    const end = toDateString(endBase.getUTCFullYear(), endBase.getUTCMonth() + 1, endBase.getUTCDate());
+    return { start, end };
+  }
+
+  function getAvailableTargetSchedules(userId, targetEmployeeId = "") {
+    const user = getEmployee(userId);
+    const { start, end } = getFutureSwapDateWindow();
+    const assignments = getAllAssignments("");
     const myWorkDates = new Set(assignments.filter((assignment) => assignment.personId === userId).map((assignment) => assignment.date));
     return assignments
       .filter((assignment) => assignment.personId !== userId)
+      .filter((assignment) => !targetEmployeeId || assignment.personId === targetEmployeeId)
+      .filter((assignment) => assignment.date >= start && assignment.date <= end)
       .filter((assignment) => !myWorkDates.has(assignment.date))
       .filter((assignment) => {
         const employee = getEmployee(assignment.personId);
