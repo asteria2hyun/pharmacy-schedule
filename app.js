@@ -12,6 +12,7 @@
     "schedules",
     "staffSchedules",
     "swapRequests",
+    "overseasSchedules",
     "holidays",
     "authAccounts",
     "deletedScheduleSeedIds",
@@ -90,7 +91,16 @@
   const VIEWER_LOGIN = {
     loginId: "1111",
     password: "1111",
-    employeeId: "emp-minji",
+  };
+  const OBSERVER_USER = {
+    id: "__observer__",
+    name: "옵저버",
+    loginId: VIEWER_LOGIN.loginId,
+    password: VIEWER_LOGIN.password,
+    role: "observer",
+    status: "active",
+    mustChangePassword: false,
+    viewOnly: true,
   };
 
   const app = document.querySelector("#app");
@@ -170,6 +180,7 @@
     base.schedules = Array.isArray(base.schedules) ? base.schedules : [];
     base.staffSchedules = Array.isArray(base.staffSchedules) ? base.staffSchedules : [];
     base.swapRequests = Array.isArray(base.swapRequests) ? base.swapRequests : [];
+    base.overseasSchedules = normalizeOverseasSchedules(base.overseasSchedules);
     base.holidays = Array.isArray(base.holidays) ? base.holidays : [];
     base.authAccounts = normalizeAuthAccounts(base.authAccounts);
     base.auditLogs = Array.isArray(base.auditLogs) ? base.auditLogs : [];
@@ -316,6 +327,26 @@
           },
         ]),
     );
+  }
+
+  function normalizeOverseasSchedules(value = []) {
+    if (!Array.isArray(value)) return [];
+    return value
+      .filter((item) => item && typeof item === "object")
+      .map((item) => {
+        const startDate = /^\d{4}-\d{2}-\d{2}$/.test(item.startDate || "") ? item.startDate : "";
+        const endDate = /^\d{4}-\d{2}-\d{2}$/.test(item.endDate || "") ? item.endDate : startDate;
+        return {
+          id: item.id || makeId("overseas"),
+          employeeId: item.employeeId || "",
+          startDate,
+          endDate: endDate && startDate && endDate < startDate ? startDate : endDate,
+          memo: String(item.memo || "").trim(),
+          createdAt: item.createdAt || nowIso(),
+          updatedAt: item.updatedAt || item.createdAt || nowIso(),
+        };
+      })
+      .filter((item) => item.employeeId && item.startDate && item.endDate);
   }
 
   function getAuthAccountsSnapshot(authAccounts = {}) {
@@ -595,6 +626,7 @@
         schedules: Array.isArray(source.schedules) ? source.schedules : [],
         staffSchedules: Array.isArray(source.staffSchedules) ? source.staffSchedules : [],
         swapRequests: Array.isArray(source.swapRequests) ? source.swapRequests : [],
+        overseasSchedules: normalizeOverseasSchedules(source.overseasSchedules),
         holidays: Array.isArray(source.holidays) ? source.holidays : [],
         authAccounts: normalizeAuthAccounts(source.authAccounts),
         deletedScheduleSeedIds: uniqueStrings(source.deletedScheduleSeedIds),
@@ -663,7 +695,7 @@
     if (Array.isArray(shared.employees)) {
       db.employees = mergeRemoteEmployees(nextShared.employees);
     }
-    ["schedules", "staffSchedules", "swapRequests", "holidays", "deletedScheduleSeedIds", "deletedStaffScheduleSeedIds"].forEach((key) => {
+    ["schedules", "staffSchedules", "swapRequests", "overseasSchedules", "holidays", "deletedScheduleSeedIds", "deletedStaffScheduleSeedIds"].forEach((key) => {
       if (Array.isArray(shared[key])) db[key] = nextShared[key];
     });
     db = normalizeDb(db, false);
@@ -874,6 +906,7 @@
       schedules,
       staffSchedules,
       swapRequests: [],
+      overseasSchedules: [],
       holidays,
       auditLogs: [
         {
@@ -1421,11 +1454,14 @@
       app.innerHTML = renderLogin("퇴사 상태의 계정은 로그인할 수 없습니다.");
       return;
     }
-    if (user.mustChangePassword) {
+    if (user.mustChangePassword && !user.viewOnly) {
       app.innerHTML = renderPasswordSetup(user);
       return;
     }
     ensureMonthData(monthCursor, db, true, { preserveExisting: true });
+    if (user.viewOnly && currentTab !== "calendar") {
+      currentTab = "calendar";
+    }
     if ((currentTab === "admin" || currentTab === "employees") && user.role !== "admin") {
       currentTab = "calendar";
     }
@@ -1531,6 +1567,9 @@
   }
 
   function getTabs(user) {
+    if (user?.viewOnly) {
+      return [{ id: "calendar", label: "근무표", icon: iconCalendar() }];
+    }
     const tabs = [
       { id: "calendar", label: "근무표", icon: iconCalendar() },
       { id: "salary", label: user.role === "admin" ? "급여관리" : "내 급여", icon: iconWallet() },
@@ -1736,11 +1775,13 @@
         </div>
         ${renderMonthbar()}
         ${isStaffCoverageOnly ? "" : renderWorkChangeRequestForm(user)}
+        ${canManageOverseasSchedule(user) ? renderOverseasScheduleForm(user) : ""}
         ${renderCoverageRequestForm(user)}
         ${renderIncomingRequests(user)}
         ${renderMyRequests(user)}
         ${user.role === "admin" ? renderCompletedWorkChangesPanel(user) : ""}
         ${user.role === "admin" ? renderAllRequestsPanel(user) : ""}
+        ${user.role === "admin" ? renderAdminOverseasSchedulesPanel(user) : ""}
       </section>
     `;
   }
@@ -1844,6 +1885,73 @@
           <button class="primary-button" type="submit" ${coverageOptions && admin ? "" : "disabled"}>관리자에게 요청</button>
         </form>
       </div>
+    `;
+  }
+
+  function renderOverseasScheduleForm(user) {
+    const schedules = getOverseasSchedulesForEmployee(user.id, monthCursor);
+    return `
+      <div class="panel">
+        <h2>해외일정 등록</h2>
+        <p class="item-meta">근무약사 해외일정을 등록하면 관리자가 해당 월 일정에서 확인할 수 있습니다.</p>
+        <form class="form-grid" data-form="overseas-add">
+          <label class="field">
+            <span>시작일</span>
+            <input class="input" name="startDate" type="date" value="${getKoreaDateString()}" required />
+          </label>
+          <label class="field">
+            <span>종료일</span>
+            <input class="input" name="endDate" type="date" value="${getKoreaDateString()}" required />
+          </label>
+          <label class="field full">
+            <span>메모</span>
+            <input class="input" name="memo" placeholder="예: 일본, 학회, 여행" />
+          </label>
+          <button class="primary-button full" type="submit">해외일정 등록</button>
+        </form>
+        <h3>${escapeHtml(formatMonthLabel(monthCursor))} 내 해외일정</h3>
+        ${
+          schedules.length
+            ? `<div class="list">${schedules.map((schedule) => renderOverseasScheduleItem(schedule, user)).join("")}</div>`
+            : `<div class="empty-state">해당 월에 등록된 내 해외일정이 없습니다.</div>`
+        }
+      </div>
+    `;
+  }
+
+  function renderAdminOverseasSchedulesPanel(user) {
+    const schedules = getOverseasSchedulesForMonth(monthCursor);
+    return `
+      <div class="panel">
+        <h2>해외일정 확인</h2>
+        <p class="item-meta">조회 중인 달과 하루라도 겹치는 해외일정을 모두 표시합니다.</p>
+        ${
+          schedules.length
+            ? `<div class="list">${schedules.map((schedule) => renderOverseasScheduleItem(schedule, user, true)).join("")}</div>`
+            : `<div class="empty-state">해당 월에 겹치는 해외일정이 없습니다.</div>`
+        }
+      </div>
+    `;
+  }
+
+  function renderOverseasScheduleItem(schedule, user, adminMode = false) {
+    const employee = getEmployee(schedule.employeeId);
+    const canDelete = user?.role === "admin" || user?.id === schedule.employeeId;
+    return `
+      <article class="list-item overseas-item">
+        <div class="item-title">
+          <span>${escapeHtml(employee?.name || "알 수 없음")}</span>
+          <span class="status-pill status-pending">해외</span>
+        </div>
+        <div class="overseas-range">${escapeHtml(getOverseasRangeLabel(schedule))}</div>
+        ${schedule.memo ? `<div class="item-meta">${escapeHtml(schedule.memo)}</div>` : ""}
+        ${adminMode ? `<div class="item-meta">등록일: ${formatDateTime(schedule.createdAt)}</div>` : ""}
+        ${
+          canDelete
+            ? `<div class="button-row overseas-actions"><button class="danger-button request-cancel-button admin-cancel-button" type="button" data-action="delete-overseas" data-id="${schedule.id}">삭제</button></div>`
+            : ""
+        }
+      </article>
     `;
   }
 
@@ -2705,6 +2813,7 @@
     if (formType === "coverage-request") return createCoverageRequest(data, user);
     if (formType === "swap-request") return createSwapRequest(data, user);
     if (formType === "handoff-request") return createHandoffRequest(data, user);
+    if (formType === "overseas-add") return addOverseasSchedule(data, user);
     if (formType === "leave-add") return addLeaveDate(data, user);
     if (user.role !== "admin") return showToast("관리자만 처리할 수 있습니다.");
     if (formType === "employee-add") return addEmployee(data, user);
@@ -2760,6 +2869,7 @@
     if (action === "approve-request") return approveRequest(id, user);
     if (action === "reject-request") return rejectRequest(id, user);
     if (action === "cancel-request") return cancelRequest(id, user);
+    if (action === "delete-overseas") return deleteOverseasSchedule(id, user);
     if (action === "delete-leave") return deleteLeaveDate(actionButton.dataset.date, user);
     if (user.role !== "admin") return showToast("관리자만 처리할 수 있습니다.");
     if (action === "select-employee") {
@@ -2828,10 +2938,12 @@
     const loginId = String(data.loginId || "").trim();
     const password = String(data.password || "");
     let isViewerLogin = false;
-    let employee = db.employees.find((item) => item.loginId === loginId && item.password === password);
-    if (!employee && loginId === VIEWER_LOGIN.loginId && password === VIEWER_LOGIN.password) {
-      employee = getEmployee(VIEWER_LOGIN.employeeId);
+    let employee = null;
+    if (loginId === VIEWER_LOGIN.loginId && password === VIEWER_LOGIN.password) {
+      employee = OBSERVER_USER;
       isViewerLogin = true;
+    } else {
+      employee = db.employees.find((item) => item.loginId === loginId && item.password === password);
     }
     if (!employee) {
       app.innerHTML = renderLogin("아이디 또는 비밀번호가 올바르지 않습니다.");
@@ -2849,7 +2961,7 @@
     monthCursor = getKoreaMonthKey();
     adminSelectedDate = getKoreaDateString();
     requestTodayFocus();
-    if (employee.mustChangePassword) {
+    if (employee.mustChangePassword && !employee.viewOnly) {
       render();
       return;
     }
@@ -2954,6 +3066,38 @@
     addAudit(user.id, `${user.name}님이 ${target.name}님에게 근무 넘기기를 요청했습니다.`);
     saveDb();
     showToast("근무 넘기기 요청을 보냈습니다.");
+  }
+
+  function addOverseasSchedule(data, user) {
+    if (!canManageOverseasSchedule(user)) return showToast("해외일정은 관리자와 근무약사만 등록할 수 있습니다.");
+    const startDate = String(data.startDate || "");
+    const endDate = String(data.endDate || startDate);
+    if (!isDateString(startDate) || !isDateString(endDate)) return showToast("해외일정 시작일과 종료일을 선택해주세요.");
+    if (endDate < startDate) return showToast("종료일은 시작일보다 빠를 수 없습니다.");
+    db.overseasSchedules = normalizeOverseasSchedules(db.overseasSchedules);
+    db.overseasSchedules.push({
+      id: makeId("overseas"),
+      employeeId: user.id,
+      startDate,
+      endDate,
+      memo: String(data.memo || "").trim(),
+      createdAt: nowIso(),
+      updatedAt: nowIso(),
+    });
+    addAudit(user.id, `${user.name}님이 ${getOverseasRangeLabel({ startDate, endDate })} 해외일정을 등록했습니다.`);
+    saveDb();
+    showToast("해외일정을 등록했습니다.");
+  }
+
+  function deleteOverseasSchedule(id, user) {
+    const schedule = db.overseasSchedules.find((item) => item.id === id);
+    if (!schedule) return showToast("해외일정을 찾을 수 없습니다.");
+    if (user.role !== "admin" && schedule.employeeId !== user.id) return showToast("본인 해외일정만 삭제할 수 있습니다.");
+    const employee = getEmployee(schedule.employeeId);
+    db.overseasSchedules = db.overseasSchedules.filter((item) => item.id !== id);
+    addAudit(user.id, `${employee?.name || "직원"}님의 ${getOverseasRangeLabel(schedule)} 해외일정을 삭제했습니다.`);
+    saveDb();
+    showToast("해외일정을 삭제했습니다.");
   }
 
   function createCoverageRequest(data, user) {
@@ -3587,6 +3731,7 @@
 
   function getCurrentUser() {
     if (!session?.userId) return null;
+    if (session.userId === OBSERVER_USER.id) return OBSERVER_USER;
     return getEmployee(session.userId) || null;
   }
 
@@ -4822,6 +4967,32 @@
   function getMonthEndDate(monthKey) {
     const [year, month] = monthKey.split("-").map(Number);
     return `${monthKey}-${pad(getDaysInMonth(year, month))}`;
+  }
+
+  function isDateString(value) {
+    return /^\d{4}-\d{2}-\d{2}$/.test(value || "");
+  }
+
+  function canManageOverseasSchedule(user) {
+    return Boolean(user && ["admin", "pharmacist"].includes(user.role));
+  }
+
+  function getOverseasSchedulesForMonth(monthKey) {
+    const monthStart = `${monthKey}-01`;
+    const monthEnd = getMonthEndDate(monthKey);
+    return normalizeOverseasSchedules(db.overseasSchedules)
+      .filter((schedule) => schedule.startDate <= monthEnd && schedule.endDate >= monthStart)
+      .sort((a, b) => a.startDate.localeCompare(b.startDate) || a.endDate.localeCompare(b.endDate));
+  }
+
+  function getOverseasSchedulesForEmployee(employeeId, monthKey) {
+    return getOverseasSchedulesForMonth(monthKey).filter((schedule) => schedule.employeeId === employeeId);
+  }
+
+  function getOverseasRangeLabel(schedule) {
+    if (!schedule) return "";
+    if (schedule.startDate === schedule.endDate) return formatFullDate(schedule.startDate);
+    return `${formatFullDate(schedule.startDate)} ~ ${formatFullDate(schedule.endDate)}`;
   }
 
   function toDateString(year, month, day) {

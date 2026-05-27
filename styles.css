@@ -1070,6 +1070,26 @@ input:disabled {
   font-size: 0.9rem;
 }
 
+.overseas-item {
+  border-color: #cfe3da;
+  background: #fbfffd;
+}
+
+.overseas-range {
+  margin-top: 8px;
+  border-radius: var(--radius);
+  background: var(--surface-soft);
+  color: var(--brand-strong);
+  padding: 9px 10px;
+  font-size: 0.94rem;
+  font-weight: 900;
+}
+
+.overseas-actions {
+  margin-top: 8px;
+  justify-content: flex-end;
+}
+
 .two-column {
   display: grid;
   grid-template-columns: 1fr;
