@@ -650,6 +650,19 @@ input:disabled {
   color: #827ba0;
 }
 
+.person-name {
+  min-width: 0;
+}
+
+.changed-star {
+  margin-left: 1px;
+  color: #d83434;
+  font-size: 0.72em;
+  font-weight: 950;
+  line-height: 0;
+  vertical-align: super;
+}
+
 .person-time {
   display: inline-block;
   margin-left: 3px;
@@ -674,6 +687,10 @@ input:disabled {
   color: #7b4a00;
   font-weight: 950;
   box-shadow: inset 0 0 0 1px rgba(156, 101, 19, 0.32);
+}
+
+.person-row.pending-swap-person .person-name {
+  flex: 1 1 auto;
 }
 
 .person-row.needs-my-approval {

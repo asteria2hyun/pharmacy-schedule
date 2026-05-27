@@ -1686,13 +1686,14 @@
     const pendingForMe = pendingSwap && pendingSwap.targetId === user.id;
     const name = employee ? employee.name : "알 수 없음";
     const statusMark = employee && employee.status === "resigned" ? " (퇴사)" : "";
+    const changedMark = isChangedSchedule(schedule, "rx") ? renderChangedScheduleMark() : "";
     const timeLabel = schedule.pharmacistId === "emp-bae" ? SHIFT_META[schedule.shiftType]?.label : getScheduleTimeLabel(schedule);
     const timeMark =
       schedule.pharmacistId !== "emp-bae" && timeLabel !== SHIFT_META[schedule.shiftType]?.label
         ? `<span class="person-time">${escapeHtml(timeLabel)}</span>`
         : "";
     return `<div class="person-row ${isMine ? "mine" : ""} ${pendingSwap ? "pending-swap-person" : ""} ${pendingForMe ? "needs-my-approval" : ""}">
-      ${escapeHtml(name)}${statusMark}${timeMark}${pendingSwap ? `<span class="swap-badge">${pendingForMe ? "승인필요" : "교체대기"}</span>` : ""}
+      <span class="person-name">${escapeHtml(name)}${changedMark}${statusMark}</span>${timeMark}${pendingSwap ? `<span class="swap-badge">${pendingForMe ? "승인필요" : "교체대기"}</span>` : ""}
     </div>`;
   }
 
@@ -1714,9 +1715,47 @@
     const pendingForMe = pendingSwap && pendingSwap.targetId === user.id;
     const name = employee ? employee.name : "알 수 없음";
     const statusMark = employee && employee.status === "resigned" ? " (퇴사)" : "";
+    const changedMark = isChangedSchedule(schedule, "staff") ? renderChangedScheduleMark() : "";
     return `<div class="person-row staff-person ${isMine ? "mine" : ""} ${pendingSwap ? "pending-swap-person" : ""} ${pendingForMe ? "needs-my-approval" : ""}">
-      ${escapeHtml(name)}${statusMark}${pendingSwap ? `<span class="swap-badge">${pendingForMe ? "승인필요" : "교체대기"}</span>` : ""}
+      <span class="person-name">${escapeHtml(name)}${changedMark}${statusMark}</span>${pendingSwap ? `<span class="swap-badge">${pendingForMe ? "승인필요" : "교체대기"}</span>` : ""}
     </div>`;
+  }
+
+  function renderChangedScheduleMark() {
+    return `<sup class="changed-star" title="변경된 근무">*</sup>`;
+  }
+
+  function isChangedSchedule(schedule, type) {
+    if (!schedule) return false;
+    if (isManuallyChangedSchedule(schedule, type)) return true;
+    return hasApprovedChangeForSchedule(schedule, type);
+  }
+
+  function isManuallyChangedSchedule(schedule, type) {
+    if (!schedule.changedAt) return false;
+    const original = schedule.changeOriginal;
+    if (!original || typeof original !== "object") return true;
+    const current = type === "staff" ? snapshotStaffSchedule(schedule) : snapshotRxSchedule(schedule);
+    return JSON.stringify(original) !== JSON.stringify(current);
+  }
+
+  function hasApprovedChangeForSchedule(schedule, type) {
+    const ref = `${type === "staff" ? "staff" : "rx"}:${schedule.id}`;
+    const currentOwnerId = type === "staff" ? schedule.staffId : schedule.pharmacistId;
+    return db.swapRequests.some((request) => {
+      if (!request || request.status !== "approved" || request.type === "leave") return false;
+      const requesterRef = normalizeAssignmentRef(request.requesterScheduleId);
+      const targetRef = normalizeAssignmentRef(request.targetScheduleId);
+      if (requesterRef === ref) {
+        const originalOwnerId = request.requesterOriginalPharmacistId || request.requesterId;
+        return currentOwnerId !== originalOwnerId;
+      }
+      if (targetRef === ref) {
+        const originalOwnerId = request.targetOriginalPharmacistId || request.targetId;
+        return currentOwnerId !== originalOwnerId;
+      }
+      return false;
+    });
   }
 
   function shouldShowRxScheduleOnCalendar(user, schedule) {
@@ -3605,10 +3644,12 @@
     schedule.pharmacistId = select.value;
     schedule.startHour = parseHourValue(startSelect?.value, defaults.start);
     schedule.endHour = parseHourValue(endSelect?.value, defaults.end);
+    const after = snapshotRxSchedule(schedule);
+    if (isScheduleSnapshotChanged(before, after)) markManualScheduleChange(schedule, "rx", before, user.id);
     addAudit(
       user.id,
       `${formatDate(schedule.date)} 근무를 수정했습니다.`,
-      describeScheduleChange(before, snapshotRxSchedule(schedule), "rx"),
+      describeScheduleChange(before, after, "rx"),
     );
     saveDb();
     showToast("근무자를 저장했습니다.");
@@ -3645,10 +3686,12 @@
     schedule.startHour = parseHourValue(startSelect?.value, getDefaultTimeRange("staff").start);
     schedule.endHour = parseHourValue(endSelect?.value, getDefaultTimeRange("staff").end);
     schedule.hours = getStaffScheduleHours(schedule);
+    const after = snapshotStaffSchedule(schedule);
+    if (isScheduleSnapshotChanged(before, after)) markManualScheduleChange(schedule, "staff", before, user.id);
     addAudit(
       user.id,
       `${formatDate(schedule.date)} 직원 근무를 수정했습니다.`,
-      describeScheduleChange(before, snapshotStaffSchedule(schedule), "staff"),
+      describeScheduleChange(before, after, "staff"),
     );
     saveDb();
     showToast("직원근무자를 저장했습니다.");
@@ -4251,6 +4294,19 @@
       endHour: schedule.endHour,
       hours: schedule.hours,
     };
+  }
+
+  function isScheduleSnapshotChanged(before, after) {
+    return JSON.stringify(before || {}) !== JSON.stringify(after || {});
+  }
+
+  function markManualScheduleChange(schedule, type, before, userId) {
+    if (!schedule.changeOriginal || typeof schedule.changeOriginal !== "object") {
+      schedule.changeOriginal = before;
+    }
+    schedule.changedAt = nowIso();
+    schedule.changedBy = userId || "";
+    schedule.changeType = type === "staff" ? "staff-manual" : "rx-manual";
   }
 
   function describeScheduleChange(before, after, type) {
