@@ -102,6 +102,20 @@
     mustChangePassword: false,
     viewOnly: true,
   };
+  // 옵저버 전용 가짜 급여 통계. 실제 직원 급여를 노출하지 않으려고 그럴듯한 고정 샘플값을 쓴다.
+  const OBSERVER_SALARY_STATS = {
+    totalCount: 12,
+    tenCount: 8,
+    eightCount: 4,
+    staffCount: 0,
+    totalHours: 136,
+    weekdayHours: 96,
+    weekendHours: 40,
+    weekdayPay: 3072000,
+    weekendPay: 1480000,
+    fixedPay: 0,
+    totalPay: 4552000,
+  };
 
   const app = document.querySelector("#app");
   let salaryStatsCache = new Map();
@@ -1459,7 +1473,8 @@
       return;
     }
     ensureMonthData(monthCursor, db, true, { preserveExisting: true });
-    if (user.viewOnly && currentTab !== "calendar") {
+    // 옵저버는 근무약사와 동일하게 근무표/근무변경/급여 탭만 허용한다.
+    if (user.viewOnly && !["calendar", "swap", "salary"].includes(currentTab)) {
       currentTab = "calendar";
     }
     if ((currentTab === "admin" || currentTab === "employees") && user.role !== "admin") {
@@ -1468,7 +1483,7 @@
     if (currentTab === "leave" && employeeCategory(user) !== "staff1") {
       currentTab = "calendar";
     }
-    if (currentTab === "swap" && !["admin", "pharmacist", "staff"].includes(user.role)) {
+    if (currentTab === "swap" && !["admin", "pharmacist", "staff"].includes(user.role) && !user.viewOnly) {
       currentTab = "calendar";
     }
     const tabs = getTabs(user);
@@ -1568,7 +1583,12 @@
 
   function getTabs(user) {
     if (user?.viewOnly) {
-      return [{ id: "calendar", label: "근무표", icon: iconCalendar() }];
+      // 옵저버는 근무약사와 동일한 탭 구성(근무표/근무변경/내 급여)을 본다.
+      return [
+        { id: "calendar", label: "근무표", icon: iconCalendar() },
+        { id: "swap", label: "근무 변경", icon: iconSwap() },
+        { id: "salary", label: "내 급여", icon: iconWallet() },
+      ];
     }
     const tabs = [
       { id: "calendar", label: "근무표", icon: iconCalendar() },
@@ -1727,8 +1747,31 @@
 
   function isChangedSchedule(schedule, type) {
     if (!schedule) return false;
+    // 지난 일정은 변경 표시하지 않고, 오늘 이후 일정만 체크한다.
+    if (schedule.date && schedule.date < getKoreaDateString()) return false;
+    // 기본 근무(요일/시간)와 다르면 사유(교환·넘기기·관리자 입력)와 무관하게 변경으로 본다.
+    if (isOffRoutineSchedule(schedule, type)) return true;
     if (isManuallyChangedSchedule(schedule, type)) return true;
     return hasApprovedChangeForSchedule(schedule, type);
+  }
+
+  // 직원관리에 등록된 요일별 기본 근무를 기준으로, 실제 근무가 다르면 변경(별표)으로 본다.
+  // 약사·직원 구분 없이 동일하게 적용한다. 기본 근무가 등록되지 않은 사람(예: 관리자 배주성)은
+  // 근무에 들어가면 항상 변경으로 표시한다.
+  function isOffRoutineSchedule(schedule, type) {
+    if (!schedule || !schedule.date) return false;
+    const employeeId = type === "staff" ? schedule.staffId : schedule.pharmacistId;
+    const employee = getEmployee(employeeId);
+    if (!employee) return false;
+    const patterns = Array.isArray(employee.workPatterns) ? employee.workPatterns : [];
+    if (!patterns.length) return true; // 기본 근무 미등록(배주성 등) → 근무하면 항상 별표
+    const [year, month, day] = schedule.date.split("-").map(Number);
+    if (!year || !month || !day) return false;
+    const weekday = getWeekday(year, month, day);
+    const pattern = patterns.find((item) => item.weekday === weekday);
+    if (!pattern) return true; // 기본 근무 요일이 아닌 날 근무 → 변경
+    const actual = getScheduleTimeRange(schedule, type);
+    return actual.start !== pattern.startHour || actual.end !== pattern.endHour; // 시간 변경
   }
 
   function isManuallyChangedSchedule(schedule, type) {
@@ -2149,8 +2192,11 @@
     if (user.role === "admin") {
       return renderAdminSalary(user);
     }
-    const stats = getSalaryStats(user.id, monthCursor);
-    const salaryConfig = getSalaryConfigForDate(user, getMonthEndDate(monthCursor));
+    // 옵저버는 실제 직원 급여 대신 그럴듯한 가짜 통계만 본다.
+    const stats = user.viewOnly ? OBSERVER_SALARY_STATS : getSalaryStats(user.id, monthCursor);
+    const salaryConfig = user.viewOnly
+      ? { salaryType: "hourly", weekdayHourlyRate: 32000, weekendHourlyRate: 37000, monthlySalary: 0 }
+      : getSalaryConfigForDate(user, getMonthEndDate(monthCursor));
     return `
       <section>
         <div class="page-head">
@@ -2181,7 +2227,7 @@
             ${stats.eightCount ? `<div class="metric compact"><span>10-8</span><strong>${stats.eightCount}회</strong></div>` : ""}
             ${stats.staffCount ? `<div class="metric compact"><span>직원 근무</span><strong>${stats.staffCount}회</strong></div>` : ""}
           </div>
-          <p class="item-meta">${salaryBasisText(user)} 기준입니다. 근무시간을 수정하면 선택한 시작/종료 시간 기준으로 계산합니다.</p>
+          <p class="item-meta">${user.viewOnly ? "시급 평일 32,000원 / 주말·공휴일 37,000원" : salaryBasisText(user)} 기준입니다. 근무시간을 수정하면 선택한 시작/종료 시간 기준으로 계산합니다.</p>
         </div>
       </section>
     `;
@@ -2848,6 +2894,7 @@
     if (formType === "login") return login(data);
     const user = getCurrentUser();
     if (!user) return;
+    if (user.viewOnly) return showToast("옵저버는 조회 전용입니다.");
     if (formType === "password-setup") return setupPassword(data, user);
     if (formType === "coverage-request") return createCoverageRequest(data, user);
     if (formType === "swap-request") return createSwapRequest(data, user);
@@ -2905,6 +2952,7 @@
       return;
     }
     if (!user) return;
+    if (user.viewOnly) return showToast("옵저버는 조회 전용입니다.");
     if (action === "approve-request") return approveRequest(id, user);
     if (action === "reject-request") return rejectRequest(id, user);
     if (action === "cancel-request") return cancelRequest(id, user);
@@ -2931,6 +2979,7 @@
 
   function handleChange(event) {
     if (!app.contains(event.target)) return;
+    if (getCurrentUser()?.viewOnly) return; // 옵저버는 조회 전용: 폼 상태 변경도 막는다.
     if (event.target.matches('[name="roleKind"]')) {
       syncRoleKindFields(event.target.closest("[data-role-kind]"));
       return;
