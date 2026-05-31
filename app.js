@@ -1749,31 +1749,55 @@
     if (!schedule) return false;
     // 지난 일정은 변경 표시하지 않고, 오늘 이후 일정만 체크한다.
     if (schedule.date && schedule.date < getKoreaDateString()) return false;
-    // 기본 근무(요일/시간)와 다르면 사유(교환·넘기기·관리자 입력)와 무관하게 변경으로 본다.
-    if (isOffRoutineSchedule(schedule, type)) return true;
+    // 기본 근무가 등록되지 않은 사람(예: 관리자 배주성)은 근무에 들어가면 항상 변경으로 본다.
+    const ownerId = type === "staff" ? schedule.staffId : schedule.pharmacistId;
+    const owner = getEmployee(ownerId);
+    if (owner && !(Array.isArray(owner.workPatterns) && owner.workPatterns.length)) return true;
+    // 사진 기준으로 박힌 달(2026-05~07)은 변경 기록이 없으므로 그 달 최초 세팅(시드)과 직접 비교한다.
+    if (isSeedDifferentFromBaseline(schedule, type)) return true;
+    // 그 외(요일 패턴으로 자동 생성되는 달)는 교환·넘기기·대체·관리자수정 기록으로만 변경을 판정한다.
     if (isManuallyChangedSchedule(schedule, type)) return true;
     return hasApprovedChangeForSchedule(schedule, type);
   }
 
-  // 직원관리에 등록된 요일별 기본 근무를 기준으로, 실제 근무가 다르면 변경(별표)으로 본다.
-  // 약사·직원 구분 없이 동일하게 적용한다. 기본 근무가 등록되지 않은 사람(예: 관리자 배주성)은
-  // 근무에 들어가면 항상 변경으로 표시한다.
-  function isOffRoutineSchedule(schedule, type) {
+  // 사진 기준으로 세팅된 달(2026-05~07)의 시드(최초 배정) 베이스라인. 한 번 만들어 캐시한다.
+  const seedRxBaselineCache = new Map();
+  const seedStaffBaselineCache = new Map();
+  function getSeedRxBaseline(monthKey) {
+    if (seedRxBaselineCache.has(monthKey)) return seedRxBaselineCache.get(monthKey);
+    let rows = null;
+    if (monthKey === "2026-05") rows = createMay2026Schedules();
+    else if (monthKey === "2026-06") rows = createJune2026Schedules();
+    else if (monthKey === "2026-07") rows = createJuly2026Schedules();
+    const map = rows ? new Map(rows.map((row) => [row.id, row])) : null;
+    seedRxBaselineCache.set(monthKey, map);
+    return map;
+  }
+  function getSeedStaffBaseline(monthKey) {
+    if (seedStaffBaselineCache.has(monthKey)) return seedStaffBaselineCache.get(monthKey);
+    let rows = null;
+    if (monthKey === "2026-05") rows = createMay2026StaffSchedules();
+    else if (monthKey === "2026-06") rows = createJune2026StaffSchedules();
+    else if (monthKey === "2026-07") rows = createJuly2026StaffSchedules();
+    const map = rows ? new Map(rows.map((row) => [row.id, row])) : null;
+    seedStaffBaselineCache.set(monthKey, map);
+    return map;
+  }
+
+  // 사진 기준 시드(최초 배정)와 현재 배정이 다르면 변경으로 본다. 시드달(2026-05~07)이 아니면 false.
+  function isSeedDifferentFromBaseline(schedule, type) {
     if (!schedule || !schedule.date) return false;
-    const employeeId = type === "staff" ? schedule.staffId : schedule.pharmacistId;
-    const employee = getEmployee(employeeId);
-    if (!employee) return false;
-    const patterns = Array.isArray(employee.workPatterns) ? employee.workPatterns : [];
-    if (!patterns.length) return true; // 기본 근무 미등록(배주성 등) → 근무하면 항상 별표
-    const [year, month, day] = schedule.date.split("-").map(Number);
-    if (!year || !month || !day) return false;
-    const weekday = getWeekday(year, month, day);
-    const pattern = patterns.find((item) => item.weekday === weekday);
-    if (!pattern) return true; // 기본 근무 요일이 아닌 날 근무 → 변경
-    // 시간 비교: 근무종류(10-10/10-8)별 기본시간을 fallback으로 써야 한다.
-    // (type "rx"/"staff"를 그대로 넘기면 기본시간이 10-10으로 잡혀 10-8 근무가 전부 오탐된다.)
-    const actual = getScheduleTimeRange(schedule, type === "staff" ? "staff" : schedule.shiftType);
-    return actual.start !== pattern.startHour || actual.end !== pattern.endHour; // 시간 변경
+    const monthKey = schedule.date.slice(0, 7);
+    const baseline = type === "staff" ? getSeedStaffBaseline(monthKey) : getSeedRxBaseline(monthKey);
+    if (!baseline) return false; // 시드달이 아님(자동 생성 달)
+    const base = baseline.get(schedule.id);
+    if (!base) return true; // 시드에 없던 근무(추가 배정) → 변경
+    if (type === "staff") return base.staffId !== schedule.staffId; // 직원: 사람 변경
+    if (base.pharmacistId !== schedule.pharmacistId) return true; // 약사: 사람 변경
+    if (base.shiftType !== schedule.shiftType) return true; // 근무 종류(10-10/10-8) 변경
+    const actual = getScheduleTimeRange(schedule, schedule.shiftType);
+    const baseTime = getDefaultTimeRange(base.shiftType);
+    return actual.start !== baseTime.start || actual.end !== baseTime.end; // 시간 변경
   }
 
   function isManuallyChangedSchedule(schedule, type) {
