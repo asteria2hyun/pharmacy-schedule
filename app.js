@@ -1770,7 +1770,9 @@
     const weekday = getWeekday(year, month, day);
     const pattern = patterns.find((item) => item.weekday === weekday);
     if (!pattern) return true; // 기본 근무 요일이 아닌 날 근무 → 변경
-    const actual = getScheduleTimeRange(schedule, type);
+    // 시간 비교: 근무종류(10-10/10-8)별 기본시간을 fallback으로 써야 한다.
+    // (type "rx"/"staff"를 그대로 넘기면 기본시간이 10-10으로 잡혀 10-8 근무가 전부 오탐된다.)
+    const actual = getScheduleTimeRange(schedule, type === "staff" ? "staff" : schedule.shiftType);
     return actual.start !== pattern.startHour || actual.end !== pattern.endHour; // 시간 변경
   }
 
