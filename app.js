@@ -1754,19 +1754,26 @@
     return `<sup class="changed-star" title="변경된 근무">*</sup>`;
   }
 
+  // 별표 판정: 직원관리에 세팅된 요일별 근무(workPatterns)가 유일한 기준이다.
+  // - 기준 근무와 요일/시간이 다르면 별표
+  // - 직원관리에 기본 근무가 없는 사람(관리자 배주성 등)은 근무에 들어가면 항상 별표
+  // - 약사·직원 구분 없이 동일 적용, 오늘 이후 일정만 표시
   function isChangedSchedule(schedule, type) {
-    if (!schedule) return false;
-    // 지난 일정은 변경 표시하지 않고, 오늘 이후 일정만 체크한다.
-    if (schedule.date && schedule.date < getKoreaDateString()) return false;
-    // 기본 근무가 등록되지 않은 사람(예: 관리자 배주성)은 근무에 들어가면 항상 변경으로 본다.
+    if (!schedule || !schedule.date) return false;
+    if (schedule.date < getKoreaDateString()) return false; // 지난 일정 제외
     const ownerId = type === "staff" ? schedule.staffId : schedule.pharmacistId;
-    const owner = getEmployee(ownerId);
-    if (owner && !(Array.isArray(owner.workPatterns) && owner.workPatterns.length)) return true;
-    // 사진 기준으로 박힌 달(2026-05~07)은 변경 기록이 없으므로 그 달 최초 세팅(시드)과 직접 비교한다.
-    if (isSeedDifferentFromBaseline(schedule, type)) return true;
-    // 그 외(요일 패턴으로 자동 생성되는 달)는 교환·넘기기·대체·관리자수정 기록으로만 변경을 판정한다.
-    if (isManuallyChangedSchedule(schedule, type)) return true;
-    return hasApprovedChangeForSchedule(schedule, type);
+    const employee = getEmployee(ownerId);
+    if (!employee) return false;
+    const patterns = Array.isArray(employee.workPatterns) ? employee.workPatterns : [];
+    if (!patterns.length) return true; // 기본 근무 미등록 → 항상 별표
+    const [year, month, day] = schedule.date.split("-").map(Number);
+    if (!year || !month || !day) return false;
+    const weekday = getWeekday(year, month, day);
+    const pattern = patterns.find((item) => item.weekday === weekday);
+    if (!pattern) return true; // 기본 근무 요일이 아닌 날 근무 → 별표
+    // staff는 fallback을 "staff"로 줘야 기본시간(10-8:30)으로 정확히 비교된다.
+    const actual = getScheduleTimeRange(schedule, type === "staff" ? "staff" : schedule.shiftType);
+    return actual.start !== pattern.startHour || actual.end !== pattern.endHour; // 시간 다름 → 별표
   }
 
   // 사진 기준으로 세팅된 달(2026-05~07)의 시드(최초 배정) 베이스라인. 한 번 만들어 캐시한다.
