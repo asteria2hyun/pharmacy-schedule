@@ -663,6 +663,17 @@ input:disabled {
   vertical-align: super;
 }
 
+.calendar-legend {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.74rem;
+  line-height: 1.3;
+}
+
+.calendar-legend .changed-star {
+  vertical-align: baseline;
+}
+
 .person-time {
   display: inline-block;
   margin-left: 3px;

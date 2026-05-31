@@ -1504,8 +1504,9 @@
           ${tabs
             .map(
               (tab) => `
-                <button class="tab-button ${currentTab === tab.id ? "active" : ""}" type="button" data-tab="${tab.id}" aria-label="${tab.label}">
+                <button class="tab-button ${currentTab === tab.id ? "active" : ""}" type="button" data-tab="${tab.id}" aria-label="${tab.label}${tab.badge ? ` 승인대기 ${tab.badge}건` : ""}">
                   ${tab.icon}
+                  ${tab.badge ? `<span class="tab-badge">${tab.badge > 99 ? "99+" : tab.badge}</span>` : ""}
                   <span>${tab.label}</span>
                 </button>
               `,
@@ -1581,6 +1582,12 @@
     return renderCalendar(user);
   }
 
+  // 내가 승인해야 할(나에게 온) 대기중 요청 수. renderIncomingRequests와 동일 기준. 옵저버는 0.
+  function getPendingRequestCountForUser(user) {
+    if (!user || user.viewOnly) return 0;
+    return db.swapRequests.filter((request) => request.targetId === user.id && request.status === "pending").length;
+  }
+
   function getTabs(user) {
     if (user?.viewOnly) {
       // 옵저버는 근무약사와 동일한 탭 구성(근무표/근무변경/내 급여)을 본다.
@@ -1590,12 +1597,13 @@
         { id: "salary", label: "내 급여", icon: iconWallet() },
       ];
     }
+    const pendingCount = getPendingRequestCountForUser(user);
     const tabs = [
       { id: "calendar", label: "근무표", icon: iconCalendar() },
       { id: "salary", label: user.role === "admin" ? "급여관리" : "내 급여", icon: iconWallet() },
     ];
     if (["admin", "pharmacist", "staff"].includes(user.role)) {
-      tabs.splice(1, 0, { id: "swap", label: user.role === "admin" ? "근무 변경 관리" : "근무 변경", icon: iconSwap() });
+      tabs.splice(1, 0, { id: "swap", label: user.role === "admin" ? "근무 변경 관리" : "근무 변경", icon: iconSwap(), badge: pendingCount });
     }
     if (employeeCategory(user) === "staff1") {
       tabs.push({ id: "leave", label: "연차관리", icon: iconCalendar() });
