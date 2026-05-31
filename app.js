@@ -1647,6 +1647,7 @@
           ${blanks.join("")}
           ${cells.join("")}
         </div>
+        <p class="calendar-legend"><sup class="changed-star">*</sup> 표시는 기본 근무와 달라진(교환·넘기기·대체·수정) 근무입니다.</p>
       </section>
     `;
   }
