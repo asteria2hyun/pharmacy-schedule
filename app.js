@@ -1632,7 +1632,7 @@
               <h1>월별 근무표</h1>
             </div>
           </div>
-          ${renderMonthbar()}
+          ${renderMonthbar({ showToday: true })}
           <div class="weekdays" aria-hidden="true">
             <div class="weekday sun">일</div>
             <div class="weekday">월</div>
@@ -1866,13 +1866,20 @@
     return actual.start === defaults.start && actual.end === defaults.end;
   }
 
-  function renderMonthbar() {
+  function renderMonthbar(options = {}) {
     const [year, month] = monthCursor.split("-").map(Number);
+    // 근무표 달력에서만 '오늘' 버튼을 노출한다. 이미 이번 달을 보고 있으면 흐리게(비활성) 표시.
+    const showToday = Boolean(options.showToday);
+    const isCurrentMonth = monthCursor === getKoreaMonthKey();
+    const todayButton = showToday
+      ? `<button class="today-button${isCurrentMonth ? " is-current" : ""}" type="button" data-action="month-today" aria-label="오늘로 이동"${isCurrentMonth ? " disabled" : ""}>오늘</button>`
+      : "";
     return `
-      <div class="monthbar">
+      <div class="monthbar${showToday ? " has-today" : ""}">
         <button class="icon-button" type="button" data-action="month-prev" aria-label="이전 달">‹</button>
         <button class="month-title" type="button" data-action="month-today">${year}년 ${month}월</button>
         <button class="icon-button" type="button" data-action="month-next" aria-label="다음 달">›</button>
+        ${todayButton}
       </div>
     `;
   }
