@@ -3695,7 +3695,11 @@
     if (sameDateSchedules.some((schedule) => schedule.staffId === data.staffId)) {
       return showToast("같은 날짜에 같은 직원을 중복 배정할 수 없습니다.");
     }
-    if (sameDateSchedules.length >= 3) {
+    // 인원 카운트는 화면 표시와 동일하게 연차/퇴사로 실제 근무하지 않는 직원을 제외한다.
+    const activeSameDateCount = sameDateSchedules.filter((schedule) =>
+      isEmployeeAvailableForScheduleDate(getEmployee(schedule.staffId), schedule.date),
+    ).length;
+    if (activeSameDateCount >= 3) {
       return showToast("직원근무는 하루 최대 3명까지 배정합니다.");
     }
     db.staffSchedules.push({
