@@ -3695,8 +3695,8 @@
     if (sameDateSchedules.some((schedule) => schedule.staffId === data.staffId)) {
       return showToast("같은 날짜에 같은 직원을 중복 배정할 수 없습니다.");
     }
-    if (sameDateSchedules.length >= 2) {
-      return showToast("직원근무는 하루 최대 2명까지 배정합니다.");
+    if (sameDateSchedules.length >= 3) {
+      return showToast("직원근무는 하루 최대 3명까지 배정합니다.");
     }
     db.staffSchedules.push({
       id: makeId("staff"),
