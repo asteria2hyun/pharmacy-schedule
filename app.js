@@ -486,7 +486,20 @@
         lastRemotePayloadSnapshot = getSharedStateSnapshot(db);
       } else {
         lastRemotePayloadSnapshot = getSharedStateSnapshot(db);
-        await pushRemoteScheduleState(true);
+        // 데이터 보호: 원격에 row가 아예 없을 때(최초 1회)만 로컬을 올린다.
+        // 원격에 데이터가 있는데 형식만 이상한 경우엔 절대 덮어쓰지 않는다(초기화 사고 방지).
+        // 또한 로컬이 빈 상태(직원/근무 0건)면 어떤 경우에도 올리지 않는다.
+        const localHasData = (db.employees || []).length > 0 && (db.schedules || []).length > 0;
+        if (!row && localHasData) {
+          await pushRemoteScheduleState(true);
+        } else if (row) {
+          // 원격 데이터가 비정상으로 보이면 덮어쓰지 않고 사용자에게만 알린다.
+          remoteSyncStatus = "공유확인";
+          if (!remoteSyncErrorShown) {
+            remoteSyncErrorShown = true;
+            showToast("공유 데이터 형식을 확인해주세요. 안전을 위해 덮어쓰지 않았습니다.");
+          }
+        }
       }
       remoteSyncReady = true;
       if (pendingAuthPublish) {
