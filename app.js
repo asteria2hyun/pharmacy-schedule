@@ -139,6 +139,7 @@
   let adminSelectedDate = `${monthCursor}-01`;
   let selectedEmployeeId = "";
   let selectedSwapTargetEmployeeId = "";
+  let selectedSwapOwnScheduleId = ""; // 교환 폼에서 선택한 '내 근무일'을 기억(상대 바꿔도 유지)
   let toast = "";
   let toastTimer = null;
   let issuedPasswordNotice = "";
@@ -1931,8 +1932,13 @@
   }
 
   function renderWorkChangeRequestForm(user) {
-    const ownOptions = getAvailableOwnSchedules(user.id)
-      .map((assignment) => `<option value="${assignment.ref}">${escapeHtml(assignmentOptionLabel(assignment))}</option>`)
+    const ownSchedules = getAvailableOwnSchedules(user.id);
+    // 상대를 바꿔 화면이 다시 그려져도 '내 근무일' 선택이 유지되도록 기억한 값을 반영한다.
+    if (!ownSchedules.some((assignment) => assignment.ref === selectedSwapOwnScheduleId)) {
+      selectedSwapOwnScheduleId = ownSchedules[0]?.ref || "";
+    }
+    const ownOptions = ownSchedules
+      .map((assignment) => `<option value="${assignment.ref}" ${assignment.ref === selectedSwapOwnScheduleId ? "selected" : ""}>${escapeHtml(assignmentOptionLabel(assignment))}</option>`)
       .join("");
     const targetEmployees = getAvailableSwapTargetEmployees(user.id);
     if (!targetEmployees.some((employee) => employee.id === selectedSwapTargetEmployeeId)) {
@@ -2169,8 +2175,11 @@
     const targetSchedule = getSwapAssignment(request.targetScheduleId);
     const statusText = getRequestStatusText(request.status, request.type);
     const canRequesterCancel = request.status === "pending" && request.requesterId === user?.id;
+    // 근무약사 당사자(요청자/상대방)는 교환·넘기기 '승인완료' 건도 본인이 취소할 수 있다.
+    const isPartyMember = request.requesterId === user?.id || request.targetId === user?.id;
+    const canPartyCancelApproved = canPartyCancelApprovedRequest(request, user) && isPartyMember;
     const canAdminCancel = adminMode && user?.role === "admin" && ["pending", "approved"].includes(request.status);
-    const canCancel = canRequesterCancel || canAdminCancel;
+    const canCancel = canRequesterCancel || canPartyCancelApproved || canAdminCancel;
     const cancelLabel = canAdminCancel ? "관리자 취소" : "요청 취소";
     const requesterOwnerId = request.requesterOriginalPharmacistId || request.requesterId;
     const targetOwnerId = request.targetOriginalPharmacistId || request.targetId;
@@ -3050,7 +3059,15 @@
       syncScheduleKindFields(event.target.closest("[data-schedule-kind]"));
       return;
     }
+    if (event.target.matches('form[data-form="swap-request"] select[name="ownScheduleId"]')) {
+      // 내 근무일 선택을 기억(상대 변경으로 화면이 다시 그려져도 유지)
+      selectedSwapOwnScheduleId = event.target.value;
+      return;
+    }
     if (event.target.matches('form[data-form="swap-request"] select[name="targetEmployeeId"]')) {
+      // 상대를 바꾸기 전에, 현재 선택된 내 근무일을 먼저 보존한다.
+      const ownSelect = event.target.closest("form")?.querySelector('select[name="ownScheduleId"]');
+      if (ownSelect && ownSelect.value) selectedSwapOwnScheduleId = ownSelect.value;
       selectedSwapTargetEmployeeId = event.target.value;
       render();
       return;
@@ -3385,13 +3402,34 @@
     showToast(request.type === "leave" ? "연차 요청을 거절했습니다." : "근무 변경 요청을 거절했습니다.");
   }
 
+  // 근무약사 당사자가 '승인완료'된 교환·넘기기를 본인이 취소할 수 있는지.
+  // - 교환(swap)·넘기기(handoff)만 (연차·직원대체는 관리자 전용 유지)
+  // - 아직 지나지 않은 근무만 (지난 근무는 되돌리지 않음)
+  function canPartyCancelApprovedRequest(request, user) {
+    if (!request || !user) return false;
+    if (request.status !== "approved") return false;
+    if (!["swap", "handoff"].includes(request.type)) return false;
+    if (request.requesterId !== user.id && request.targetId !== user.id) return false;
+    const dates = [
+      getSwapAssignment(request.requesterScheduleId)?.date,
+      getSwapAssignment(request.targetScheduleId)?.date,
+    ].filter(Boolean);
+    const today = getKoreaDateString();
+    return dates.length > 0 && dates.every((date) => date >= today);
+  }
+
   function cancelRequest(id, user) {
     const request = db.swapRequests.find((item) => item.id === id);
     if (!request || !["pending", "approved"].includes(request.status)) return showToast("취소할 수 없는 요청입니다.");
     const isRequesterPendingCancel = request.status === "pending" && request.requesterId === user.id;
     const isAdminCancel = user.role === "admin";
-    if (!isRequesterPendingCancel && !isAdminCancel) return showToast("요청자 본인 또는 관리자만 취소할 수 있습니다.");
-    if (request.status === "approved" && !isAdminCancel) return showToast("승인완료된 요청은 관리자만 취소할 수 있습니다.");
+    const isPartyApprovedCancel = canPartyCancelApprovedRequest(request, user);
+    if (!isRequesterPendingCancel && !isPartyApprovedCancel && !isAdminCancel) {
+      return showToast("요청자 본인 또는 관리자만 취소할 수 있습니다.");
+    }
+    if (request.status === "approved" && !isAdminCancel && !isPartyApprovedCancel) {
+      return showToast("승인완료된 요청은 관리자만 취소할 수 있습니다.");
+    }
     let detail = "";
     if (request.status === "approved") {
       if (request.type === "leave") {
@@ -4749,12 +4787,12 @@
     const user = getEmployee(userId);
     const { start, end } = getFutureSwapDateWindow();
     const assignments = getAllAssignments("");
-    const myWorkDates = new Set(assignments.filter((assignment) => assignment.personId === userId).map((assignment) => assignment.date));
+    // 같은 날 교환도 허용한다(내가 10-10, 상대가 같은 날 10-8인 경우 등).
+    // 10-10 ↔ 10-8 교환은 근무종류 제약 없이 가능(canSwapEmployees는 역할만 확인).
     return assignments
       .filter((assignment) => assignment.personId !== userId)
       .filter((assignment) => !targetEmployeeId || assignment.personId === targetEmployeeId)
       .filter((assignment) => assignment.date >= start && assignment.date <= end)
-      .filter((assignment) => !myWorkDates.has(assignment.date))
       .filter((assignment) => {
         const employee = getEmployee(assignment.personId);
         if (employeeCategory(user) === "staff2" && employee?.role === "admin") return false;
