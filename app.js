@@ -1596,9 +1596,37 @@
     return renderCalendar(user);
   }
 
-  // 내가 승인해야 할(나에게 온) 대기중 요청 수. renderIncomingRequests와 동일 기준. 옵저버는 0.
+  // 관리자 알림 '마지막 확인 시각'은 운영 데이터를 건드리지 않도록 브라우저(localStorage)에만 보관한다.
+  const ADMIN_SEEN_KEY = "pharmacy-schedule-admin-seen-v1";
+  function getAdminLastSeenAt() {
+    try {
+      return localStorage.getItem(ADMIN_SEEN_KEY) || "";
+    } catch {
+      return "";
+    }
+  }
+  function markAdminChangesSeen() {
+    try {
+      localStorage.setItem(ADMIN_SEEN_KEY, nowIso());
+    } catch {
+      // 저장 실패는 무시(알림이 안 사라질 뿐, 데이터엔 영향 없음)
+    }
+  }
+
+  // 배지 숫자:
+  // - 관리자: 마지막으로 '근무 변경 관리' 탭을 본 이후에 생긴/처리된 모든 근무 변경 건수(본인이 직접 한 건 제외)
+  // - 그 외: 내가 승인해야 할(나에게 온) 대기중 요청 수
   function getPendingRequestCountForUser(user) {
     if (!user || user.viewOnly) return 0;
+    if (user.role === "admin") {
+      const seenAt = getAdminLastSeenAt();
+      return getAdminVisibleRequests().filter((request) => {
+        const recent = getRequestRecentTime(request);
+        if (!recent) return false;
+        if (seenAt && recent <= seenAt) return false; // 이미 확인한 시점 이전이면 제외
+        return true;
+      }).length;
+    }
     return db.swapRequests.filter((request) => request.targetId === user.id && request.status === "pending").length;
   }
 
@@ -2986,6 +3014,10 @@
         monthCursor = getKoreaMonthKey();
         adminSelectedDate = getKoreaDateString();
         requestTodayFocus();
+      }
+      // 관리자가 '근무 변경 관리' 탭을 열면 그동안의 변경을 확인한 것으로 보고 알림을 초기화한다.
+      if (currentTab === "swap" && getCurrentUser()?.role === "admin") {
+        markAdminChangesSeen();
       }
       render();
       return;
