@@ -56,19 +56,26 @@
       .dnum { font-size: 9px; font-weight: 800; line-height: 1.3; text-align: center; padding: 1px 0; }
       .dnum.s0 { color: var(--sun); }
       .dnum.s6 { color: var(--sat); }
-      /* 3단: 10-10 / 10-8 / 직원. 빈 단도 유지해 위치(=종류) 일관성 보장 */
+      /* 3단: 10-10 / 10-8 / 직원. 각 단 '2줄 고정'으로 모든 칸에서 라인 위치 동일하게 맞춤 */
       .seg {
-        min-height: 13px;
-        padding: 0 2px;
+        padding: 1px 2px;
         font-size: 9px;
-        line-height: 1.25;
         text-align: center;
         overflow: hidden;
       }
       .seg.ten   { background: var(--ten-bg);   color: var(--ten-fg); }
       .seg.eight { background: var(--eight-bg); color: var(--eight-fg); }
       .seg.staff { background: var(--staff-bg); color: var(--staff-fg); }
-      .seg .nm { font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      /* 각 줄(이름) 고정 높이 — 1명인 날도 빈 줄로 자리를 채워 정렬 일관성 보장 */
+      .seg .nm {
+        font-weight: 800;
+        height: 12px;
+        line-height: 12px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .seg .nm.empty { visibility: hidden; }
       .seg .nm.is-mine { text-decoration: underline; text-decoration-color: var(--mine-line); text-decoration-thickness: 1.5px; }
       .seg.mine { box-shadow: inset 0 0 0 1.5px var(--mine-line); border-radius: 2px; }
       .state { font-size: 11px; color: var(--muted); padding: 12px; text-align: center; }
@@ -142,16 +149,17 @@
           for (var b = 0; b < first; b++) html += '<div class="cell blank"></div>';
 
           // 한 단(段)에 들어갈 이름들을 가독성 있게 표현: 2명까지 줄바꿈, 3명 이상은 "김·이 +N" 축약
+          // 각 단은 기본 2줄 고정(라인 정렬). 인원이 2명 미만이면 빈 줄로 채우고,
+          // 3명 이상이면 축약 없이 그 칸만 줄을 늘려 전부 표시(일시적으로 한 줄 밀림).
+          var SEG_MIN_ROWS = 2;
           function namesHtml(names) {
-            if (!names.length) return "&nbsp;"; // 빈 단도 높이 유지(정렬 일관성)
-            if (names.length <= 2) {
-              return names.map(function (n) {
-                return '<div class="nm' + (n.mine ? " is-mine" : "") + '">' + esc(n.name) + "</div>";
-              }).join("");
+            var rows = names.map(function (n) {
+              return '<div class="nm' + (n.mine ? " is-mine" : "") + '">' + esc(n.name) + "</div>";
+            });
+            while (rows.length < SEG_MIN_ROWS) {
+              rows.push('<div class="nm empty">·</div>'); // 빈 줄(자리만 차지, 보이지 않음)
             }
-            var head = names.slice(0, 2).map(function (n) { return esc(n.name.slice(0, 1)); }).join("·");
-            var anyMine = names.some(function (n) { return n.mine; });
-            return '<div class="nm' + (anyMine ? " is-mine" : "") + '">' + head + " +" + (names.length - 2) + "</div>";
+            return rows.join("");
           }
           function pickNames(list, idKey) {
             return list.map(function (s) {
