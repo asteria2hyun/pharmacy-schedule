@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0f3d2e" />
+    <title>근무표 위젯</title>
+    <style>
+      :root {
+        --bg: #ffffff;
+        --ink: #16261f;
+        --muted: #6b7d75;
+        --line: #e3ebe7;
+        --ten: #b9842b;        /* 10-10 */
+        --eight: #2f7d8c;      /* 10-8 */
+        --staff: #6a5acd;      /* 직원 */
+        --sun: #d92d20;
+        --sat: #1d6fd6;
+        --mine: #d8f3e3;       /* 내 근무 강조 배경 */
+        --mine-line: #1f9d6b;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body {
+        background: var(--bg);
+        color: var(--ink);
+        font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+        -webkit-text-size-adjust: 100%;
+      }
+      .wrap { padding: 6px 8px 8px; }
+      .head {
+        display: flex; align-items: baseline; justify-content: space-between;
+        margin-bottom: 4px;
+      }
+      .title { font-size: 14px; font-weight: 800; }
+      .sub { font-size: 10px; color: var(--muted); }
+      .legend { font-size: 9px; color: var(--muted); margin: 2px 0 4px; }
+      .legend b.ten { color: var(--ten); }
+      .legend b.eight { color: var(--eight); }
+      .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+      .dow { font-size: 9px; font-weight: 800; text-align: center; padding: 1px 0; color: var(--muted); }
+      .dow.s0 { color: var(--sun); }
+      .dow.s6 { color: var(--sat); }
+      .cell {
+        border: 1px solid var(--line);
+        border-radius: 5px;
+        min-height: 46px;
+        padding: 2px 3px;
+        overflow: hidden;
+      }
+      .cell.blank { border: none; }
+      .cell.today { border-color: var(--mine-line); box-shadow: inset 0 0 0 1px var(--mine-line); }
+      .dnum { font-size: 9px; font-weight: 800; line-height: 1; }
+      .dnum.s0 { color: var(--sun); }
+      .dnum.s6 { color: var(--sat); }
+      .who { font-size: 9px; line-height: 1.18; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .who .t { font-weight: 800; }
+      .who.ten .t { color: var(--ten); }
+      .who.eight .t { color: var(--eight); }
+      .who.staff .t { color: var(--staff); }
+      .who.mine {
+        background: var(--mine);
+        border-radius: 3px;
+        padding: 0 2px;
+        font-weight: 800;
+      }
+      .state { font-size: 11px; color: var(--muted); padding: 12px; text-align: center; }
+      .err { color: var(--sun); }
+      .foot { font-size: 8px; color: var(--muted); text-align: right; margin-top: 3px; }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #14201b; --ink: #e8f0ec; --muted: #9fb3aa; --line: #2a3a33;
+          --mine: #1f5740; --mine-line: #49d39a;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap"><div id="root"><div class="state">근무표 불러오는 중…</div></div></div>
+    <script>
+      (function () {
+        // 읽기 전용 위젯: Supabase 공유 데이터에서 근무표를 읽어 이달 달력을 그린다.
+        // 운영 앱(app.js)·데이터는 절대 건드리지 않는다. (이름·근무종류만 표시)
+        var SUPABASE_URL = "https://seqefputbjlxjyvloywk.supabase.co";
+        var KEY = "sb_publishable_k8EqPOzPYr6itPaOgFYwCA_39-Zi182";
+        var STATE_ID = "shared_schedule";
+        var SHIFT = { "10pm": { label: "10-10", cls: "ten" }, "8pm": { label: "10-8", cls: "eight" } };
+
+        function qp(name) {
+          try { return new URLSearchParams(location.search).get(name) || ""; } catch (e) { return ""; }
+        }
+        var MY_NAME = (qp("name") || "").trim();
+
+        function koreaParts() {
+          var f = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit" });
+          var p = {};
+          f.formatToParts(new Date()).forEach(function (x) { if (x.type !== "literal") p[x.type] = x.value; });
+          return { y: Number(p.year), m: Number(p.month), d: Number(p.day) };
+        }
+        function pad(n) { return String(n).padStart(2, "0"); }
+        function weekday(y, m, d) { return new Date(Date.UTC(y, m - 1, d)).getUTCDay(); }
+        function daysInMonth(y, m) { return new Date(Date.UTC(y, m, 0)).getUTCDate(); }
+        function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]; }); }
+
+        function render(data) {
+          var t = koreaParts();
+          var y = t.y, m = t.m;
+          var emps = {};
+          (data.employees || []).forEach(function (e) { emps[e.id] = e.name; });
+          var byDate = {};
+          (data.schedules || []).forEach(function (s) {
+            if (!s.date || s.date.slice(0, 7) !== y + "-" + pad(m)) return;
+            (byDate[s.date] = byDate[s.date] || []).push(s);
+          });
+          var staffByDate = {};
+          (data.staffSchedules || []).forEach(function (s) {
+            if (!s.date || s.date.slice(0, 7) !== y + "-" + pad(m)) return;
+            (staffByDate[s.date] = staffByDate[s.date] || []).push(s);
+          });
+
+          var dows = ["일", "월", "화", "수", "목", "금", "토"];
+          var html = '<div class="head"><div class="title">' + y + "년 " + m + "월</div>" +
+            '<div class="sub">' + (MY_NAME ? esc(MY_NAME) + "님" : "전체") + "</div></div>";
+          html += '<div class="legend"><b class="ten">●</b> 10-10 &nbsp; <b class="eight">●</b> 10-8</div>';
+          html += '<div class="grid">';
+          for (var i = 0; i < 7; i++) html += '<div class="dow s' + i + '">' + dows[i] + "</div>";
+
+          var first = weekday(y, m, 1);
+          for (var b = 0; b < first; b++) html += '<div class="cell blank"></div>';
+
+          var dim = daysInMonth(y, m);
+          for (var day = 1; day <= dim; day++) {
+            var date = y + "-" + pad(m) + "-" + pad(day);
+            var w = weekday(y, m, day);
+            var isToday = day === t.d;
+            html += '<div class="cell' + (isToday ? " today" : "") + '">';
+            html += '<div class="dnum s' + w + '">' + day + "</div>";
+
+            var rx = (byDate[date] || []).slice().sort(function (a, c) {
+              var o = { "10pm": 0, "8pm": 1, irregular: 2 };
+              return (o[a.shiftType] || 9) - (o[c.shiftType] || 9);
+            });
+            rx.forEach(function (s) {
+              var meta = SHIFT[s.shiftType] || { label: "", cls: "" };
+              var nm = emps[s.pharmacistId] || "";
+              if (!nm) return;
+              var mine = MY_NAME && nm === MY_NAME ? " mine" : "";
+              html += '<div class="who ' + meta.cls + mine + '"><span class="t">' + esc(meta.label) + "</span> " + esc(nm) + "</div>";
+            });
+            (staffByDate[date] || []).forEach(function (s) {
+              var nm = emps[s.staffId] || "";
+              if (!nm) return;
+              var mine = MY_NAME && nm === MY_NAME ? " mine" : "";
+              html += '<div class="who staff' + mine + '"><span class="t">직</span> ' + esc(nm) + "</div>";
+            });
+            html += "</div>";
+          }
+          html += "</div>";
+          var now = koreaParts();
+          html += '<div class="foot">갱신 ' + now.m + "/" + now.d + "</div>";
+          document.getElementById("root").innerHTML = html;
+        }
+
+        function load() {
+          var url = SUPABASE_URL + "/rest/v1/app_state?id=eq." + encodeURIComponent(STATE_ID) + "&select=data";
+          fetch(url, { headers: { apikey: KEY, Authorization: "Bearer " + KEY }, cache: "no-store" })
+            .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+            .then(function (rows) {
+              var data = rows && rows[0] && rows[0].data;
+              if (!data) throw new Error("no-data");
+              render(data);
+            })
+            .catch(function (e) {
+              document.getElementById("root").innerHTML =
+                '<div class="state err">근무표를 불러오지 못했습니다. 잠시 후 자동으로 다시 시도합니다.</div>';
+            });
+        }
+
+        load();
+        // 위젯 자동 새로고침: 10분마다 + 화면이 다시 보일 때
+        setInterval(load, 10 * 60 * 1000);
+        document.addEventListener("visibilitychange", function () { if (!document.hidden) load(); });
+      })();
+    </script>
+  </body>
+</html>
