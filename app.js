@@ -130,6 +130,7 @@
   let remoteSyncErrorShown = false;
   let lastRemoteUpdatedAt = "";
   let lastRemoteVersion = null; // 서버측 낙관적 잠금: 마지막으로 본 서버 version
+  let remoteBaseState = null;   // 3-way 병합 기준점: 마지막으로 서버와 맞춘 공유상태(객체)
   let lastRemotePayloadSnapshot = "";
   let pendingRemotePayloadSnapshot = "";
   let pendingAuthPublish = false;
@@ -486,6 +487,7 @@
         lastRemoteVersion = typeof row.version === "number" ? row.version : lastRemoteVersion;
         lastRemotePayloadSnapshot = getSharedDataSnapshot(row.data);
         saveDb(db, { skipRemote: true });
+        remoteBaseState = cloneSharedStateCore(db); // 병합 기준점 갱신
         lastRemotePayloadSnapshot = getSharedStateSnapshot(db);
       } else {
         if (row && typeof row.version === "number") lastRemoteVersion = row.version;
@@ -607,31 +609,34 @@
     remoteSyncInFlight = true;
     remoteSyncStatus = "저장중";
     try {
-      const payload = extractSharedState(db);
-      const result = await upsertRemoteScheduleRow(payload);
+      let payload = extractSharedState(db);
+      let result = await upsertRemoteScheduleRow(payload);
       if (result.stale) {
-        // 다른 기기가 먼저 저장함 → 내 옛 데이터로 덮지 않는다.
-        // 최신을 받아 합친 뒤, 사용자 화면을 최신으로 갱신하고 저장은 보류한다.
+        // 다른 기기가 먼저 저장함 → 내 변경과 서버 최신을 항목 단위로 '병합'해 둘 다 살린다.
+        // (서로 다른 날짜/근무는 모두 보존, 같은 항목 충돌 시 내 것=나중 저장 우선)
         const latest = await fetchRemoteScheduleRow();
         if (latest && hasRemoteSharedState(latest.data)) {
-          applyRemoteSharedState(latest.data);
-          lastRemoteUpdatedAt = latest.updated_at || "";
+          mergeRemoteIntoLocal(latest.data);
           lastRemoteVersion = typeof latest.version === "number" ? latest.version : lastRemoteVersion;
-          lastRemotePayloadSnapshot = getSharedStateSnapshot(db);
-          pendingRemotePayloadSnapshot = "";
+          lastRemoteUpdatedAt = latest.updated_at || "";
           saveDb(db, { skipRemote: true });
+          // 병합 결과를 다시 저장 시도(이번엔 최신 version 기준이라 통과)
+          payload = extractSharedState(db);
+          result = await upsertRemoteScheduleRow(payload);
+          render();
         }
-        remoteSyncStatus = "공유중";
-        if (!remoteSyncErrorShown) {
-          remoteSyncErrorShown = true;
-          showToast("다른 기기에서 먼저 변경되어 최신 내용으로 새로고침했습니다.");
+        if (result.stale) {
+          // 재시도도 충돌(아주 짧은 사이 또 변경)이면 이번엔 보류하고 다음 저장/폴링에서 재시도
+          remoteSyncStatus = "공유확인";
+          pendingRemotePayloadSnapshot = getSharedStateSnapshot(db);
+          render();
+          return;
         }
-        render();
-        return;
       }
       const row = result.row;
       lastRemoteUpdatedAt = row?.updated_at || payload.savedAt || nowIso();
-      lastRemotePayloadSnapshot = snapshot;
+      remoteBaseState = cloneSharedStateCore(db); // 방금 서버와 맞춘 상태를 병합 기준점으로 저장
+      lastRemotePayloadSnapshot = getSharedStateSnapshot(db);
       pendingRemotePayloadSnapshot = "";
       pendingAuthPublish = false;
       remoteSyncReady = true;
@@ -671,6 +676,7 @@
       lastRemoteVersion = typeof row.version === "number" ? row.version : lastRemoteVersion;
       lastRemotePayloadSnapshot = snapshot;
       saveDb(db, { skipRemote: true });
+      remoteBaseState = cloneSharedStateCore(db); // 병합 기준점 갱신
       remoteSyncStatus = "공유중";
       remoteSyncErrorShown = false;
       render();
@@ -711,6 +717,60 @@
         deletedStaffScheduleSeedIds: uniqueStrings(source.deletedStaffScheduleSeedIds),
       }),
     );
+  }
+
+  // 3-way 병합: base(마지막으로 맞춘 공유상태) 기준으로 mine(내 변경)과 theirs(서버 최신)를 합친다.
+  // 컬렉션은 id로 항목 단위 병합. 같은 항목을 양쪽이 바꿨으면 mine(나중 저장) 우선.
+  // 서로 다른 항목은 둘 다 보존. base에 있었는데 한쪽이 지웠으면 삭제 반영.
+  function mergeArrayById(baseArr, mineArr, theirsArr) {
+    const base = new Map((baseArr || []).map((x) => [x.id, JSON.stringify(x)]));
+    const mine = new Map((mineArr || []).map((x) => [x.id, x]));
+    const theirs = new Map((theirsArr || []).map((x) => [x.id, x]));
+    const allIds = new Set([...mine.keys(), ...theirs.keys()]);
+    const result = [];
+    allIds.forEach((id) => {
+      const inBase = base.has(id);
+      const m = mine.get(id);
+      const t = theirs.get(id);
+      const mineChanged = m && (!inBase || base.get(id) !== JSON.stringify(m));
+      const theirsChanged = t && (!inBase || base.get(id) !== JSON.stringify(t));
+      if (m && t) {
+        // 양쪽 다 있음: 둘 다 바꿨으면 내 것 우선, 한쪽만 바꿨으면 그쪽, 아무도 안 바꿨으면 아무거나
+        result.push(mineChanged ? m : theirsChanged ? t : m);
+      } else if (m && !t) {
+        // 서버엔 없음: 내가 새로 추가했으면 유지, base에 있었는데 서버가 지운 거면 삭제
+        if (!inBase || mineChanged) result.push(m); // 내가 새로 추가/수정 → 유지
+        // (inBase && !mineChanged) = 내가 안 건드렸는데 서버가 지움 → 삭제(추가 안 함)
+      } else if (!m && t) {
+        // 내겐 없음: 서버가 새로 추가했으면 유지, base에 있었는데 내가 지운 거면 삭제
+        if (!inBase || theirsChanged) result.push(t);
+      }
+    });
+    return result;
+  }
+
+  // 서버 최신(theirs)과 내 변경(mine=현재 db)을 base 기준으로 합쳐 db에 반영한다.
+  function mergeRemoteIntoLocal(theirsShared) {
+    const theirs = cloneSharedStateCore(theirsShared);
+    const mine = cloneSharedStateCore(db);
+    const base = remoteBaseState ? cloneSharedStateCore(remoteBaseState) : mine; // base 없으면 내 것 기준(안전)
+    const idKeys = ["schedules", "staffSchedules", "swapRequests", "overseasSchedules", "holidays"];
+    idKeys.forEach((key) => {
+      db[key] = mergeArrayById(base[key], mine[key], theirs[key]);
+    });
+    // 삭제 시드 목록은 합집합(누가 지웠든 지운 건 지운 것)
+    db.deletedScheduleSeedIds = uniqueStrings([...(mine.deletedScheduleSeedIds || []), ...(theirs.deletedScheduleSeedIds || [])]);
+    db.deletedStaffScheduleSeedIds = uniqueStrings([...(mine.deletedStaffScheduleSeedIds || []), ...(theirs.deletedStaffScheduleSeedIds || [])]);
+    // 직원: id 기준 병합(급여/설정 등). 충돌 시 내 것 우선. (비밀번호는 별도 authAccounts에서 관리)
+    db.employees = mergeArrayById(base.employees, mine.employees, theirs.employees).map((e) => {
+      const local = (db.employees || []).find((x) => x.id === e.id);
+      return local ? { ...e, password: local.password, mustChangePassword: local.mustChangePassword, passwordUpdatedAt: local.passwordUpdatedAt } : e;
+    });
+    db.authAccounts = mergeAuthAccounts(db.authAccounts, normalizeAuthAccounts(theirs.authAccounts));
+    db = normalizeDb(db, false);
+    clearComputedCaches();
+    removeSchedulesAfterResignations(db);
+    ensureMonthData(monthCursor, db, false, { preserveExisting: true });
   }
 
   function cloneEmployeeForSharedState(employee = {}) {
