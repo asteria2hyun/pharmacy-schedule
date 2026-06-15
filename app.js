@@ -129,6 +129,7 @@
   let remoteSyncStatus = "연결중";
   let remoteSyncErrorShown = false;
   let lastRemoteUpdatedAt = "";
+  let lastRemoteVersion = null; // 서버측 낙관적 잠금: 마지막으로 본 서버 version
   let lastRemotePayloadSnapshot = "";
   let pendingRemotePayloadSnapshot = "";
   let pendingAuthPublish = false;
@@ -482,10 +483,12 @@
       if (row && hasRemoteSharedState(row.data)) {
         applyRemoteSharedState(row.data);
         lastRemoteUpdatedAt = row.updated_at || "";
+        lastRemoteVersion = typeof row.version === "number" ? row.version : lastRemoteVersion;
         lastRemotePayloadSnapshot = getSharedDataSnapshot(row.data);
         saveDb(db, { skipRemote: true });
         lastRemotePayloadSnapshot = getSharedStateSnapshot(db);
       } else {
+        if (row && typeof row.version === "number") lastRemoteVersion = row.version;
         lastRemotePayloadSnapshot = getSharedStateSnapshot(db);
         // 데이터 보호: 원격에 row가 아예 없을 때(최초 1회)만 로컬을 올린다.
         // 원격에 데이터가 있는데 형식만 이상한 경우엔 절대 덮어쓰지 않는다(초기화 사고 방지).
@@ -534,7 +537,7 @@
   }
 
   async function fetchRemoteScheduleRow() {
-    const url = `${SUPABASE_URL}/rest/v1/app_state?id=eq.${encodeURIComponent(SUPABASE_STATE_ID)}&select=id,data,updated_at`;
+    const url = `${SUPABASE_URL}/rest/v1/app_state?id=eq.${encodeURIComponent(SUPABASE_STATE_ID)}&select=id,data,updated_at,version`;
     const response = await fetch(url, {
       headers: getSupabaseHeaders({ Accept: "application/json" }),
       cache: "no-store",
@@ -544,22 +547,47 @@
     return Array.isArray(rows) ? rows[0] || null : null;
   }
 
+  // 서버측 낙관적 잠금 저장: "내가 마지막으로 본 version일 때만" 업데이트한다.
+  // 그 사이 다른 기기가 먼저 저장해 version이 올라갔으면 0행이 반영되며 stale=true로 알린다.
+  // (이렇게 해야 오래된 화면을 가진 기기가 최신 데이터를 옛날로 덮어쓰지 못한다.)
   async function upsertRemoteScheduleRow(payload) {
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/app_state?on_conflict=id`, {
-      method: "POST",
-      headers: getSupabaseHeaders({
-        "Content-Type": "application/json",
-        Prefer: "resolution=merge-duplicates,return=representation",
-      }),
-      body: JSON.stringify({
-        id: SUPABASE_STATE_ID,
-        data: payload,
-        updated_at: nowIso(),
-      }),
+    // version을 모르면(아직 한 번도 못 읽음) 우선 한 번 읽어온다.
+    if (lastRemoteVersion === null) {
+      const current = await fetchRemoteScheduleRow();
+      lastRemoteVersion = current && typeof current.version === "number" ? current.version : null;
+    }
+    // version을 끝내 모르면(컬럼 미설정 등) 예전 방식(통째 upsert)으로 폴백 — 저장 자체가 막히지 않도록.
+    if (lastRemoteVersion === null) {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/app_state?on_conflict=id`, {
+        method: "POST",
+        headers: getSupabaseHeaders({ "Content-Type": "application/json", Prefer: "resolution=merge-duplicates,return=representation" }),
+        body: JSON.stringify({ id: SUPABASE_STATE_ID, data: payload, updated_at: nowIso() }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const rows = await res.json();
+      const row = Array.isArray(rows) ? rows[0] || null : null;
+      if (row && typeof row.version === "number") lastRemoteVersion = row.version;
+      return { row, stale: false };
+    }
+    // 조건부 PATCH: id가 맞고 version이 '내가 본 값'과 같을 때만 업데이트.
+    const url =
+      `${SUPABASE_URL}/rest/v1/app_state` +
+      `?id=eq.${encodeURIComponent(SUPABASE_STATE_ID)}` +
+      `&version=eq.${encodeURIComponent(lastRemoteVersion)}`;
+    const response = await fetch(url, {
+      method: "PATCH",
+      headers: getSupabaseHeaders({ "Content-Type": "application/json", Prefer: "return=representation" }),
+      body: JSON.stringify({ data: payload, updated_at: nowIso() }),
     });
     if (!response.ok) throw new Error(await response.text());
     const rows = await response.json();
-    return Array.isArray(rows) ? rows[0] || null : null;
+    const row = Array.isArray(rows) ? rows[0] || null : null;
+    if (!row) {
+      // 0행 = 그 사이 다른 기기가 먼저 저장함(version 불일치). 덮어쓰지 않고 stale 신호.
+      return { row: null, stale: true };
+    }
+    if (typeof row.version === "number") lastRemoteVersion = row.version;
+    return { row, stale: false };
   }
 
   function scheduleRemoteScheduleSave(snapshot = getSharedStateSnapshot(db)) {
@@ -580,7 +608,28 @@
     remoteSyncStatus = "저장중";
     try {
       const payload = extractSharedState(db);
-      const row = await upsertRemoteScheduleRow(payload);
+      const result = await upsertRemoteScheduleRow(payload);
+      if (result.stale) {
+        // 다른 기기가 먼저 저장함 → 내 옛 데이터로 덮지 않는다.
+        // 최신을 받아 합친 뒤, 사용자 화면을 최신으로 갱신하고 저장은 보류한다.
+        const latest = await fetchRemoteScheduleRow();
+        if (latest && hasRemoteSharedState(latest.data)) {
+          applyRemoteSharedState(latest.data);
+          lastRemoteUpdatedAt = latest.updated_at || "";
+          lastRemoteVersion = typeof latest.version === "number" ? latest.version : lastRemoteVersion;
+          lastRemotePayloadSnapshot = getSharedStateSnapshot(db);
+          pendingRemotePayloadSnapshot = "";
+          saveDb(db, { skipRemote: true });
+        }
+        remoteSyncStatus = "공유중";
+        if (!remoteSyncErrorShown) {
+          remoteSyncErrorShown = true;
+          showToast("다른 기기에서 먼저 변경되어 최신 내용으로 새로고침했습니다.");
+        }
+        render();
+        return;
+      }
+      const row = result.row;
       lastRemoteUpdatedAt = row?.updated_at || payload.savedAt || nowIso();
       lastRemotePayloadSnapshot = snapshot;
       pendingRemotePayloadSnapshot = "";
@@ -619,6 +668,7 @@
       if (snapshot === lastRemotePayloadSnapshot && row.updated_at === lastRemoteUpdatedAt) return;
       applyRemoteSharedState(row.data);
       lastRemoteUpdatedAt = row.updated_at || "";
+      lastRemoteVersion = typeof row.version === "number" ? row.version : lastRemoteVersion;
       lastRemotePayloadSnapshot = snapshot;
       saveDb(db, { skipRemote: true });
       remoteSyncStatus = "공유중";
