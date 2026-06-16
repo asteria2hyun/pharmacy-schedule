@@ -123,6 +123,9 @@
   let assignmentsCache = new Map();
   let lastStoredSnapshot = "";
   let remoteSyncReady = false;
+  // 서버에서 '실제 공유 데이터'를 한 번이라도 성공적으로 받아 반영했는지.
+  // 이게 true가 되기 전에는 어떤 변경도 서버로 올리지 않는다(부팅 자동생성분이 서버를 덮는 사고 방지).
+  let remoteHydrated = false;
   let remoteSyncInFlight = false;
   let remoteSyncTimer = null;
   let remotePollTimer = null;
@@ -312,7 +315,9 @@
     };
     lastStoredSnapshot = JSON.stringify(nextDb);
     localStorage.setItem(STORAGE_KEY, lastStoredSnapshot);
-    if (!options.skipRemote && remoteSyncReady) {
+    // 서버 최신을 받기 전(remoteHydrated=false)에는 절대 서버로 올리지 않는다.
+    // 부팅 시 자동생성된 기본 근무표가 서버의 실제 데이터를 덮어쓰는 사고를 원천 차단.
+    if (!options.skipRemote && remoteSyncReady && remoteHydrated) {
       const sharedSnapshot = getSharedStateSnapshot(nextDb);
       if (sharedSnapshot !== lastRemotePayloadSnapshot) {
         scheduleRemoteScheduleSave(sharedSnapshot);
@@ -489,6 +494,7 @@
         saveDb(db, { skipRemote: true });
         remoteBaseState = cloneSharedStateCore(db); // 병합 기준점 갱신
         lastRemotePayloadSnapshot = getSharedStateSnapshot(db);
+        remoteHydrated = true; // 서버 실제 데이터를 받아 반영함 → 이제부터 저장 허용
       } else {
         if (row && typeof row.version === "number") lastRemoteVersion = row.version;
         lastRemotePayloadSnapshot = getSharedStateSnapshot(db);
@@ -497,6 +503,8 @@
         // 또한 로컬이 빈 상태(직원/근무 0건)면 어떤 경우에도 올리지 않는다.
         const localHasData = (db.employees || []).length > 0 && (db.schedules || []).length > 0;
         if (!row && localHasData) {
+          // 서버가 진짜 비어있는 최초 1회만 로컬을 올린다(이 경우만 예외적으로 hydrated 인정).
+          remoteHydrated = true;
           await pushRemoteScheduleState(true);
         } else if (row) {
           // 원격 데이터가 비정상으로 보이면 덮어쓰지 않고 사용자에게만 알린다.
@@ -594,6 +602,8 @@
 
   function scheduleRemoteScheduleSave(snapshot = getSharedStateSnapshot(db)) {
     if (!remoteSyncReady) return;
+    // 서버 최신을 받기 전에는 어떤 저장 예약도 하지 않는다(모든 저장 경로의 마지막 안전장치).
+    if (!remoteHydrated) return;
     pendingRemotePayloadSnapshot = snapshot;
     clearTimeout(remoteSyncTimer);
     remoteSyncTimer = setTimeout(() => {
@@ -677,6 +687,7 @@
       lastRemotePayloadSnapshot = snapshot;
       saveDb(db, { skipRemote: true });
       remoteBaseState = cloneSharedStateCore(db); // 병합 기준점 갱신
+      remoteHydrated = true; // 폴링으로 서버 데이터를 받음 → 저장 허용
       remoteSyncStatus = "공유중";
       remoteSyncErrorShown = false;
       render();
@@ -4215,7 +4226,7 @@
   }
 
   function getDefaultEmployeeWorkPatternPreset(employeeId) {
-    const startDate = "2026-08-01";
+    const startDate = "2026-06-01";
     const presets = {
       "emp-juna": defaultWorkPatterns([4, 5, 6], 10, 10),
       "emp-juyeon": defaultWorkPatterns([1, 2, 6], 10, 10).concat(defaultWorkPatterns([5], 10, 8)),
