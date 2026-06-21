@@ -1,10 +1,11 @@
-name: 근무표 주간 백업
+name: 근무표 격주 백업
 
-# 매주 1회 + 수동 실행 시 근무표를 backup/schedule-latest.json 한 파일에 덮어쓰기 백업.
+# 2주에 1회 + 수동 실행 시 근무표를 backup/schedule-latest.json 한 파일에 덮어쓰기 백업.
+# (1주는 짧아서 오류를 인지하기 전에 백업이 덮일 수 있어 2주 주기로 운영)
 on:
   schedule:
-    - cron: "0 18 * * 0"   # 매주 일요일 18:00 UTC = 한국 월요일 새벽 3시
-  workflow_dispatch: {}     # GitHub에서 수동 실행 버튼
+    - cron: "0 18 1,15 * *"  # 매월 1일·15일 18:00 UTC(한국 새벽 3시) ≈ 2주 간격
+  workflow_dispatch: {}      # GitHub에서 수동 실행 버튼
 
 permissions:
   contents: write
