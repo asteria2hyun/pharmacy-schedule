@@ -2270,6 +2270,7 @@
   function renderIncomingRequests(user) {
     const incoming = db.swapRequests
       .filter((request) => request.targetId === user.id && request.status === "pending")
+      .filter((request) => !isRequestScheduleDeleted(request))
       .sort(sortByWorkDateAsc);
     return `
       <div class="panel">
@@ -2286,6 +2287,7 @@
   function renderMyRequests(user) {
     const mine = db.swapRequests
       .filter((request) => request.requesterId === user.id || request.targetId === user.id)
+      .filter((request) => !isRequestScheduleDeleted(request))
       .sort(sortRecent);
     return `
       <div class="panel">
@@ -3082,7 +3084,7 @@
 
   function renderAuditPanel() {
     const logs = db.auditLogs.slice().sort(sortRecent).slice(0, 8);
-    const requests = db.swapRequests.slice().sort(sortRecent).slice(0, 5);
+    const requests = db.swapRequests.filter((request) => !isRequestScheduleDeleted(request)).sort(sortRecent).slice(0, 5);
     return `
       <div class="panel">
         <h2>관리 기록</h2>
@@ -5043,11 +5045,27 @@
   }
 
   function getVisibleCompletedWorkChanges() {
-    return db.swapRequests.filter(isCompletedWorkChange).filter((request) => !isPastRequestByWorkDate(request));
+    return db.swapRequests
+      .filter(isCompletedWorkChange)
+      .filter((request) => !isPastRequestByWorkDate(request))
+      .filter((request) => !isRequestScheduleDeleted(request));
   }
 
   function getAdminVisibleRequests() {
-    return db.swapRequests.filter((request) => !(isCompletedWorkChange(request) && isPastRequestByWorkDate(request)));
+    return db.swapRequests.filter(
+      (request) => !(isCompletedWorkChange(request) && isPastRequestByWorkDate(request)) && !isRequestScheduleDeleted(request),
+    );
+  }
+
+  // 참조하던 근무가 전부 삭제돼(=날짜를 알 수 없어) 목록에 의미 없이 남는 변경 요청인지 판단한다.
+  // 실제 데이터는 지우지 않고, 목록에 안 보이게만(자동 숨김) 하기 위한 기준이다.
+  function isRequestScheduleDeleted(request) {
+    if (!request) return false;
+    if (request.type === "leave") return false; // 휴무 요청은 근무 참조가 아니라 날짜(leaveDate) 기준이라 해당 없음
+    if (request.leaveDate) return false; // 날짜를 직접 들고 있으면 유지
+    const refs = [request.requesterScheduleId, request.targetScheduleId].filter(Boolean);
+    if (!refs.length) return false; // 애초에 근무 참조가 없던 요청은 건드리지 않음
+    return refs.every((ref) => !getSwapAssignment(ref)); // 참조한 근무가 전부 사라졌으면 삭제된 것으로 본다
   }
 
   function isCompletedPharmacistSwap(request) {
