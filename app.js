@@ -5320,7 +5320,7 @@
   function getRequestPrimaryWorkDate(request) {
     const dates = getRequestWorkDates(request);
     if (dates.length) return dates.slice().sort()[0];
-    return getRequestRecentTime(request).slice(0, 10) || "9999-99-99";
+    return "9999-99-99"; // 근무 날짜가 없거나 그 근무가 삭제된 요청은 맨 아래로 보낸다.
   }
 
   function sortByWorkDateAsc(a, b) {
