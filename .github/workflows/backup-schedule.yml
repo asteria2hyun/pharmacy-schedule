@@ -1,10 +1,12 @@
-name: 근무표 격주 백업
+name: 근무표 매일 백업
 
-# 2주에 1회 + 수동 실행 시 근무표를 backup/schedule-latest.json 한 파일에 덮어쓰기 백업.
-# (1주는 짧아서 오류를 인지하기 전에 백업이 덮일 수 있어 2주 주기로 운영)
+# 매일 1회 + 수동 실행 시 근무표를 백업한다.
+#  - backup/schedule-latest.json         : 항상 최신 1개(덮어쓰기)
+#  - backup/history/schedule-<날짜>.json  : 날짜별 스냅샷(최근 30일치 보관, 오래된 것은 자동 정리)
+# 매일 남기되 날짜별로 보관하므로, 잘못된 상태가 저장돼도 최대 한 달 전까지 정상본으로 되돌릴 수 있다.
 on:
   schedule:
-    - cron: "0 18 1,15 * *"  # 매월 1일·15일 18:00 UTC(한국 새벽 3시) ≈ 2주 간격
+    - cron: "0 18 * * *"   # 매일 18:00 UTC(한국 새벽 3시)
   workflow_dispatch: {}      # GitHub에서 수동 실행 버튼
 
 permissions:
@@ -26,14 +28,14 @@ jobs:
       - name: 백업 생성
         run: node scripts/backup-schedule.mjs
 
-      - name: 변경분 커밋 (같은 파일 덮어쓰기)
+      - name: 변경분 커밋 (최신본 + 날짜별 스냅샷)
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add backup/schedule-latest.json
+          git add backup/
           if git diff --cached --quiet; then
             echo "변경 없음 - 커밋 생략"
           else
-            git commit -m "근무표 주간 백업 갱신"
+            git commit -m "근무표 매일 백업 갱신"
             git push
           fi

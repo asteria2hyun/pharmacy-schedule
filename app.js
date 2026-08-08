@@ -1524,11 +1524,14 @@
 
   function ensureBaseMonthTemplates(monthKey, targetDb = db) {
     let changed = false;
-    if (monthKey >= "2026-08" && !targetDb.schedules.some((schedule) => schedule.id.startsWith(`sch-${monthKey}-`))) {
+    // 그 달에 '이미 어떤 근무든' 있으면 기본 근무표를 다시 얹지 않는다.
+    // (예전에는 sch-YYYY-MM- 형태의 ID만 확인해서, 손으로 고쳐 ID가 바뀐 달을 '빈 달'로 착각하고
+    //  기본 근무표를 통째로 다시 넣어 → 근무가 2배로 겹치는 문제가 있었다. 날짜 기준으로 바꿔 방지한다.)
+    if (monthKey >= "2026-08" && !targetDb.schedules.some((schedule) => schedule.date && schedule.date.startsWith(monthKey))) {
       targetDb.schedules.push(...createMonthlyTemplateSchedules(monthKey));
       changed = true;
     }
-    if (monthKey >= "2026-08" && !targetDb.staffSchedules.some((schedule) => schedule.id.startsWith(`staff-${monthKey}-`))) {
+    if (monthKey >= "2026-08" && !targetDb.staffSchedules.some((schedule) => schedule.date && schedule.date.startsWith(monthKey))) {
       targetDb.staffSchedules.push(...createMonthlyTemplateStaffSchedules(monthKey));
       changed = true;
     }
@@ -2007,6 +2010,7 @@
   }
 
   function shouldShowRxScheduleOnCalendar(user, schedule) {
+    if (!isScheduleOwnerEmployedOnDate(schedule?.pharmacistId, schedule?.date)) return false; // 퇴사자: 마지막 근무일 이후 근무표에서 숨김
     if (schedule?.shiftType === "irregular") return canSeeAdminPrivateSchedule(user);
     if (schedule?.pharmacistId !== "emp-bae") return true;
     if (canSeeAdminPrivateSchedule(user)) return true;
@@ -2014,9 +2018,18 @@
   }
 
   function shouldShowStaffScheduleOnCalendar(user, schedule) {
+    if (!isScheduleOwnerEmployedOnDate(schedule?.staffId, schedule?.date)) return false; // 퇴사자: 마지막 근무일 이후 근무표에서 숨김
     if (schedule?.staffId !== "emp-bae") return true;
     if (canSeeAdminPrivateSchedule(user)) return true;
     return isDefaultScheduleTime(schedule, "staff");
+  }
+
+  // 퇴사한 직원이 마지막 근무일(퇴사일) 이후 날짜의 근무에 남아 있어도 화면에는 보이지 않게 한다.
+  // (직원 정보를 못 찾으면 정보 부족으로 보고 기존대로 표시한다.)
+  function isScheduleOwnerEmployedOnDate(ownerId, date) {
+    const employee = getEmployee(ownerId);
+    if (!employee || !date) return true;
+    return isEmployeeEmployedOnDate(employee, date);
   }
 
   function canSeeAdminPrivateSchedule(user) {
@@ -2257,7 +2270,7 @@
   function renderIncomingRequests(user) {
     const incoming = db.swapRequests
       .filter((request) => request.targetId === user.id && request.status === "pending")
-      .sort(sortRecent);
+      .sort(sortByWorkDateAsc);
     return `
       <div class="panel">
         <h2>승인 대기</h2>
@@ -2287,7 +2300,7 @@
   }
 
   function renderAllRequestsPanel(user) {
-    const requests = getAdminVisibleRequests().filter((request) => !isCompletedWorkChange(request)).sort(sortRecent);
+    const requests = getAdminVisibleRequests().filter((request) => !isCompletedWorkChange(request)).sort(sortByWorkDateAsc);
     return `
       <div class="panel">
         <h2>기타 요청 내역</h2>
@@ -2301,7 +2314,7 @@
   }
 
   function renderCompletedWorkChangesPanel(user) {
-    const requests = getVisibleCompletedWorkChanges().sort(sortRecent);
+    const requests = getVisibleCompletedWorkChanges().sort(sortByWorkDateAsc);
     return `
       <div class="panel">
         <h2>근무 변경 처리완료</h2>
@@ -3758,7 +3771,9 @@
     db.employees.push(employee);
     setEmployeeAuth(employee, temporaryPassword, true);
     if (employee.workStartDate) ensureBaseMonthTemplates(employee.workStartDate.slice(0, 7), db);
-    const result = applyEmployeeWorkPattern(employee, employee.workStartDate, employee.workPatterns);
+    // 입사월뿐 아니라 이미 만들어진 모든 달에 새 직원 근무를 반영한다.
+    // (예전엔 첫 달만 반영돼 그 뒤 달에는 새 직원 근무가 비어 있었다.)
+    const result = applyEmployeePatternChange(employee);
     if (result.attempted && employee.workStartDate) {
       monthCursor = employee.workStartDate.slice(0, 7);
       adminSelectedDate = employee.workStartDate;
@@ -5299,6 +5314,20 @@
 
   function getRequestRecentTime(request) {
     return request?.approvedAt || request?.rejectedAt || request?.cancelledAt || request?.createdAt || "";
+  }
+
+  // 근무 변경 목록을 '근무 날짜가 가까운 순(가장 이른 날짜가 맨 위)'으로 정렬한다.
+  function getRequestPrimaryWorkDate(request) {
+    const dates = getRequestWorkDates(request);
+    if (dates.length) return dates.slice().sort()[0];
+    return getRequestRecentTime(request).slice(0, 10) || "9999-99-99";
+  }
+
+  function sortByWorkDateAsc(a, b) {
+    const left = getRequestPrimaryWorkDate(a);
+    const right = getRequestPrimaryWorkDate(b);
+    if (left === right) return sortRecent(a, b);
+    return left.localeCompare(right);
   }
 
   function getKoreaDateParts() {
