@@ -2471,6 +2471,8 @@
   function renderAdminSalary() {
     const workers = db.employees
       .filter((employee) => employee.role !== "admin" || employee.id === "emp-bae")
+      // 그 달에 재직하지 않은 사람(퇴사한 달 이후 등)은 급여관리에서 제외한다. 직원관리와 동일 기준.
+      .filter((employee) => isEmployeeVisibleInMonth(employee, monthCursor))
       .map((employee) => ({ employee, stats: getSalaryStats(employee.id, monthCursor) }))
       .sort((a, b) => {
         if (a.employee.id === "emp-bae") return -1;
