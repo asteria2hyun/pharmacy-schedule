@@ -4452,7 +4452,9 @@
     return months.reduce(
       (result, monthKey) => {
         ensureBaseMonthTemplates(monthKey, db);
-        const applied = applyEmployeeWorkPattern(employee, startDate, patterns, monthKey, db, true);
+        // 기존 근무는 지우지 않고(=손으로 바꾼 미래 근무 보존), 비어 있는 요일에만 기본근무를 채운다.
+        // 예전에는 마지막 인자가 true라 시작일부터 이 사람 근무를 전부 지우고 다시 깔아, 수동 편집이 사라졌다.
+        const applied = applyEmployeeWorkPattern(employee, startDate, patterns, monthKey, db, false);
         result.added += applied.added;
         result.skipped += applied.skipped;
         result.attempted = result.attempted || applied.attempted;
