@@ -1850,3 +1850,10 @@ tr:last-child td {
   font-size: 12px;
   font-weight: 700;
 }
+
+/* 12시 오픈일(설날·추석 당일) 시간 라벨 강조 */
+.shift-label.noon-open {
+  background: var(--amber-bg);
+  color: var(--amber);
+  border: 1px dashed var(--amber);
+}

@@ -1838,7 +1838,7 @@
           </span>
         </div>
         <div class="day-content ${hasIrregular ? "has-irregular" : ""}">
-          ${SHIFT_ORDER.map((shiftType) => renderShiftBlock(user, schedules, shiftType)).join("")}
+          ${SHIFT_ORDER.map((shiftType) => renderShiftBlock(user, schedules, shiftType, date)).join("")}
           ${renderIrregularBlock(user, schedules)}
           ${renderStaffBlock(user, date)}
         </div>
@@ -1846,12 +1846,14 @@
     `;
   }
 
-  function renderShiftBlock(user, schedules, shiftType) {
+  function renderShiftBlock(user, schedules, shiftType, date) {
     const shiftSchedules = schedules.filter((schedule) => schedule.shiftType === shiftType);
     const meta = SHIFT_META[shiftType];
+    const label = shiftLabelForDate(shiftType, date);
+    const noonOpen = isNoonOpenDay(date);
     return `
       <div class="shift-block schedule-section shift-section ${meta.className}">
-        <span class="shift-label ${meta.className}" title="${meta.detail}">${meta.label}</span>
+        <span class="shift-label ${meta.className}${noonOpen ? " noon-open" : ""}" title="${noonOpen ? "12시 오픈일" : meta.detail}">${label}</span>
         ${
           shiftSchedules.length
             ? shiftSchedules.map((schedule) => renderPersonRow(user, schedule)).join("")
@@ -4647,14 +4649,39 @@
     };
   }
 
+  // 설날·추석 '당일'(연휴 제외)은 1년에 2일, 낮 12시에 오픈한다.
+  function isNoonOpenDay(date) {
+    const holiday = getHoliday(date);
+    if (!holiday) return false;
+    const name = String(holiday.name || "").trim();
+    if (!name || name.includes("연휴")) return false;
+    return name === "설날" || name === "추석" || name === "한가위";
+  }
+
+  // 12시 오픈일에는 시작 시간을 12시로 당긴다(그만큼 근무시간이 줄어 시급 급여가 2시간분 줄어든다).
+  // 월급(고정급) 직원은 시급률이 0이라 급여가 그대로 유지된다.
+  function applyNoonOpenStart(startHour, date) {
+    const start = normalizeHourValue(startHour);
+    return isNoonOpenDay(date) && start < 12 ? 12 : start;
+  }
+
+  // 근무표 시간 표시. 12시 오픈일에는 10-10/10-8 대신 12-10/12-8로 보여준다.
+  function shiftLabelForDate(shiftType, date) {
+    if (isNoonOpenDay(date)) {
+      if (shiftType === "10pm") return "12-10";
+      if (shiftType === "8pm") return "12-8";
+    }
+    return SHIFT_META[shiftType]?.label || "";
+  }
+
   function getRxScheduleHours(schedule) {
     const range = getScheduleTimeRange(schedule, schedule?.shiftType);
-    return getHoursFromRange(range.start, range.end);
+    return getHoursFromRange(applyNoonOpenStart(range.start, schedule?.date), range.end);
   }
 
   function getStaffScheduleHours(schedule) {
     const range = getScheduleTimeRange(schedule, "staff");
-    return getHoursFromRange(range.start, range.end);
+    return getHoursFromRange(applyNoonOpenStart(range.start, schedule?.date), range.end);
   }
 
   function getHoursFromRange(start, end) {
