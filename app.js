@@ -2081,14 +2081,14 @@
           </div>
         </div>
         ${renderMonthbar()}
+        ${user.role === "admin" ? renderAdminOverseasSchedulesPanel(user) : ""}
         ${isStaffCoverageOnly ? "" : renderWorkChangeRequestForm(user)}
         ${canManageOverseasSchedule(user) ? renderOverseasScheduleForm(user) : ""}
         ${renderCoverageRequestForm(user)}
         ${renderIncomingRequests(user)}
-        ${renderMyRequests(user)}
+        ${user.role === "admin" ? "" : renderMyRequests(user)}
         ${user.role === "admin" ? renderCompletedWorkChangesPanel(user) : ""}
         ${user.role === "admin" ? renderAllRequestsPanel(user) : ""}
-        ${user.role === "admin" ? renderAdminOverseasSchedulesPanel(user) : ""}
       </section>
     `;
   }
@@ -2234,8 +2234,8 @@
   function renderAdminOverseasSchedulesPanel(user) {
     const schedules = getOverseasSchedulesForMonth(monthCursor);
     return `
-      <div class="panel">
-        <h2>해외일정 확인</h2>
+      <div class="panel overseas-panel${schedules.length ? " has-overseas" : ""}">
+        <h2>✈️ 해외일정 확인${schedules.length ? ` <span class="count-badge">${schedules.length}</span>` : ""}</h2>
         <p class="item-meta">조회 중인 달과 하루라도 겹치는 해외일정을 모두 표시합니다.</p>
         ${
           schedules.length
@@ -2273,8 +2273,8 @@
       .filter((request) => !isRequestScheduleDeleted(request))
       .sort(sortByWorkDateAsc);
     return `
-      <div class="panel">
-        <h2>승인 대기</h2>
+      <div class="panel${incoming.length ? " needs-action-panel" : ""}">
+        <h2>⏳ 승인 대기${incoming.length ? ` <span class="count-badge urgent">${incoming.length}</span>` : ""}</h2>
         ${
           incoming.length
             ? `<div class="list">${incoming.map((request) => renderRequestCard(request, user, true, user.role === "admin")).join("")}</div>`
@@ -2302,15 +2302,18 @@
   }
 
   function renderAllRequestsPanel(user) {
-    const requests = getAdminVisibleRequests().filter((request) => !isCompletedWorkChange(request)).sort(sortByWorkDateAsc);
+    const requests = getAdminVisibleRequests()
+      .filter((request) => !isCompletedWorkChange(request))
+      // '승인 대기'에 이미 뜨는 내 승인대기 건은 여기서 빼서 중복을 없앤다.
+      .filter((request) => !(request.status === "pending" && request.targetId === user.id))
+      .sort(sortByWorkDateAsc);
+    if (!requests.length) return "";
     return `
-      <div class="panel">
-        <h2>기타 요청 내역</h2>
-        ${
-          requests.length
-            ? `<div class="list">${requests.map((request) => renderRequestCard(request, user, false, true)).join("")}</div>`
-            : `<div class="empty-state">표시할 기타 요청 내역이 없습니다.</div>`
-        }
+      <div class="panel subtle-panel">
+        <details>
+          <summary class="panel-summary">기타 요청 (대기·거절·취소·연차) <span class="count-badge">${requests.length}</span></summary>
+          <div class="list" style="margin-top: 10px;">${requests.map((request) => renderRequestCard(request, user, false, true)).join("")}</div>
+        </details>
       </div>
     `;
   }
@@ -2319,11 +2322,12 @@
     const requests = getVisibleCompletedWorkChanges().sort(sortByWorkDateAsc);
     return `
       <div class="panel">
-        <h2>근무 변경 처리완료</h2>
+        <h2>✅ 확정된 근무 변경${requests.length ? ` <span class="count-badge">${requests.length}</span>` : ""}</h2>
+        <p class="item-meta">오늘 이후 확정된 교환·넘기기·대체를 가까운 날짜순으로 모두 표시합니다.</p>
         ${
           requests.length
             ? `<div class="list">${requests.map((request) => renderRequestCard(request, user, false, true)).join("")}</div>`
-            : `<div class="empty-state">오늘 이후 남아있는 근무 변경 처리완료 내역이 없습니다.</div>`
+            : `<div class="empty-state">오늘 이후 확정된 근무 변경이 없습니다.</div>`
         }
       </div>
     `;
@@ -2386,10 +2390,12 @@
       if (isHandoff) return `${requester?.name || "알 수 없음"}님이 ${target?.name || "알 수 없음"}님에게 근무 넘기기 요청`;
       return `${requester?.name || "알 수 없음"}님과 ${target?.name || "알 수 없음"}님의 근무 변경 요청`;
     })();
+    // 직원 변경 결과로 관리자(본인) 근무가 되는 건은 눈에 띄게 '내 근무'로 표시한다.
+    const affectsMe = request.status === "approved" && isPartyMember;
     return `
-      <article class="list-item ${request.status === "pending" ? "" : "dim"}">
+      <article class="list-item ${request.status === "pending" ? "" : "dim"} ${affectsMe ? "result-mine" : ""}">
         <div class="item-title">
-          <span>${requestTitle}</span>
+          <span>${requestTitle}${affectsMe ? ` <span class="mine-badge">내 근무</span>` : ""}</span>
           <span class="status-pill ${statusClass}">${statusText}</span>
         </div>
         <div class="swap-pair" aria-label="교체 근무 내용">

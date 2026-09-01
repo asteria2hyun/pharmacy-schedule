@@ -1791,3 +1791,62 @@ tr:last-child td {
 .salary-history li {
   margin: 2px 0;
 }
+
+/* 근무 변경 관리 가독성 개선 */
+/* 해외일정 강조 패널 */
+.overseas-panel {
+  border: 1px solid var(--blue);
+  border-left: 5px solid var(--blue);
+  background: var(--aqua);
+}
+.overseas-panel h2 {
+  color: var(--blue);
+}
+/* 건수 배지 */
+.count-badge {
+  display: inline-block;
+  min-width: 20px;
+  padding: 1px 8px;
+  margin-left: 6px;
+  border-radius: 999px;
+  background: var(--brand);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  vertical-align: middle;
+}
+.count-badge.urgent {
+  background: var(--red);
+}
+/* 승인 대기(할 일) 패널 강조 */
+.needs-action-panel {
+  border: 1px solid var(--red);
+  border-left: 5px solid var(--red);
+}
+/* 기타 요청(접기) 패널 */
+.subtle-panel {
+  background: var(--surface-soft);
+}
+.panel-summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--muted);
+  list-style: revert;
+}
+/* 직원 변경 결과로 내(관리자) 근무가 되는 건 강조 */
+.list-item.result-mine {
+  border-left: 4px solid var(--brand);
+  background: var(--mint);
+  opacity: 1;
+}
+.mine-badge {
+  display: inline-block;
+  padding: 1px 8px;
+  margin-left: 6px;
+  border-radius: 999px;
+  background: var(--brand-strong);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
