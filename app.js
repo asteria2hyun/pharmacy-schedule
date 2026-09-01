@@ -2796,12 +2796,52 @@
           </label>
         </div>
         ${renderEmployeeLeaveAdmin(employee)}
+        <div class="salary-adjust-box">
+          <div class="salary-adjust-title">💰 시급 조정 <span class="salary-adjust-note">근무표는 그대로 두고, 정한 날짜부터 급여 계산만 바뀝니다</span></div>
+          <div class="form-grid wide">
+            <label class="field">
+              <span>적용 시작일</span>
+              <input class="mini-input" name="salaryAdjDate" type="date" value="${escapeAttr(getKoreaDateString())}" />
+            </label>
+            <label class="field">
+              <span>평일 시급</span>
+              <input class="mini-input" name="salaryAdjWeekday" type="number" min="0" step="100" value="${Number(employee.weekdayHourlyRate)}" />
+            </label>
+            <label class="field">
+              <span>주말 시급</span>
+              <input class="mini-input" name="salaryAdjWeekend" type="number" min="0" step="100" value="${Number(employee.weekendHourlyRate)}" />
+            </label>
+            <label class="field">
+              <span>월 고정급</span>
+              <input class="mini-input" name="salaryAdjMonthly" type="number" min="0" step="10000" value="${Number(employee.monthlySalary)}" />
+            </label>
+          </div>
+          ${salaryChangesSummaryHtml(employee)}
+          <button class="secondary-button" type="button" data-action="adjust-salary" data-id="${employee.id}">이 날짜부터 시급 적용</button>
+        </div>
         <div class="employee-card-actions">
           <button class="secondary-button" type="button" data-action="save-employee" data-id="${employee.id}">설정 저장</button>
           <button class="danger-button" type="button" data-action="reset-password" data-id="${employee.id}">비밀번호 초기화</button>
         </div>
       </article>
     `;
+  }
+
+  // 직원의 시급 변경 이력을 간단히 보여준다(적용일 → 금액).
+  function salaryChangesSummaryHtml(employee) {
+    const changes = normalizeSalaryChanges(employee);
+    if (!changes.length) return "";
+    const rows = changes
+      .map((change) => {
+        const label = change.effectiveDate === "0000-00-00" ? "처음" : formatDate(change.effectiveDate);
+        const amount =
+          change.salaryType === "fixed"
+            ? `월급 ${formatWon(change.monthlySalary)}`
+            : `평일 ${formatWon(change.weekdayHourlyRate)} · 주말 ${formatWon(change.weekendHourlyRate)}`;
+        return `<li><b>${escapeHtml(label)}</b>부터 · ${escapeHtml(amount)}</li>`;
+      })
+      .join("");
+    return `<div class="salary-history-wrap"><div class="salary-history-title">시급 이력</div><ul class="salary-history">${rows}</ul></div>`;
   }
 
   function renderEmployeeCardSummary(employee) {
@@ -3204,6 +3244,7 @@
       return;
     }
     if (action === "reset-password") return resetEmployeePassword(id, user);
+    if (action === "adjust-salary") return adjustSalary(id, user);
     if (action === "save-employee") return saveEmployee(id, user);
     if (action === "admin-add-leave") return adminAddEmployeeLeaveDate(id, user);
     if (action === "admin-delete-leave") return adminDeleteEmployeeLeaveDate(id, actionButton.dataset.date, user);
@@ -3859,6 +3900,42 @@
     }
     saveDb();
     showToast("직원 정보를 저장했습니다.");
+  }
+
+  // 시급 조정: 근무표(변경된 것 포함)는 전혀 건드리지 않고, 정한 날짜부터 급여 계산만 바꾼다.
+  function adjustSalary(id, user) {
+    const row = app.querySelector(`[data-employee-row="${cssEscape(id)}"]`);
+    const employee = getEmployee(id);
+    if (!row || !employee) return showToast("직원을 찾을 수 없습니다.");
+    const effectiveDate = getRowValue(row, "salaryAdjDate");
+    if (!effectiveDate) return showToast("적용 시작일을 선택해 주세요.");
+    ensureSalaryBaseline(employee);
+    const config = {
+      effectiveDate: normalizeEffectiveDate(effectiveDate),
+      salaryType: employee.salaryType === "fixed" ? "fixed" : "hourly",
+      weekdayHourlyRate: Number(getRowValue(row, "salaryAdjWeekday") || 0),
+      weekendHourlyRate: Number(getRowValue(row, "salaryAdjWeekend") || 0),
+      monthlySalary: Number(getRowValue(row, "salaryAdjMonthly") || 0),
+    };
+    // 같은 날짜 항목이 있으면 교체, 없으면 추가. (schedules는 절대 손대지 않음)
+    const changes = normalizeSalaryChanges(employee).filter((change) => change.effectiveDate !== config.effectiveDate);
+    changes.push(config);
+    employee.salaryChanges = changes.sort((a, b) => a.effectiveDate.localeCompare(b.effectiveDate));
+    // 이 조정이 가장 최근이면 화면 표시용 기준값도 맞춰 둔다.
+    const latest = employee.salaryChanges[employee.salaryChanges.length - 1];
+    if (latest.effectiveDate === config.effectiveDate) {
+      employee.weekdayHourlyRate = config.weekdayHourlyRate;
+      employee.weekendHourlyRate = config.weekendHourlyRate;
+      employee.monthlySalary = config.monthlySalary;
+      employee.salaryEffectiveDate = config.effectiveDate;
+    }
+    const amountText =
+      config.salaryType === "fixed"
+        ? `월급 ${formatWon(config.monthlySalary)}`
+        : `평일 ${formatWon(config.weekdayHourlyRate)} / 주말 ${formatWon(config.weekendHourlyRate)}`;
+    addAudit(user.id, `${employee.name} 시급을 조정했습니다(근무표 변경 없음).`, `${formatFullDate(config.effectiveDate)}부터 · ${amountText}`);
+    saveDb();
+    showToast(`${employee.name}님 시급을 ${formatDate(config.effectiveDate)}부터 적용했습니다.`);
   }
 
   function resetEmployeePassword(id, user) {

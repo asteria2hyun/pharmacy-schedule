@@ -16,7 +16,7 @@ import { writeFileSync, mkdirSync, readdirSync, unlinkSync } from "node:fs";
 const SUPABASE_URL = "https://seqefputbjlxjyvloywk.supabase.co";
 const KEY = "sb_publishable_k8EqPOzPYr6itPaOgFYwCA_39-Zi182"; // 공개 읽기 키
 const STATE_ID = "shared_schedule";
-const KEEP_DAYS = 30; // 날짜별 스냅샷 보관 일수
+const KEEP_DAYS = 7; // 날짜별 스냅샷 보관 일수(최근 1주일치만 보관, 나머지는 자동 삭제)
 
 // 한국 시간(KST) 기준 오늘 날짜 문자열(YYYY-MM-DD)을 만든다.
 function koreaDateString() {
