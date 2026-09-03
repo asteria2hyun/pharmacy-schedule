@@ -1,17 +1,17 @@
 {
-  "backedUpAt": "2026-09-02T21:07:46.264Z",
-  "sourceVersion": 235,
-  "sourceUpdatedAt": "2026-09-01T04:55:47.271+00:00",
+  "backedUpAt": "2026-09-03T21:07:34.040Z",
+  "sourceVersion": 241,
+  "sourceUpdatedAt": "2026-09-03T09:59:05.292+00:00",
   "note": "비밀번호(authAccounts) 제외. 복원 시 비번은 관리자가 초기화.",
   "counts": {
     "employees": 13,
-    "schedules": 3001,
+    "schedules": 3002,
     "staffSchedules": 1470,
-    "swapRequests": 45,
+    "swapRequests": 46,
     "holidays": 22
   },
   "data": {
-    "savedAt": "2026-09-01T04:55:47.256Z",
+    "savedAt": "2026-09-03T09:59:05.284Z",
     "holidays": [
       {
         "id": "holiday-2026-01-01",
@@ -468,17 +468,24 @@
             "monthlySalary": 0,
             "weekdayHourlyRate": 32000,
             "weekendHourlyRate": 37000
+          },
+          {
+            "salaryType": "hourly",
+            "effectiveDate": "2026-09-01",
+            "monthlySalary": 0,
+            "weekdayHourlyRate": 35000,
+            "weekendHourlyRate": 40000
           }
         ],
         "workStartDate": "2026-06-01",
         "workStartHour": 10,
         "leaveAllowance": 0,
         "resignationDate": "",
-        "weekdayHourlyRate": 32000,
-        "weekendHourlyRate": 37000,
+        "weekdayHourlyRate": 35000,
+        "weekendHourlyRate": 40000,
         "firstWorkStartDate": "2024-08-20",
         "leaveCycleStartDate": "",
-        "salaryEffectiveDate": "2026-06-01",
+        "salaryEffectiveDate": "2026-09-01",
         "lastModifiedStartDate": "2026-06-01"
       },
       {
@@ -632,6 +639,7 @@
           "2026-08-17",
           "2026-08-28",
           "2026-08-31",
+          "2026-09-18",
           "2026-11-17",
           "2026-11-18",
           "2026-11-19",
@@ -20894,6 +20902,14 @@
         "date": "2028-11-28",
         "shiftType": "10pm",
         "pharmacistId": "emp-juyeon"
+      },
+      {
+        "id": "sch-b76af3f3-a0b2-477f-9d53-6d88bea27c48",
+        "date": "2026-09-03",
+        "endHour": 7,
+        "shiftType": "irregular",
+        "startHour": 11.5,
+        "pharmacistId": "emp-bae"
       }
     ],
     "swapRequests": [
@@ -21619,6 +21635,20 @@
         "requesterAssignmentType": "rx",
         "targetOriginalPharmacistId": "emp-juyeon",
         "requesterOriginalPharmacistId": "emp-minji"
+      },
+      {
+        "id": "leave-82658ea0-9d86-4f04-8340-bc973b915ccf",
+        "type": "leave",
+        "status": "approved",
+        "targetId": "emp-bae",
+        "createdAt": "2026-09-03T06:00:29.873Z",
+        "leaveDate": "2026-09-18",
+        "approvedAt": "2026-09-03T09:43:52.961Z",
+        "rejectedAt": "",
+        "cancelledAt": "",
+        "requesterId": "emp-subin",
+        "targetScheduleId": "",
+        "requesterScheduleId": ""
       }
     ],
     "sharedVersion": 1,
@@ -31662,7 +31692,8 @@
       "sch-6c7f63a1-9b95-4681-b543-143a03e5f805",
       "sch-43ce2011-4e00-4131-a902-5afb2bfd3ae8",
       "sch-4ef84742-6525-4d4f-b968-ca5303944636",
-      "sch-cba794e2-0f3d-4103-92ce-6ac358111bae"
+      "sch-cba794e2-0f3d-4103-92ce-6ac358111bae",
+      "sch-c32638c4-5e68-45ff-81c6-9f94935d07ac"
     ],
     "deletedStaffScheduleSeedIds": [
       "staff-2026-06-25-0",
