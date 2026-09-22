@@ -1,17 +1,17 @@
 {
-  "backedUpAt": "2026-09-15T21:28:05.853Z",
-  "sourceVersion": 253,
-  "sourceUpdatedAt": "2026-09-15T10:47:39.933+00:00",
+  "backedUpAt": "2026-09-22T21:25:55.524Z",
+  "sourceVersion": 255,
+  "sourceUpdatedAt": "2026-09-22T11:11:54.626+00:00",
   "note": "비밀번호(authAccounts) 제외. 복원 시 비번은 관리자가 초기화.",
   "counts": {
     "employees": 13,
-    "schedules": 3385,
+    "schedules": 3386,
     "staffSchedules": 1608,
     "swapRequests": 50,
     "holidays": 22
   },
   "data": {
-    "savedAt": "2026-09-15T10:47:39.925Z",
+    "savedAt": "2026-09-22T11:11:54.609Z",
     "holidays": [
       {
         "id": "holiday-2026-01-01",
@@ -2081,7 +2081,7 @@
         "endHour": 8,
         "shiftType": "8pm",
         "startHour": 10,
-        "pharmacistId": "emp-jaehee"
+        "pharmacistId": "emp-juyeon"
       },
       {
         "id": "sch-bd485a6c-6cdd-47c1-811b-56b3d806968b",
@@ -18005,7 +18005,7 @@
         "endHour": 10,
         "shiftType": "10pm",
         "startHour": 10,
-        "pharmacistId": "emp-juyeon"
+        "pharmacistId": "emp-jaehee"
       },
       {
         "id": "sch-83864d79-83f6-48f7-8b89-e2d50c84b4f2",
@@ -23223,6 +23223,14 @@
         "shiftType": "irregular",
         "startHour": 8,
         "pharmacistId": "emp-bae"
+      },
+      {
+        "id": "sch-82e0ff64-6c33-4215-8234-bac717fb283c",
+        "date": "2026-09-22",
+        "endHour": 8,
+        "shiftType": "irregular",
+        "startHour": 12,
+        "pharmacistId": "emp-bae"
       }
     ],
     "swapRequests": [
@@ -23998,10 +24006,10 @@
       },
       {
         "id": "swap-4f40490d-55a8-43b8-8cb5-f714e5a83b1e",
-        "status": "pending",
+        "status": "approved",
         "targetId": "emp-jaehee",
         "createdAt": "2026-09-15T07:46:37.179Z",
-        "approvedAt": "",
+        "approvedAt": "2026-09-16T01:57:39.556Z",
         "rejectedAt": "",
         "cancelledAt": "",
         "requesterId": "emp-juyeon",
