@@ -1,7 +1,7 @@
 {
-  "backedUpAt": "2026-09-27T21:25:51.268Z",
-  "sourceVersion": 259,
-  "sourceUpdatedAt": "2026-09-27T10:38:40.942+00:00",
+  "backedUpAt": "2026-09-28T23:21:59.917Z",
+  "sourceVersion": 260,
+  "sourceUpdatedAt": "2026-09-28T14:40:02.106+00:00",
   "note": "비밀번호(authAccounts) 제외. 복원 시 비번은 관리자가 초기화.",
   "counts": {
     "employees": 13,
@@ -11,7 +11,7 @@
     "holidays": 22
   },
   "data": {
-    "savedAt": "2026-09-27T10:38:40.934Z",
+    "savedAt": "2026-09-28T14:40:02.097Z",
     "holidays": [
       {
         "id": "holiday-2026-01-01",
@@ -18117,7 +18117,7 @@
         "endHour": 10,
         "shiftType": "10pm",
         "startHour": 10,
-        "pharmacistId": "emp-juyeon"
+        "pharmacistId": "emp-bae"
       },
       {
         "id": "sch-63b69e87-7df6-4d24-a468-a9d5b0456c4f",
@@ -24047,10 +24047,10 @@
       {
         "id": "swap-193de2b3-f89b-4f6e-9429-71dc31819b11",
         "type": "handoff",
-        "status": "pending",
+        "status": "approved",
         "targetId": "emp-bae",
         "createdAt": "2026-09-27T10:38:27.479Z",
-        "approvedAt": "",
+        "approvedAt": "2026-09-28T14:40:01.370Z",
         "rejectedAt": "",
         "cancelledAt": "",
         "requesterId": "emp-juyeon",
