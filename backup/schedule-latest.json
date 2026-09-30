@@ -1,17 +1,17 @@
 {
-  "backedUpAt": "2026-09-29T22:22:44.702Z",
-  "sourceVersion": 270,
-  "sourceUpdatedAt": "2026-09-29T12:07:44.719+00:00",
+  "backedUpAt": "2026-09-30T22:21:59.643Z",
+  "sourceVersion": 278,
+  "sourceUpdatedAt": "2026-09-30T08:52:02.099+00:00",
   "note": "비밀번호(authAccounts) 제외. 복원 시 비번은 관리자가 초기화.",
   "counts": {
     "employees": 13,
-    "schedules": 3390,
+    "schedules": 3391,
     "staffSchedules": 1608,
-    "swapRequests": 55,
+    "swapRequests": 58,
     "holidays": 22
   },
   "data": {
-    "savedAt": "2026-09-29T12:07:44.717Z",
+    "savedAt": "2026-09-30T08:52:02.092Z",
     "holidays": [
       {
         "id": "holiday-2026-01-01",
@@ -2987,7 +2987,7 @@
         "endHour": 10,
         "shiftType": "10pm",
         "startHour": 10,
-        "pharmacistId": "emp-juna"
+        "pharmacistId": "emp-juyeon"
       },
       {
         "id": "sch-bb4c90a2-eb45-4aff-8838-ae46e783e847",
@@ -18286,7 +18286,7 @@
         "endHour": 10,
         "shiftType": "10pm",
         "startHour": 10,
-        "pharmacistId": "emp-juyeon"
+        "pharmacistId": "emp-yeongju"
       },
       {
         "id": "sch-f9cd345d-c7f5-44e8-9f74-b2a7fcac18fe",
@@ -18294,7 +18294,7 @@
         "endHour": 10,
         "shiftType": "10pm",
         "startHour": 10,
-        "pharmacistId": "emp-juyeon"
+        "pharmacistId": "emp-juna"
       },
       {
         "id": "sch-79b265ba-ddec-4fc4-a81e-5f8852797b76",
@@ -23272,6 +23272,14 @@
         "shiftType": "8pm",
         "startHour": 10,
         "pharmacistId": "emp-bae"
+      },
+      {
+        "id": "sch-6f72a05e-cdcb-4506-8026-d72007fdb49a",
+        "date": "2026-09-30",
+        "endHour": 8,
+        "shiftType": "irregular",
+        "startHour": 12,
+        "pharmacistId": "emp-bae"
       }
     ],
     "swapRequests": [
@@ -24154,6 +24162,56 @@
         "requesterId": "emp-subin",
         "targetScheduleId": "",
         "requesterScheduleId": ""
+      },
+      {
+        "id": "swap-09b2f702-4329-49d5-a1c6-8c7a776046ff",
+        "type": "handoff",
+        "status": "approved",
+        "targetId": "emp-yeongju",
+        "createdAt": "2026-09-30T01:21:02.105Z",
+        "approvedAt": "2026-09-30T01:21:27.529Z",
+        "rejectedAt": "",
+        "cancelledAt": "",
+        "requesterId": "emp-juyeon",
+        "targetScheduleId": "",
+        "requesterScheduleId": "rx:sch-4345f495-7d93-408f-bcf7-40e7e0d80651",
+        "targetAssignmentType": "handoff",
+        "requesterAssignmentType": "rx",
+        "targetOriginalPharmacistId": "emp-yeongju",
+        "requesterOriginalPharmacistId": "emp-juyeon"
+      },
+      {
+        "id": "swap-acb55ca7-3b50-430b-bb86-ce250463b55a",
+        "type": "coverage",
+        "status": "approved",
+        "targetId": "emp-bae",
+        "createdAt": "2026-09-30T01:52:34.217Z",
+        "approvedAt": "2026-09-30T08:51:24.292Z",
+        "rejectedAt": "",
+        "cancelledAt": "",
+        "requesterId": "emp-hyojin",
+        "targetScheduleId": "",
+        "requesterScheduleId": "staff:staff-e8473f92-23c5-4589-b33e-808419ce3a14",
+        "targetAssignmentType": "adminCoverage",
+        "requesterAssignmentType": "staff",
+        "targetOriginalPharmacistId": "emp-bae",
+        "requesterOriginalPharmacistId": "emp-hyojin"
+      },
+      {
+        "id": "swap-293bf045-24a4-435d-aee9-6e9b315b4b62",
+        "status": "approved",
+        "targetId": "emp-juna",
+        "createdAt": "2026-09-30T01:59:40.830Z",
+        "approvedAt": "2026-09-30T02:07:38.468Z",
+        "rejectedAt": "",
+        "cancelledAt": "",
+        "requesterId": "emp-juyeon",
+        "targetScheduleId": "rx:sch-5bd6546b-4e48-442c-8d98-4db7d0ccaa56",
+        "requesterScheduleId": "rx:sch-f9cd345d-c7f5-44e8-9f74-b2a7fcac18fe",
+        "targetAssignmentType": "rx",
+        "requesterAssignmentType": "rx",
+        "targetOriginalPharmacistId": "emp-juna",
+        "requesterOriginalPharmacistId": "emp-juyeon"
       }
     ],
     "sharedVersion": 1,
@@ -26127,7 +26185,7 @@
         "date": "2026-10-18",
         "hours": 10.5,
         "endHour": 8.5,
-        "staffId": "emp-hyojin",
+        "staffId": "emp-bae",
         "startHour": 10
       },
       {
@@ -35012,6 +35070,15 @@
         "startDate": "2026-06-28",
         "updatedAt": "2026-06-05T10:14:01.889Z",
         "employeeId": "emp-juna"
+      },
+      {
+        "id": "overseas-792fb712-75f9-4e93-81ce-82f012dc0760",
+        "memo": "해외일정",
+        "endDate": "2026-11-04",
+        "createdAt": "2026-09-30T07:19:06.050Z",
+        "startDate": "2026-10-31",
+        "updatedAt": "2026-09-30T07:19:06.050Z",
+        "employeeId": "emp-jaehee"
       }
     ],
     "deletedScheduleSeedIds": [
