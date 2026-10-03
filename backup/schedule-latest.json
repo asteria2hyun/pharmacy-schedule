@@ -1,7 +1,7 @@
 {
-  "backedUpAt": "2026-10-02T22:19:57.834Z",
-  "sourceVersion": 283,
-  "sourceUpdatedAt": "2026-10-02T09:03:33.843+00:00",
+  "backedUpAt": "2026-10-03T21:25:34.781Z",
+  "sourceVersion": 285,
+  "sourceUpdatedAt": "2026-10-03T01:01:33.279+00:00",
   "note": "비밀번호(authAccounts) 제외. 복원 시 비번은 관리자가 초기화.",
   "counts": {
     "employees": 13,
@@ -11,7 +11,7 @@
     "holidays": 22
   },
   "data": {
-    "savedAt": "2026-10-02T09:03:33.830Z",
+    "savedAt": "2026-10-03T01:01:33.269Z",
     "holidays": [
       {
         "id": "holiday-2026-01-01",
@@ -2274,7 +2274,7 @@
         "endHour": 8,
         "shiftType": "8pm",
         "startHour": 10,
-        "pharmacistId": "emp-jaehee"
+        "pharmacistId": "emp-hyeonju"
       },
       {
         "id": "sch-004cabe8-773a-451c-9172-b767843f2b09",
@@ -2330,7 +2330,7 @@
         "endHour": 10,
         "shiftType": "10pm",
         "startHour": 10,
-        "pharmacistId": "emp-jaehee"
+        "pharmacistId": "emp-hyeonju"
       },
       {
         "id": "sch-4a48524b-7e26-4a22-84ce-4ca27212d23d",
@@ -11395,7 +11395,7 @@
         "endHour": 8,
         "shiftType": "8pm",
         "startHour": 10,
-        "pharmacistId": "emp-hyeonju"
+        "pharmacistId": "emp-jaehee"
       },
       {
         "id": "sch-1b66fe64-17e9-4642-9303-5f7a0e40060d",
@@ -11403,7 +11403,7 @@
         "endHour": 8,
         "shiftType": "8pm",
         "startHour": 10,
-        "pharmacistId": "emp-hyeonju"
+        "pharmacistId": "emp-jaehee"
       },
       {
         "id": "sch-fe52f0cd-d899-4340-b8ca-6c7aae8dd85f",
@@ -24215,10 +24215,10 @@
       },
       {
         "id": "swap-92ba6551-a02d-41df-8f1d-8cc33172d5da",
-        "status": "pending",
+        "status": "approved",
         "targetId": "emp-hyeonju",
         "createdAt": "2026-10-02T08:45:10.560Z",
-        "approvedAt": "",
+        "approvedAt": "2026-10-03T01:00:14.466Z",
         "rejectedAt": "",
         "cancelledAt": "",
         "requesterId": "emp-jaehee",
@@ -24231,10 +24231,10 @@
       },
       {
         "id": "swap-6be0774b-83a4-4b47-999b-a15d3012e2b8",
-        "status": "pending",
+        "status": "approved",
         "targetId": "emp-hyeonju",
         "createdAt": "2026-10-02T08:46:19.317Z",
-        "approvedAt": "",
+        "approvedAt": "2026-10-03T01:01:32.558Z",
         "rejectedAt": "",
         "cancelledAt": "",
         "requesterId": "emp-jaehee",
