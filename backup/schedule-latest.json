@@ -1,17 +1,17 @@
 {
-  "backedUpAt": "2026-10-04T21:36:46.311Z",
-  "sourceVersion": 289,
-  "sourceUpdatedAt": "2026-10-04T11:41:32.457+00:00",
+  "backedUpAt": "2026-10-06T00:08:37.559Z",
+  "sourceVersion": 291,
+  "sourceUpdatedAt": "2026-10-05T06:29:57.286+00:00",
   "note": "비밀번호(authAccounts) 제외. 복원 시 비번은 관리자가 초기화.",
   "counts": {
     "employees": 13,
     "schedules": 3392,
     "staffSchedules": 1608,
-    "swapRequests": 63,
+    "swapRequests": 64,
     "holidays": 22
   },
   "data": {
-    "savedAt": "2026-10-04T11:41:32.445Z",
+    "savedAt": "2026-10-05T06:29:57.278Z",
     "holidays": [
       {
         "id": "holiday-2026-01-01",
@@ -24302,6 +24302,23 @@
         "requesterAssignmentType": "rx",
         "targetOriginalPharmacistId": "emp-hyeonju",
         "requesterOriginalPharmacistId": "emp-jaehee"
+      },
+      {
+        "id": "swap-1ce13c3b-3fa3-4206-beb8-cb3f2f20c32a",
+        "type": "coverage",
+        "status": "approved",
+        "targetId": "emp-bae",
+        "createdAt": "2026-10-05T05:05:56.855Z",
+        "approvedAt": "2026-10-05T06:29:56.549Z",
+        "rejectedAt": "",
+        "cancelledAt": "",
+        "requesterId": "emp-yuri",
+        "targetScheduleId": "",
+        "requesterScheduleId": "staff:staff-6764acbe-4938-48c5-b866-c12a597117d4",
+        "targetAssignmentType": "adminCoverage",
+        "requesterAssignmentType": "staff",
+        "targetOriginalPharmacistId": "emp-bae",
+        "requesterOriginalPharmacistId": "emp-yuri"
       }
     ],
     "sharedVersion": 1,
@@ -25931,7 +25948,7 @@
         "date": "2026-11-08",
         "hours": 10.5,
         "endHour": 8.5,
-        "staffId": "emp-yuri",
+        "staffId": "emp-bae",
         "startHour": 10
       },
       {
