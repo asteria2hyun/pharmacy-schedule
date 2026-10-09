@@ -1,17 +1,17 @@
 {
-  "backedUpAt": "2026-10-02T22:19:57.834Z",
-  "sourceVersion": 283,
-  "sourceUpdatedAt": "2026-10-02T09:03:33.843+00:00",
+  "backedUpAt": "2026-10-09T22:43:50.323Z",
+  "sourceVersion": 292,
+  "sourceUpdatedAt": "2026-10-07T14:48:21.788+00:00",
   "note": "비밀번호(authAccounts) 제외. 복원 시 비번은 관리자가 초기화.",
   "counts": {
     "employees": 13,
-    "schedules": 3391,
+    "schedules": 3393,
     "staffSchedules": 1608,
-    "swapRequests": 62,
+    "swapRequests": 64,
     "holidays": 22
   },
   "data": {
-    "savedAt": "2026-10-02T09:03:33.830Z",
+    "savedAt": "2026-10-07T14:48:21.771Z",
     "holidays": [
       {
         "id": "holiday-2026-01-01",
@@ -2274,7 +2274,7 @@
         "endHour": 8,
         "shiftType": "8pm",
         "startHour": 10,
-        "pharmacistId": "emp-jaehee"
+        "pharmacistId": "emp-hyeonju"
       },
       {
         "id": "sch-004cabe8-773a-451c-9172-b767843f2b09",
@@ -2282,7 +2282,7 @@
         "endHour": 8,
         "shiftType": "8pm",
         "startHour": 10,
-        "pharmacistId": "emp-jaehee"
+        "pharmacistId": "emp-bae"
       },
       {
         "id": "sch-cc4f8729-70f1-4ae2-a804-1804446c52b8",
@@ -2330,7 +2330,7 @@
         "endHour": 10,
         "shiftType": "10pm",
         "startHour": 10,
-        "pharmacistId": "emp-jaehee"
+        "pharmacistId": "emp-hyeonju"
       },
       {
         "id": "sch-4a48524b-7e26-4a22-84ce-4ca27212d23d",
@@ -3567,7 +3567,7 @@
         "endHour": 10,
         "shiftType": "10pm",
         "startHour": 10,
-        "pharmacistId": "emp-jaehee"
+        "pharmacistId": "emp-hyeonju"
       },
       {
         "id": "sch-940faef7-68bd-4b60-b6f4-193dd2f2908f",
@@ -11307,7 +11307,7 @@
         "endHour": 8,
         "shiftType": "8pm",
         "startHour": 10,
-        "pharmacistId": "emp-hyeonju"
+        "pharmacistId": "emp-jaehee"
       },
       {
         "id": "sch-576c6b8f-8208-42e4-9a8d-ab34c202c7c0",
@@ -11395,7 +11395,7 @@
         "endHour": 8,
         "shiftType": "8pm",
         "startHour": 10,
-        "pharmacistId": "emp-hyeonju"
+        "pharmacistId": "emp-jaehee"
       },
       {
         "id": "sch-1b66fe64-17e9-4642-9303-5f7a0e40060d",
@@ -11403,7 +11403,7 @@
         "endHour": 8,
         "shiftType": "8pm",
         "startHour": 10,
-        "pharmacistId": "emp-hyeonju"
+        "pharmacistId": "emp-jaehee"
       },
       {
         "id": "sch-fe52f0cd-d899-4340-b8ca-6c7aae8dd85f",
@@ -23280,6 +23280,22 @@
         "shiftType": "irregular",
         "startHour": 12,
         "pharmacistId": "emp-bae"
+      },
+      {
+        "id": "sch-837ac55d-e2d0-47a0-80ed-5b58796976b4",
+        "date": "2026-10-05",
+        "endHour": 10.5,
+        "shiftType": "irregular",
+        "startHour": 10,
+        "pharmacistId": "emp-bae"
+      },
+      {
+        "id": "sch-5856416b-6bab-4af4-8f47-11309d704c42",
+        "date": "2026-10-06",
+        "endHour": 8,
+        "shiftType": "irregular",
+        "startHour": 11,
+        "pharmacistId": "emp-bae"
       }
     ],
     "swapRequests": [
@@ -24215,10 +24231,10 @@
       },
       {
         "id": "swap-92ba6551-a02d-41df-8f1d-8cc33172d5da",
-        "status": "pending",
+        "status": "approved",
         "targetId": "emp-hyeonju",
         "createdAt": "2026-10-02T08:45:10.560Z",
-        "approvedAt": "",
+        "approvedAt": "2026-10-03T01:00:14.466Z",
         "rejectedAt": "",
         "cancelledAt": "",
         "requesterId": "emp-jaehee",
@@ -24231,10 +24247,10 @@
       },
       {
         "id": "swap-6be0774b-83a4-4b47-999b-a15d3012e2b8",
-        "status": "pending",
+        "status": "approved",
         "targetId": "emp-hyeonju",
         "createdAt": "2026-10-02T08:46:19.317Z",
-        "approvedAt": "",
+        "approvedAt": "2026-10-03T01:01:32.558Z",
         "rejectedAt": "",
         "cancelledAt": "",
         "requesterId": "emp-jaehee",
@@ -24265,10 +24281,10 @@
       {
         "id": "swap-d0b9a50f-eaca-46f7-9693-41d6cb7af087",
         "type": "handoff",
-        "status": "pending",
+        "status": "approved",
         "targetId": "emp-bae",
         "createdAt": "2026-10-02T09:03:33.104Z",
-        "approvedAt": "",
+        "approvedAt": "2026-10-04T11:40:51.631Z",
         "rejectedAt": "",
         "cancelledAt": "",
         "requesterId": "emp-jaehee",
@@ -24278,6 +24294,39 @@
         "requesterAssignmentType": "rx",
         "targetOriginalPharmacistId": "emp-bae",
         "requesterOriginalPharmacistId": "emp-jaehee"
+      },
+      {
+        "id": "swap-52d8e442-98a3-4294-a390-84a7711e2ac1",
+        "status": "approved",
+        "targetId": "emp-hyeonju",
+        "createdAt": "2026-10-04T01:00:12.922Z",
+        "approvedAt": "2026-10-04T01:06:21.447Z",
+        "rejectedAt": "",
+        "cancelledAt": "",
+        "requesterId": "emp-jaehee",
+        "targetScheduleId": "rx:sch-59ec07f0-7905-4828-b053-47ed9e51bde7",
+        "requesterScheduleId": "rx:sch-b41995b7-9107-49a5-8190-414f7ff28c5e",
+        "targetAssignmentType": "rx",
+        "requesterAssignmentType": "rx",
+        "targetOriginalPharmacistId": "emp-hyeonju",
+        "requesterOriginalPharmacistId": "emp-jaehee"
+      },
+      {
+        "id": "swap-1ce13c3b-3fa3-4206-beb8-cb3f2f20c32a",
+        "type": "coverage",
+        "status": "approved",
+        "targetId": "emp-bae",
+        "createdAt": "2026-10-05T05:05:56.855Z",
+        "approvedAt": "2026-10-05T06:29:56.549Z",
+        "rejectedAt": "",
+        "cancelledAt": "",
+        "requesterId": "emp-yuri",
+        "targetScheduleId": "",
+        "requesterScheduleId": "staff:staff-6764acbe-4938-48c5-b866-c12a597117d4",
+        "targetAssignmentType": "adminCoverage",
+        "requesterAssignmentType": "staff",
+        "targetOriginalPharmacistId": "emp-bae",
+        "requesterOriginalPharmacistId": "emp-yuri"
       }
     ],
     "sharedVersion": 1,
@@ -25907,7 +25956,7 @@
         "date": "2026-11-08",
         "hours": 10.5,
         "endHour": 8.5,
-        "staffId": "emp-yuri",
+        "staffId": "emp-bae",
         "startHour": 10
       },
       {
