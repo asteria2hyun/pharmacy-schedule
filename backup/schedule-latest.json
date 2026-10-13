@@ -1,7 +1,7 @@
 {
-  "backedUpAt": "2026-10-11T22:06:33.936Z",
-  "sourceVersion": 296,
-  "sourceUpdatedAt": "2026-10-10T10:58:45.916+00:00",
+  "backedUpAt": "2026-10-13T00:49:00.833Z",
+  "sourceVersion": 297,
+  "sourceUpdatedAt": "2026-10-12T10:22:52.676+00:00",
   "note": "비밀번호(authAccounts) 제외. 복원 시 비번은 관리자가 초기화.",
   "counts": {
     "employees": 13,
@@ -11,7 +11,7 @@
     "holidays": 22
   },
   "data": {
-    "savedAt": "2026-10-10T10:58:45.905Z",
+    "savedAt": "2026-10-12T10:22:52.665Z",
     "holidays": [
       {
         "id": "holiday-2026-01-01",
@@ -35226,6 +35226,15 @@
         "startDate": "2026-10-31",
         "updatedAt": "2026-09-30T07:19:06.050Z",
         "employeeId": "emp-jaehee"
+      },
+      {
+        "id": "overseas-ff38b354-d63a-48a0-911e-09589afba9d7",
+        "memo": "여행",
+        "endDate": "2026-12-15",
+        "createdAt": "2026-10-12T10:22:51.938Z",
+        "startDate": "2026-12-11",
+        "updatedAt": "2026-10-12T10:22:51.938Z",
+        "employeeId": "emp-minji"
       }
     ],
     "deletedScheduleSeedIds": [
