@@ -1,17 +1,17 @@
 {
-  "backedUpAt": "2026-10-13T22:53:39.440Z",
-  "sourceVersion": 303,
-  "sourceUpdatedAt": "2026-10-13T06:35:38.129+00:00",
+  "backedUpAt": "2026-10-14T21:47:26.244Z",
+  "sourceVersion": 306,
+  "sourceUpdatedAt": "2026-10-14T11:11:27.929+00:00",
   "note": "비밀번호(authAccounts) 제외. 복원 시 비번은 관리자가 초기화.",
   "counts": {
     "employees": 13,
-    "schedules": 3393,
+    "schedules": 3394,
     "staffSchedules": 1610,
     "swapRequests": 68,
     "holidays": 22
   },
   "data": {
-    "savedAt": "2026-10-13T06:35:38.119Z",
+    "savedAt": "2026-10-14T11:11:27.916Z",
     "holidays": [
       {
         "id": "holiday-2026-01-01",
@@ -2985,9 +2985,18 @@
         "id": "sch-5bd6546b-4e48-442c-8d98-4db7d0ccaa56",
         "date": "2026-11-19",
         "endHour": 10,
+        "changedAt": "2026-10-14T05:24:35.513Z",
+        "changedBy": "emp-bae",
         "shiftType": "10pm",
         "startHour": 10,
-        "pharmacistId": "emp-juyeon"
+        "changeType": "rx-manual",
+        "pharmacistId": "emp-bae",
+        "changeOriginal": {
+          "endHour": 10,
+          "shiftType": "10pm",
+          "startHour": 10,
+          "pharmacistId": "emp-juyeon"
+        }
       },
       {
         "id": "sch-bb4c90a2-eb45-4aff-8838-ae46e783e847",
@@ -18286,7 +18295,7 @@
         "endHour": 10,
         "shiftType": "10pm",
         "startHour": 10,
-        "pharmacistId": "emp-juyeon"
+        "pharmacistId": "emp-bae"
       },
       {
         "id": "sch-f9cd345d-c7f5-44e8-9f74-b2a7fcac18fe",
@@ -23296,6 +23305,14 @@
         "shiftType": "irregular",
         "startHour": 11,
         "pharmacistId": "emp-bae"
+      },
+      {
+        "id": "sch-c988247b-52db-4147-babc-5101d09a7224",
+        "date": "2026-10-14",
+        "endHour": 8,
+        "shiftType": "irregular",
+        "startHour": 11,
+        "pharmacistId": "emp-bae"
       }
     ],
     "swapRequests": [
@@ -24380,10 +24397,10 @@
       {
         "id": "swap-8cdc946d-23f8-4623-bc21-a4f10856c70c",
         "type": "handoff",
-        "status": "pending",
+        "status": "approved",
         "targetId": "emp-bae",
         "createdAt": "2026-10-13T06:35:37.409Z",
-        "approvedAt": "",
+        "approvedAt": "2026-10-14T01:04:48.337Z",
         "rejectedAt": "",
         "cancelledAt": "",
         "requesterId": "emp-juyeon",
