@@ -56,6 +56,9 @@
   };
   // 시급 점검일(매년 같은 월-일). 점주가 2026-10-16에 직접 정해준 값. 직원관리 카드에서 바꾸면 그 값이 우선한다.
   // 여기 없는 사람(황주연·배주성·신규)은 자동 기준(가장 최근 시급 조정일, 없으면 입사일 + 만 N년)을 쓴다.
+  // 위 기본 점검일을 정한 날. 이 날 이후에 저장한 시급 조정만 '다음 점검일을 조정일+1년으로 옮기는' 기준이 된다.
+  // (그 전 시급 이력은 데이터가 불완전해서 무시한다.)
+  const DEFAULT_SALARY_REVIEW_SET_AT = "2026-10-16";
   const DEFAULT_SALARY_REVIEW_MONTH_DAY = {
     "emp-juna": "03-01", // 최준아
     "emp-jaehee": "06-01", // 박재희
@@ -1829,7 +1832,7 @@
           ${cells.join("")}
         </div>
         <p class="calendar-legend"><sup class="changed-star">*</sup> 표시는 기본 근무와 달라진(교환·넘기기·대체·수정) 근무입니다.</p>
-        ${canSeeSalaryReviewMark(user) ? `<p class="calendar-legend"><span class="salary-review-mark">💰시급</span> 표시는 매년 시급 점검일(직원관리에서 정함)의 근무입니다(그날 근무가 없으면 그 다음 근무). 마스터에게만 보입니다.</p>` : ""}
+        ${canSeeSalaryReviewMark(user) ? `<p class="calendar-legend"><span class="salary-review-mark">💰시급</span> 표시는 매년 시급 점검일(직원관리에서 정함)의 근무입니다(그날 근무가 없으면 그 다음 근무). 시급을 새로 적용하면 그 적용일부터 1년 뒤로 옮겨집니다. 마스터에게만 보입니다.</p>` : ""}
       </section>
     `;
   }
@@ -1979,6 +1982,13 @@
     return DEFAULT_SALARY_REVIEW_MONTH_DAY[employee?.id] || "";
   }
 
+  // 점검일을 정한 날짜. 이 날 이후에 저장한 시급 조정만 점검일을 옮기는 기준으로 삼는다.
+  function getSalaryReviewSetAt(employee) {
+    const saved = String(employee?.salaryReviewMonthDaySetAt || "");
+    if (/^\d{4}-\d{2}-\d{2}$/.test(saved) && /^\d{2}-\d{2}$/.test(String(employee?.salaryReviewMonthDay || ""))) return saved;
+    return DEFAULT_SALARY_REVIEW_SET_AT;
+  }
+
   // 특정 연도의 점검일(해당 연도에 없는 날이면 그 달 마지막 날로)
   function salaryReviewDateInYear(monthDay, year) {
     const [month, day] = monthDay.split("-").map(Number);
@@ -2013,14 +2023,30 @@
     const monthDay = getSalaryReviewMonthDay(employee);
     if (monthDay && firstWorkDate) {
       const hireDate = getEmployeeHireDate(employee) || firstWorkDate;
+      // 점검일을 정한 뒤에 저장한 시급 조정들(적용 시작일 순). 조정이 있으면 그 뒤 점검일은 '조정일 + N년'으로 바뀐다.
+      const setAt = getSalaryReviewSetAt(employee);
+      const adjustments = normalizeSalaryChanges(employee)
+        .map((change) => change.effectiveDate)
+        .filter((date) => /^\d{4}-\d{2}-\d{2}$/.test(date) && date !== "0000-00-00" && date > setAt)
+        .sort();
+      const firstAdjustment = adjustments[0] || "";
       const startYear = Number(firstWorkDate.slice(0, 4));
       const endYear = Number(lastWorkDate.slice(0, 4));
       for (let year = startYear; year <= endYear; year += 1) {
         const reviewDate = salaryReviewDateInYear(monthDay, year);
-        if (reviewDate && reviewDate > hireDate && reviewDate >= firstWorkDate) {
-          reviewDates.push({ reviewDate, years: getFullYearsSince(hireDate, reviewDate) });
-        }
+        if (!reviewDate || reviewDate <= hireDate || reviewDate < firstWorkDate) continue;
+        if (firstAdjustment && reviewDate >= firstAdjustment) break; // 조정 이후는 조정일 기준으로
+        reviewDates.push({ reviewDate, years: getFullYearsSince(hireDate, reviewDate) });
       }
+      adjustments.forEach((adjustmentDate, index) => {
+        const nextAdjustment = adjustments[index + 1] || "";
+        for (let years = 1; years <= 50; years += 1) {
+          const reviewDate = addYearsToDate(adjustmentDate, years);
+          if (reviewDate > lastWorkDate) break;
+          if (nextAdjustment && reviewDate >= nextAdjustment) break; // 그 사이 또 조정했으면 거기서 다시 시작
+          reviewDates.push({ reviewDate, years: getFullYearsSince(hireDate, reviewDate), fromAdjustment: adjustmentDate });
+        }
+      });
     } else if (!monthDay) {
       const baseDate = getSalaryReviewBaseDate(employee);
       if (baseDate && lastWorkDate) {
@@ -2031,9 +2057,9 @@
         }
       }
     }
-    reviewDates.forEach(({ reviewDate, years }) => {
+    reviewDates.forEach(({ reviewDate, years, fromAdjustment }) => {
       const markDate = workDates.find((date) => date >= reviewDate); // 그날 근무, 없으면 그 다음 근무
-      if (markDate && !marks.has(markDate)) marks.set(markDate, { reviewDate, years });
+      if (markDate && !marks.has(markDate)) marks.set(markDate, { reviewDate, years, fromAdjustment: fromAdjustment || "" });
     });
     salaryReviewMarkCache.set(employee.id, marks);
     return marks;
@@ -2044,9 +2070,11 @@
     const mark = getSalaryReviewMarkDates(employee).get(date);
     if (!mark) return "";
     const monthDay = getSalaryReviewMonthDay(employee);
-    const title = monthDay
-      ? `시급 점검일 ${formatFullDate(mark.reviewDate)} (매년 ${Number(monthDay.slice(0, 2))}월 ${Number(monthDay.slice(3))}일)${mark.years ? ` · 입사 ${mark.years}년` : ""}`
-      : `시급 조정(없으면 입사) 후 만 ${mark.years}년 (${formatFullDate(mark.reviewDate)})`;
+    const title = mark.fromAdjustment
+      ? `시급 점검일 ${formatFullDate(mark.reviewDate)} (${formatFullDate(mark.fromAdjustment)} 시급 조정 후 1년 단위)`
+      : monthDay
+        ? `시급 점검일 ${formatFullDate(mark.reviewDate)} (매년 ${Number(monthDay.slice(0, 2))}월 ${Number(monthDay.slice(3))}일)${mark.years ? ` · 입사 ${mark.years}년` : ""}`
+        : `시급 조정(없으면 입사) 후 만 ${mark.years}년 (${formatFullDate(mark.reviewDate)})`;
     return `<span class="salary-review-mark" title="${escapeAttr(title)}">💰시급</span>`;
   }
 
@@ -2061,7 +2089,8 @@
       const label = `매년 ${Number(monthDay.slice(0, 2))}월 ${Number(monthDay.slice(3))}일`;
       if (!upcoming) return `💰 시급 점검일 ${label}`;
       const [markDate, mark] = upcoming;
-      return `💰 시급 점검일 ${label} · 다음 ${formatFullDate(mark.reviewDate)}${markDate !== mark.reviewDate ? ` (표시: ${formatFullDate(markDate)} 근무)` : ""}`;
+      const basis = mark.fromAdjustment ? `${formatFullDate(mark.fromAdjustment)} 시급 조정 기준` : label;
+      return `💰 시급 점검일 ${basis} · 다음 ${formatFullDate(mark.reviewDate)}${markDate !== mark.reviewDate ? ` (표시: ${formatFullDate(markDate)} 근무)` : ""}`;
     }
     const baseDate = getSalaryReviewBaseDate(employee);
     if (!baseDate) return "";
@@ -4075,7 +4104,13 @@
     const reviewMonth = Number(getRowValue(row, "salaryReviewMonth") || 0);
     const reviewDay = Number(getRowValue(row, "salaryReviewDay") || 0);
     const previousReviewMonthDay = getSalaryReviewMonthDay(employee);
+    const previousSavedMonthDay = employee.salaryReviewMonthDay || "";
     employee.salaryReviewMonthDay = reviewMonth && reviewDay ? `${pad(reviewMonth)}-${pad(reviewDay)}` : "";
+    if (!employee.salaryReviewMonthDay) {
+      employee.salaryReviewMonthDaySetAt = "";
+    } else if (employee.salaryReviewMonthDay !== previousSavedMonthDay) {
+      employee.salaryReviewMonthDaySetAt = getKoreaDateString(); // 이 날 이후의 시급 조정부터 점검일을 옮긴다
+    }
     if (getSalaryReviewMonthDay(employee) !== previousReviewMonthDay) {
       const next = getSalaryReviewMonthDay(employee);
       addAudit(user.id, `${employee.name} 직원의 시급 점검일을 ${next ? `매년 ${Number(next.slice(0, 2))}월 ${Number(next.slice(3))}일` : "자동 기준"}으로 바꿨습니다.`);
