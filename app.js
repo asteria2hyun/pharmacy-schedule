@@ -1814,6 +1814,7 @@
           ${cells.join("")}
         </div>
         <p class="calendar-legend"><sup class="changed-star">*</sup> 표시는 기본 근무와 달라진(교환·넘기기·대체·수정) 근무입니다.</p>
+        ${hasAnySalaryReviewDue(user) ? `<p class="calendar-legend"><span class="salary-review-mark">💰1년</span> 표시는 시급 조정(없으면 입사) 후 만 1년이 지난 사람입니다. 마스터에게만 보이며, 직원관리에서 시급을 새로 적용하면 사라집니다.</p>` : ""}
       </section>
     `;
   }
@@ -1884,13 +1885,14 @@
     const name = employee ? employee.name : "알 수 없음";
     const statusMark = employee && employee.status === "resigned" ? " (퇴사)" : "";
     const changedMark = isChangedSchedule(schedule, "rx") ? renderChangedScheduleMark() : "";
+    const salaryMark = schedule.date >= getKoreaDateString() ? renderSalaryReviewMark(user, employee) : "";
     const timeLabel = schedule.pharmacistId === "emp-bae" ? SHIFT_META[schedule.shiftType]?.label : getScheduleTimeLabel(schedule);
     const timeMark =
       schedule.pharmacistId !== "emp-bae" && timeLabel !== SHIFT_META[schedule.shiftType]?.label
         ? `<span class="person-time">${escapeHtml(timeLabel)}</span>`
         : "";
     return `<div class="person-row ${isMine ? "mine" : ""} ${pendingSwap ? "pending-swap-person" : ""} ${pendingForMe ? "needs-my-approval" : ""}">
-      <span class="person-name">${escapeHtml(name)}${changedMark}${statusMark}</span>${timeMark}${pendingSwap ? `<span class="swap-badge">${pendingForMe ? "승인필요" : "교체대기"}</span>` : ""}
+      <span class="person-name">${escapeHtml(name)}${changedMark}${statusMark}${salaryMark}</span>${timeMark}${pendingSwap ? `<span class="swap-badge">${pendingForMe ? "승인필요" : "교체대기"}</span>` : ""}
     </div>`;
   }
 
@@ -1913,13 +1915,59 @@
     const name = employee ? employee.name : "알 수 없음";
     const statusMark = employee && employee.status === "resigned" ? " (퇴사)" : "";
     const changedMark = isChangedSchedule(schedule, "staff") ? renderChangedScheduleMark() : "";
+    const salaryMark = schedule.date >= getKoreaDateString() ? renderSalaryReviewMark(user, employee) : "";
     return `<div class="person-row staff-person ${isMine ? "mine" : ""} ${pendingSwap ? "pending-swap-person" : ""} ${pendingForMe ? "needs-my-approval" : ""}">
-      <span class="person-name">${escapeHtml(name)}${changedMark}${statusMark}</span>${pendingSwap ? `<span class="swap-badge">${pendingForMe ? "승인필요" : "교체대기"}</span>` : ""}
+      <span class="person-name">${escapeHtml(name)}${changedMark}${statusMark}${salaryMark}</span>${pendingSwap ? `<span class="swap-badge">${pendingForMe ? "승인필요" : "교체대기"}</span>` : ""}
     </div>`;
   }
 
   function renderChangedScheduleMark() {
     return `<sup class="changed-star" title="변경된 근무">*</sup>`;
+  }
+
+  // ===== 시급 조정 만 N년 표시(마스터 전용) =====
+  // 기준일: 가장 최근 시급 조정 적용일(조정 기록이 없으면 입사일). 기준일로부터 만 1년, 2년… 지나면 표시한다.
+  // 새 시급 조정을 저장하면 기준일이 바뀌어 표시가 사라진다.
+  function canSeeSalaryReviewMark(user) {
+    return Boolean(user) && user.id === "emp-bae" && !user.viewOnly;
+  }
+
+  function getSalaryReviewBaseDate(employee) {
+    const changes = normalizeSalaryChanges(employee).filter((change) => /^\d{4}-\d{2}-\d{2}$/.test(change.effectiveDate) && change.effectiveDate !== "0000-00-00");
+    const latest = changes.length ? changes[changes.length - 1].effectiveDate : "";
+    const base = latest || getEmployeeHireDate(employee);
+    return /^\d{4}-\d{2}-\d{2}$/.test(base || "") ? base : "";
+  }
+
+  // 기준일부터 오늘까지 만으로 몇 년이 지났는지(생일 계산과 같은 방식). 1년 미만이면 0.
+  function getFullYearsSince(startDate, today = getKoreaDateString()) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate || "")) return 0;
+    const [sy, sm, sd] = startDate.split("-").map(Number);
+    const [ty, tm, td] = today.split("-").map(Number);
+    let years = ty - sy;
+    if (tm < sm || (tm === sm && td < sd)) years -= 1;
+    return Math.max(0, years);
+  }
+
+  function getSalaryReviewInfo(employee) {
+    if (!employee || employee.status !== "active") return null;
+    const baseDate = getSalaryReviewBaseDate(employee);
+    if (!baseDate) return null;
+    const years = getFullYearsSince(baseDate);
+    if (years < 1) return null;
+    return { baseDate, years };
+  }
+
+  function renderSalaryReviewMark(user, employee) {
+    if (!canSeeSalaryReviewMark(user)) return "";
+    const info = getSalaryReviewInfo(employee);
+    if (!info) return "";
+    return `<span class="salary-review-mark" title="시급 조정 후 만 ${info.years}년 (기준 ${escapeAttr(formatDate(info.baseDate))})">💰${info.years}년</span>`;
+  }
+
+  function hasAnySalaryReviewDue(user) {
+    if (!canSeeSalaryReviewMark(user)) return false;
+    return db.employees.some((employee) => Boolean(getSalaryReviewInfo(employee)));
   }
 
   // 별표 판정: 직원관리에 세팅된 요일별 근무(workPatterns)가 유일한 기준이다.
@@ -2859,11 +2907,13 @@
     const firstWorkDate = getEmployeeFirstWorkStartDate(employee);
     const tenureText = firstWorkDate ? formatTenureFrom(firstWorkDate) : "";
     const workSummary = workPatternSummary(employee);
+    const salaryReviewInfo = getSalaryReviewInfo(employee); // 직원관리는 관리자(마스터) 전용 화면
     return `
       <div class="employee-card-meta">
         <span class="employee-meta-chip">ID ${escapeHtml(employee.loginId)}</span>
         <span class="employee-meta-chip">${escapeHtml(employeeDisplayRole(employee))}</span>
         ${employee.mustChangePassword ? `<span class="employee-meta-chip warning">비밀번호 설정 필요</span>` : ""}
+        ${salaryReviewInfo ? `<span class="employee-meta-chip salary-review">💰 시급 조정 후 만 ${salaryReviewInfo.years}년 지남 (기준 ${escapeHtml(formatDate(salaryReviewInfo.baseDate))})</span>` : ""}
       </div>
       <div class="employee-card-info">
         ${hireDate ? `<span>입사 ${escapeHtml(formatDate(hireDate))}</span>` : ""}
@@ -3637,6 +3687,30 @@
     return dates.length > 0 && dates.every((date) => date >= today);
   }
 
+  // 승인완료된 교환·넘기기·대체를 되돌릴 수 없는 경우를 알려준다(빈 문자열이면 취소 가능).
+  //  - 그 근무가 승인 뒤 또 다른 사람에게 넘어갔으면(체인) 되돌리면 그 사람 근무를 모르게 덮어쓰므로 막는다.
+  //  - 되돌려 받을 사람이 그날 근무할 수 없으면(퇴사·연차) 막는다.
+  function getApprovedCancelBlockReason(request) {
+    const isOneWayTransfer = request.type === "coverage" || request.type === "handoff";
+    const requesterSchedule = getSwapAssignment(request.requesterScheduleId);
+    const targetSchedule = isOneWayTransfer ? null : getSwapAssignment(request.targetScheduleId);
+    if (!requesterSchedule || (!isOneWayTransfer && !targetSchedule)) return "";
+    if (requesterSchedule.personId !== request.targetId || (targetSchedule && targetSchedule.personId !== request.requesterId)) {
+      return "이 근무는 그 뒤에 다시 변경되어 되돌릴 수 없습니다.";
+    }
+    const requesterOriginal = getEmployee(request.requesterOriginalPharmacistId || request.requesterId);
+    if (!isEmployeeAvailableForScheduleDate(requesterOriginal, requesterSchedule.date)) {
+      return `${requesterOriginal?.name || "원래 근무자"}님이 ${formatDate(requesterSchedule.date)}에 근무할 수 없어 되돌릴 수 없습니다.`;
+    }
+    if (targetSchedule) {
+      const targetOriginal = getEmployee(request.targetOriginalPharmacistId || request.targetId);
+      if (!isEmployeeAvailableForScheduleDate(targetOriginal, targetSchedule.date)) {
+        return `${targetOriginal?.name || "원래 근무자"}님이 ${formatDate(targetSchedule.date)}에 근무할 수 없어 되돌릴 수 없습니다.`;
+      }
+    }
+    return "";
+  }
+
   function cancelRequest(id, user) {
     const request = db.swapRequests.find((item) => item.id === id);
     if (!request || !["pending", "approved"].includes(request.status)) return showToast("취소할 수 없는 요청입니다.");
@@ -3648,6 +3722,10 @@
     }
     if (request.status === "approved" && !isAdminCancel && !isPartyApprovedCancel) {
       return showToast("승인완료된 요청은 관리자만 취소할 수 있습니다.");
+    }
+    if (request.status === "approved" && request.type !== "leave") {
+      const blockReason = getApprovedCancelBlockReason(request);
+      if (blockReason) return showToast(blockReason);
     }
     let detail = "";
     if (request.status === "approved") {
@@ -3883,7 +3961,7 @@
     employee.workStartHour = employee.workPatterns[0]?.startHour ?? 10;
     employee.workEndHour = employee.workPatterns[0]?.endHour ?? (employee.role === "staff" ? 8.5 : 8);
     const patternResult =
-      isEmployeeAccessActive(employee) ? applyEmployeePatternChange(employee) : { attempted: false, added: 0, skipped: 0, startDate: employee.workStartDate };
+      isEmployeeAccessActive(employee) ? applyEmployeePatternChange(employee, { skipPast: true }) : { attempted: false, added: 0, skipped: 0, startDate: employee.workStartDate };
     const resignationResult = applyEmployeeResignation(employee);
     employee.firstWorkStartDate = minDate(employee.firstWorkStartDate, findFirstEmployeeWorkDate(employee.id), effectiveStartDate) || effectiveStartDate;
     employee.hireDate = employee.hireDate || employee.firstWorkStartDate;
@@ -4531,10 +4609,15 @@
       );
   }
 
-  function applyEmployeePatternChange(employee) {
-    const startDate = employee.workStartDate;
+  // options.skipPast=true: 오늘 이전 날짜는 다시 채우지 않는다.
+  // (기존 직원 '설정 저장'에서 사용. 예전에는 적용 시작일(예: 6/1)부터 과거까지 다시 훑어,
+  //  남에게 넘겼거나 원래 없던 요일의 지난 근무가 되살아나 지난 급여 계산이 달라지는 문제가 있었다.)
+  function applyEmployeePatternChange(employee, options = {}) {
+    const originalStartDate = employee.workStartDate;
     const patterns = normalizeWorkPatterns(employee);
-    if (!startDate || !patterns.length) return { attempted: false, added: 0, skipped: 0, startDate };
+    if (!originalStartDate || !patterns.length) return { attempted: false, added: 0, skipped: 0, startDate: originalStartDate };
+    const today = getKoreaDateString();
+    const startDate = options.skipPast && originalStartDate < today ? today : originalStartDate;
     const months = getExistingScheduleMonthsFrom(startDate);
     return months.reduce(
       (result, monthKey) => {
@@ -4578,6 +4661,11 @@
       if (!pattern) continue;
       const date = toDateString(year, month, day);
       if (!isEmployeeAvailableForScheduleDate(employee, date)) continue;
+      // 교환·넘기기·대체로 남에게 준 날, 관리자가 손으로 빼낸 날은 '일부러 빠진 날'이므로 다시 채우지 않는다.
+      if (wasEmployeeIntentionallyRemovedOnDate(targetDb, employee.id, date)) {
+        skipped += 1;
+        continue;
+      }
       if (addEmployeeScheduleForDate(targetDb, employee, date, pattern.startHour, pattern.endHour)) {
         added += 1;
       } else {
@@ -4585,6 +4673,42 @@
       }
     }
     return { attempted: true, added, skipped, startDate };
+  }
+
+  // 이 사람이 그 날짜에서 '일부러' 빠졌는지 판정한다.
+  //  1) 승인된 교환·넘기기·대체 기록에서 원래 주인이 이 사람이었고, 지금은 다른 사람이 그 근무를 갖고 있는 경우
+  //  2) 관리자가 근무표에서 손으로 사람을 바꿔(changeOriginal에 원래 주인이 남음) 이 사람이 빠진 경우
+  // 이런 날은 기본 근무표(요일 패턴)를 다시 채울 때 건너뛴다. 그래야 넘겨받은 사람이 원상복귀되지 않는다.
+  function wasEmployeeIntentionallyRemovedOnDate(targetDb, employeeId, date) {
+    if (!employeeId || !date) return false;
+    const rxById = new Map(targetDb.schedules.map((schedule) => [schedule.id, schedule]));
+    const staffById = new Map(targetDb.staffSchedules.map((schedule) => [schedule.id, schedule]));
+    const lookup = (ref) => {
+      const raw = String(ref || "");
+      if (!raw) return null;
+      if (raw.startsWith("staff:")) {
+        const schedule = staffById.get(raw.slice(6));
+        return schedule ? { date: schedule.date, ownerId: schedule.staffId } : null;
+      }
+      const schedule = rxById.get(raw.startsWith("rx:") ? raw.slice(3) : raw);
+      return schedule ? { date: schedule.date, ownerId: schedule.pharmacistId } : null;
+    };
+    const removedByRequest = (targetDb.swapRequests || []).some((request) => {
+      if (!request || request.status !== "approved" || request.type === "leave") return false;
+      const requesterSide = lookup(request.requesterScheduleId);
+      if (requesterSide && requesterSide.date === date && (request.requesterOriginalPharmacistId || request.requesterId) === employeeId && requesterSide.ownerId !== employeeId) {
+        return true;
+      }
+      const targetSide = lookup(request.targetScheduleId);
+      return Boolean(
+        targetSide && targetSide.date === date && (request.targetOriginalPharmacistId || request.targetId) === employeeId && targetSide.ownerId !== employeeId,
+      );
+    });
+    if (removedByRequest) return true;
+    const removedByManualEdit =
+      targetDb.schedules.some((schedule) => schedule.date === date && schedule.changeOriginal?.pharmacistId === employeeId && schedule.pharmacistId !== employeeId) ||
+      targetDb.staffSchedules.some((schedule) => schedule.date === date && schedule.changeOriginal?.staffId === employeeId && schedule.staffId !== employeeId);
+    return removedByManualEdit;
   }
 
   function removeEmployeeSchedulesFromMonth(targetDb, employeeId, monthKey, firstDay) {

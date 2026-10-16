@@ -687,6 +687,26 @@ input:disabled {
   vertical-align: super;
 }
 
+/* 시급 조정 후 만 N년 표시(마스터 전용) */
+.salary-review-mark {
+  display: inline-block;
+  margin-left: 3px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #fff3cd;
+  color: #8a5a00;
+  font-size: 0.68em;
+  font-weight: 900;
+  line-height: 1.4;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.employee-meta-chip.salary-review {
+  background: #fff3cd;
+  color: #8a5a00;
+}
+
 .calendar-legend {
   margin: 4px 0 0;
   color: var(--muted);
