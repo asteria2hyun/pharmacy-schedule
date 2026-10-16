@@ -121,6 +121,7 @@
   let salaryStatsCache = new Map();
   let monthlyPayCache = new Map();
   let assignmentsCache = new Map();
+  let salaryReviewMarkCache = new Map(); // 시급조정 만 N년 표시 날짜(직원별), 저장 때마다 비움
   let lastStoredSnapshot = "";
   let remoteSyncReady = false;
   // 서버에서 '실제 공유 데이터'를 한 번이라도 성공적으로 받아 반영했는지.
@@ -329,6 +330,7 @@
     salaryStatsCache = new Map();
     monthlyPayCache = new Map();
     assignmentsCache = new Map();
+    salaryReviewMarkCache = new Map();
   }
 
   function uniqueStrings(values) {
@@ -1814,7 +1816,7 @@
           ${cells.join("")}
         </div>
         <p class="calendar-legend"><sup class="changed-star">*</sup> 표시는 기본 근무와 달라진(교환·넘기기·대체·수정) 근무입니다.</p>
-        ${hasAnySalaryReviewDue(user) ? `<p class="calendar-legend"><span class="salary-review-mark">💰1년</span> 표시는 시급 조정(없으면 입사) 후 만 1년이 지난 사람입니다. 마스터에게만 보이며, 직원관리에서 시급을 새로 적용하면 사라집니다.</p>` : ""}
+        ${canSeeSalaryReviewMark(user) ? `<p class="calendar-legend"><span class="salary-review-mark">💰1년</span> 표시는 시급 조정(없으면 입사) 후 만 1년 되는 날의 근무입니다(그날 근무가 없으면 그 다음 근무). 마스터에게만 보이며, 시급을 새로 적용하면 위치가 바뀝니다.</p>` : ""}
       </section>
     `;
   }
@@ -1885,7 +1887,7 @@
     const name = employee ? employee.name : "알 수 없음";
     const statusMark = employee && employee.status === "resigned" ? " (퇴사)" : "";
     const changedMark = isChangedSchedule(schedule, "rx") ? renderChangedScheduleMark() : "";
-    const salaryMark = schedule.date >= getKoreaDateString() ? renderSalaryReviewMark(user, employee) : "";
+    const salaryMark = renderSalaryReviewMark(user, employee, schedule.date);
     const timeLabel = schedule.pharmacistId === "emp-bae" ? SHIFT_META[schedule.shiftType]?.label : getScheduleTimeLabel(schedule);
     const timeMark =
       schedule.pharmacistId !== "emp-bae" && timeLabel !== SHIFT_META[schedule.shiftType]?.label
@@ -1915,7 +1917,7 @@
     const name = employee ? employee.name : "알 수 없음";
     const statusMark = employee && employee.status === "resigned" ? " (퇴사)" : "";
     const changedMark = isChangedSchedule(schedule, "staff") ? renderChangedScheduleMark() : "";
-    const salaryMark = schedule.date >= getKoreaDateString() ? renderSalaryReviewMark(user, employee) : "";
+    const salaryMark = renderSalaryReviewMark(user, employee, schedule.date);
     return `<div class="person-row staff-person ${isMine ? "mine" : ""} ${pendingSwap ? "pending-swap-person" : ""} ${pendingForMe ? "needs-my-approval" : ""}">
       <span class="person-name">${escapeHtml(name)}${changedMark}${statusMark}${salaryMark}</span>${pendingSwap ? `<span class="swap-badge">${pendingForMe ? "승인필요" : "교체대기"}</span>` : ""}
     </div>`;
@@ -1926,8 +1928,9 @@
   }
 
   // ===== 시급 조정 만 N년 표시(마스터 전용) =====
-  // 기준일: 가장 최근 시급 조정 적용일(조정 기록이 없으면 입사일). 기준일로부터 만 1년, 2년… 지나면 표시한다.
-  // 새 시급 조정을 저장하면 기준일이 바뀌어 표시가 사라진다.
+  // 기준일: 가장 최근 시급 조정 적용일(조정 기록이 없으면 입사일).
+  // 기준일로부터 만 1년, 2년… 되는 날의 '그 사람 근무'에 표시한다. 그날 근무가 없으면 그 다음 근무에 표시.
+  // 날짜에 붙는 표시라서 달력을 미리 넘겨 봐도 보인다. 새 시급 조정을 저장하면 기준일이 바뀌어 표시 위치도 바뀐다.
   function canSeeSalaryReviewMark(user) {
     return Boolean(user) && user.id === "emp-bae" && !user.viewOnly;
   }
@@ -1937,6 +1940,13 @@
     const latest = changes.length ? changes[changes.length - 1].effectiveDate : "";
     const base = latest || getEmployeeHireDate(employee);
     return /^\d{4}-\d{2}-\d{2}$/.test(base || "") ? base : "";
+  }
+
+  // 날짜에 N년을 더한다(2월 29일처럼 그 해에 없는 날이면 그 달 마지막 날로).
+  function addYearsToDate(dateString, years) {
+    const [year, month, day] = dateString.split("-").map(Number);
+    const targetYear = year + years;
+    return toDateString(targetYear, month, Math.min(day, getDaysInMonth(targetYear, month)));
   }
 
   // 기준일부터 오늘까지 만으로 몇 년이 지났는지(생일 계산과 같은 방식). 1년 미만이면 0.
@@ -1949,25 +1959,53 @@
     return Math.max(0, years);
   }
 
-  function getSalaryReviewInfo(employee) {
+  // 이 사람의 표시 날짜 목록: Map(근무 날짜 → 만 N년). 근무표 전체를 훑으므로 저장 전까지 캐시한다.
+  const EMPTY_SALARY_REVIEW_MARKS = new Map();
+  function getSalaryReviewMarkDates(employee) {
+    if (!employee || employee.status !== "active") return EMPTY_SALARY_REVIEW_MARKS;
+    if (salaryReviewMarkCache.has(employee.id)) return salaryReviewMarkCache.get(employee.id);
+    const marks = new Map();
+    const baseDate = getSalaryReviewBaseDate(employee);
+    if (baseDate) {
+      const workDates = Array.from(
+        new Set(
+          db.schedules
+            .filter((schedule) => schedule.pharmacistId === employee.id)
+            .map((schedule) => schedule.date)
+            .concat(db.staffSchedules.filter((schedule) => schedule.staffId === employee.id).map((schedule) => schedule.date)),
+        ),
+      ).sort();
+      const lastWorkDate = workDates[workDates.length - 1] || "";
+      for (let years = 1; years <= 50; years += 1) {
+        const anniversary = addYearsToDate(baseDate, years);
+        if (!lastWorkDate || anniversary > lastWorkDate) break; // 그 뒤 근무가 없으면 붙일 곳이 없음
+        const markDate = workDates.find((date) => date >= anniversary); // 그날 근무, 없으면 그 다음 근무
+        if (markDate && !marks.has(markDate)) marks.set(markDate, years);
+      }
+    }
+    salaryReviewMarkCache.set(employee.id, marks);
+    return marks;
+  }
+
+  function renderSalaryReviewMark(user, employee, date) {
+    if (!canSeeSalaryReviewMark(user) || !employee || !date) return "";
+    const years = getSalaryReviewMarkDates(employee).get(date);
+    if (!years) return "";
+    const baseDate = getSalaryReviewBaseDate(employee);
+    return `<span class="salary-review-mark" title="시급 조정(없으면 입사) 후 만 ${years}년 (기준 ${escapeAttr(formatDate(baseDate))})">💰${years}년</span>`;
+  }
+
+  // 직원관리 카드용: 기준일, 지난 햇수, 다음 만 N년 날짜와 그 표시가 붙는 근무 날짜.
+  function getSalaryReviewStatus(employee) {
     if (!employee || employee.status !== "active") return null;
     const baseDate = getSalaryReviewBaseDate(employee);
     if (!baseDate) return null;
     const years = getFullYearsSince(baseDate);
-    if (years < 1) return null;
-    return { baseDate, years };
-  }
-
-  function renderSalaryReviewMark(user, employee) {
-    if (!canSeeSalaryReviewMark(user)) return "";
-    const info = getSalaryReviewInfo(employee);
-    if (!info) return "";
-    return `<span class="salary-review-mark" title="시급 조정 후 만 ${info.years}년 (기준 ${escapeAttr(formatDate(info.baseDate))})">💰${info.years}년</span>`;
-  }
-
-  function hasAnySalaryReviewDue(user) {
-    if (!canSeeSalaryReviewMark(user)) return false;
-    return db.employees.some((employee) => Boolean(getSalaryReviewInfo(employee)));
+    const nextYears = years + 1;
+    const nextDate = addYearsToDate(baseDate, nextYears);
+    const marks = getSalaryReviewMarkDates(employee);
+    const nextMarkDate = Array.from(marks.entries()).find(([, markYears]) => markYears === nextYears)?.[0] || "";
+    return { baseDate, years, nextYears, nextDate, nextMarkDate };
   }
 
   // 별표 판정: 직원관리에 세팅된 요일별 근무(workPatterns)가 유일한 기준이다.
@@ -2907,13 +2945,18 @@
     const firstWorkDate = getEmployeeFirstWorkStartDate(employee);
     const tenureText = firstWorkDate ? formatTenureFrom(firstWorkDate) : "";
     const workSummary = workPatternSummary(employee);
-    const salaryReviewInfo = getSalaryReviewInfo(employee); // 직원관리는 관리자(마스터) 전용 화면
+    const salaryReview = getSalaryReviewStatus(employee); // 직원관리는 관리자(마스터) 전용 화면
+    const salaryReviewText = salaryReview
+      ? `💰 시급 기준 ${formatFullDate(salaryReview.baseDate)}${salaryReview.years ? ` · 만 ${salaryReview.years}년 지남` : ""} · 만 ${salaryReview.nextYears}년 ${formatFullDate(salaryReview.nextDate)}${
+          salaryReview.nextMarkDate && salaryReview.nextMarkDate !== salaryReview.nextDate ? ` (표시: ${formatFullDate(salaryReview.nextMarkDate)} 근무)` : ""
+        }`
+      : "";
     return `
       <div class="employee-card-meta">
         <span class="employee-meta-chip">ID ${escapeHtml(employee.loginId)}</span>
         <span class="employee-meta-chip">${escapeHtml(employeeDisplayRole(employee))}</span>
         ${employee.mustChangePassword ? `<span class="employee-meta-chip warning">비밀번호 설정 필요</span>` : ""}
-        ${salaryReviewInfo ? `<span class="employee-meta-chip salary-review">💰 시급 조정 후 만 ${salaryReviewInfo.years}년 지남 (기준 ${escapeHtml(formatDate(salaryReviewInfo.baseDate))})</span>` : ""}
+        ${salaryReviewText ? `<span class="employee-meta-chip salary-review${salaryReview.years ? " due" : ""}">${escapeHtml(salaryReviewText)}</span>` : ""}
       </div>
       <div class="employee-card-info">
         ${hireDate ? `<span>입사 ${escapeHtml(formatDate(hireDate))}</span>` : ""}

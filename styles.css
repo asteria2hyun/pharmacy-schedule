@@ -703,8 +703,15 @@ input:disabled {
 }
 
 .employee-meta-chip.salary-review {
+  background: #f3f6f4;
+  color: #4b5d53;
+  font-weight: 700;
+}
+
+.employee-meta-chip.salary-review.due {
   background: #fff3cd;
   color: #8a5a00;
+  font-weight: 900;
 }
 
 .calendar-legend {
