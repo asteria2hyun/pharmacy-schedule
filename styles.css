@@ -708,10 +708,14 @@ input:disabled {
   font-weight: 700;
 }
 
-.employee-meta-chip.salary-review.due {
-  background: #fff3cd;
-  color: #8a5a00;
-  font-weight: 900;
+.month-day-picker {
+  display: flex;
+  gap: 6px;
+}
+
+.month-day-picker .mini-select {
+  flex: 1;
+  min-width: 0;
 }
 
 .calendar-legend {

@@ -54,6 +54,19 @@
     "emp-yeongju": 32000,
     "emp-hyeonju": 28000,
   };
+  // 시급 점검일(매년 같은 월-일). 점주가 2026-10-16에 직접 정해준 값. 직원관리 카드에서 바꾸면 그 값이 우선한다.
+  // 여기 없는 사람(황주연·배주성·신규)은 자동 기준(가장 최근 시급 조정일, 없으면 입사일 + 만 N년)을 쓴다.
+  const DEFAULT_SALARY_REVIEW_MONTH_DAY = {
+    "emp-juna": "03-01", // 최준아
+    "emp-jaehee": "06-01", // 박재희
+    "emp-minji": "09-01", // 송민지
+    "emp-yeongju": "12-05", // 원영주
+    "emp-hyeonju": "03-01", // 이현주
+    "emp-subin": "11-01", // 김수빈
+    "emp-yuri": "05-03", // 유리구슬
+    "emp-hyojin": "11-14", // 윤효진
+    "emp-e18e5484-6eef-43df-93c8-9fbfe7ccd507": "08-08", // 이준오
+  };
   const LOGIN_ID_OVERRIDES = {
     "emp-bae": "swstarp",
     "emp-yeongju": "youngju",
@@ -1816,7 +1829,7 @@
           ${cells.join("")}
         </div>
         <p class="calendar-legend"><sup class="changed-star">*</sup> 표시는 기본 근무와 달라진(교환·넘기기·대체·수정) 근무입니다.</p>
-        ${canSeeSalaryReviewMark(user) ? `<p class="calendar-legend"><span class="salary-review-mark">💰1년</span> 표시는 시급 조정(없으면 입사) 후 만 1년 되는 날의 근무입니다(그날 근무가 없으면 그 다음 근무). 마스터에게만 보이며, 시급을 새로 적용하면 위치가 바뀝니다.</p>` : ""}
+        ${canSeeSalaryReviewMark(user) ? `<p class="calendar-legend"><span class="salary-review-mark">💰시급</span> 표시는 매년 시급 점검일(직원관리에서 정함)의 근무입니다(그날 근무가 없으면 그 다음 근무). 마스터에게만 보입니다.</p>` : ""}
       </section>
     `;
   }
@@ -1959,53 +1972,115 @@
     return Math.max(0, years);
   }
 
-  // 이 사람의 표시 날짜 목록: Map(근무 날짜 → 만 N년). 근무표 전체를 훑으므로 저장 전까지 캐시한다.
+  // 점주가 정한 '매년 시급 점검일'(MM-DD). 직원 정보에 저장된 값 → 코드 기본값 순서. 없으면 "".
+  function getSalaryReviewMonthDay(employee) {
+    const saved = String(employee?.salaryReviewMonthDay || "");
+    if (/^\d{2}-\d{2}$/.test(saved)) return saved;
+    return DEFAULT_SALARY_REVIEW_MONTH_DAY[employee?.id] || "";
+  }
+
+  // 특정 연도의 점검일(해당 연도에 없는 날이면 그 달 마지막 날로)
+  function salaryReviewDateInYear(monthDay, year) {
+    const [month, day] = monthDay.split("-").map(Number);
+    if (!month || !day) return "";
+    return toDateString(year, month, Math.min(day, getDaysInMonth(year, month)));
+  }
+
+  function getEmployeeWorkDatesSorted(employee) {
+    return Array.from(
+      new Set(
+        db.schedules
+          .filter((schedule) => schedule.pharmacistId === employee.id)
+          .map((schedule) => schedule.date)
+          .concat(db.staffSchedules.filter((schedule) => schedule.staffId === employee.id).map((schedule) => schedule.date)),
+      ),
+    ).sort();
+  }
+
+  // 이 사람의 표시 날짜 목록: Map(근무 날짜 → { reviewDate, years }). 근무표 전체를 훑으므로 저장 전까지 캐시한다.
+  //  - 점검일(MM-DD)이 정해진 사람: 매년 그 날짜(첫 근무 이후)마다. years는 입사 기준 몇 년째인지(참고용).
+  //  - 안 정해진 사람: 자동 기준(최근 시급 조정일, 없으면 입사일)에서 만 1년, 2년…
+  //  - 표시는 그날 근무, 없으면 그 다음 근무에 붙인다.
   const EMPTY_SALARY_REVIEW_MARKS = new Map();
   function getSalaryReviewMarkDates(employee) {
     if (!employee || employee.status !== "active") return EMPTY_SALARY_REVIEW_MARKS;
     if (salaryReviewMarkCache.has(employee.id)) return salaryReviewMarkCache.get(employee.id);
     const marks = new Map();
-    const baseDate = getSalaryReviewBaseDate(employee);
-    if (baseDate) {
-      const workDates = Array.from(
-        new Set(
-          db.schedules
-            .filter((schedule) => schedule.pharmacistId === employee.id)
-            .map((schedule) => schedule.date)
-            .concat(db.staffSchedules.filter((schedule) => schedule.staffId === employee.id).map((schedule) => schedule.date)),
-        ),
-      ).sort();
-      const lastWorkDate = workDates[workDates.length - 1] || "";
-      for (let years = 1; years <= 50; years += 1) {
-        const anniversary = addYearsToDate(baseDate, years);
-        if (!lastWorkDate || anniversary > lastWorkDate) break; // 그 뒤 근무가 없으면 붙일 곳이 없음
-        const markDate = workDates.find((date) => date >= anniversary); // 그날 근무, 없으면 그 다음 근무
-        if (markDate && !marks.has(markDate)) marks.set(markDate, years);
+    const workDates = getEmployeeWorkDatesSorted(employee);
+    const firstWorkDate = workDates[0] || "";
+    const lastWorkDate = workDates[workDates.length - 1] || "";
+    const reviewDates = [];
+    const monthDay = getSalaryReviewMonthDay(employee);
+    if (monthDay && firstWorkDate) {
+      const hireDate = getEmployeeHireDate(employee) || firstWorkDate;
+      const startYear = Number(firstWorkDate.slice(0, 4));
+      const endYear = Number(lastWorkDate.slice(0, 4));
+      for (let year = startYear; year <= endYear; year += 1) {
+        const reviewDate = salaryReviewDateInYear(monthDay, year);
+        if (reviewDate && reviewDate > hireDate && reviewDate >= firstWorkDate) {
+          reviewDates.push({ reviewDate, years: getFullYearsSince(hireDate, reviewDate) });
+        }
+      }
+    } else if (!monthDay) {
+      const baseDate = getSalaryReviewBaseDate(employee);
+      if (baseDate && lastWorkDate) {
+        for (let years = 1; years <= 50; years += 1) {
+          const reviewDate = addYearsToDate(baseDate, years);
+          if (reviewDate > lastWorkDate) break;
+          reviewDates.push({ reviewDate, years });
+        }
       }
     }
+    reviewDates.forEach(({ reviewDate, years }) => {
+      const markDate = workDates.find((date) => date >= reviewDate); // 그날 근무, 없으면 그 다음 근무
+      if (markDate && !marks.has(markDate)) marks.set(markDate, { reviewDate, years });
+    });
     salaryReviewMarkCache.set(employee.id, marks);
     return marks;
   }
 
   function renderSalaryReviewMark(user, employee, date) {
     if (!canSeeSalaryReviewMark(user) || !employee || !date) return "";
-    const years = getSalaryReviewMarkDates(employee).get(date);
-    if (!years) return "";
-    const baseDate = getSalaryReviewBaseDate(employee);
-    return `<span class="salary-review-mark" title="시급 조정(없으면 입사) 후 만 ${years}년 (기준 ${escapeAttr(formatDate(baseDate))})">💰${years}년</span>`;
+    const mark = getSalaryReviewMarkDates(employee).get(date);
+    if (!mark) return "";
+    const monthDay = getSalaryReviewMonthDay(employee);
+    const title = monthDay
+      ? `시급 점검일 ${formatFullDate(mark.reviewDate)} (매년 ${Number(monthDay.slice(0, 2))}월 ${Number(monthDay.slice(3))}일)${mark.years ? ` · 입사 ${mark.years}년` : ""}`
+      : `시급 조정(없으면 입사) 후 만 ${mark.years}년 (${formatFullDate(mark.reviewDate)})`;
+    return `<span class="salary-review-mark" title="${escapeAttr(title)}">💰시급</span>`;
   }
 
-  // 직원관리 카드용: 기준일, 지난 햇수, 다음 만 N년 날짜와 그 표시가 붙는 근무 날짜.
-  function getSalaryReviewStatus(employee) {
-    if (!employee || employee.status !== "active") return null;
+  // 직원관리 카드용 안내 문구. 점검일이 정해진 사람과 자동 기준인 사람을 구분한다.
+  function getSalaryReviewStatusText(employee) {
+    if (!employee || employee.status !== "active") return "";
+    const today = getKoreaDateString();
+    const marks = Array.from(getSalaryReviewMarkDates(employee).entries()).sort(([a], [b]) => a.localeCompare(b));
+    const upcoming = marks.find(([markDate, mark]) => mark.reviewDate >= today || markDate >= today);
+    const monthDay = getSalaryReviewMonthDay(employee);
+    if (monthDay) {
+      const label = `매년 ${Number(monthDay.slice(0, 2))}월 ${Number(monthDay.slice(3))}일`;
+      if (!upcoming) return `💰 시급 점검일 ${label}`;
+      const [markDate, mark] = upcoming;
+      return `💰 시급 점검일 ${label} · 다음 ${formatFullDate(mark.reviewDate)}${markDate !== mark.reviewDate ? ` (표시: ${formatFullDate(markDate)} 근무)` : ""}`;
+    }
     const baseDate = getSalaryReviewBaseDate(employee);
-    if (!baseDate) return null;
-    const years = getFullYearsSince(baseDate);
-    const nextYears = years + 1;
-    const nextDate = addYearsToDate(baseDate, nextYears);
-    const marks = getSalaryReviewMarkDates(employee);
-    const nextMarkDate = Array.from(marks.entries()).find(([, markYears]) => markYears === nextYears)?.[0] || "";
-    return { baseDate, years, nextYears, nextDate, nextMarkDate };
+    if (!baseDate) return "";
+    if (!upcoming) return `💰 시급 기준 ${formatFullDate(baseDate)} (점검일 미지정: 자동 기준)`;
+    const [markDate, mark] = upcoming;
+    return `💰 시급 기준 ${formatFullDate(baseDate)} · 만 ${mark.years}년 ${formatFullDate(mark.reviewDate)}${markDate !== mark.reviewDate ? ` (표시: ${formatFullDate(markDate)} 근무)` : ""} · 점검일 미지정(자동 기준)`;
+  }
+
+  function monthDayOptions(selectedMonth, selectedDay) {
+    const months = Array.from({ length: 12 }, (_, index) => index + 1)
+      .map((month) => `<option value="${month}" ${month === selectedMonth ? "selected" : ""}>${month}월</option>`)
+      .join("");
+    const days = Array.from({ length: 31 }, (_, index) => index + 1)
+      .map((day) => `<option value="${day}" ${day === selectedDay ? "selected" : ""}>${day}일</option>`)
+      .join("");
+    return {
+      months: `<option value="" ${selectedMonth ? "" : "selected"}>자동</option>${months}`,
+      days: `<option value="" ${selectedDay ? "" : "selected"}>-</option>${days}`,
+    };
   }
 
   // 별표 판정: 직원관리에 세팅된 요일별 근무(workPatterns)가 유일한 기준이다.
@@ -2890,6 +2965,13 @@
             <span>마지막 근무일</span>
             <input class="mini-input" name="resignationDate" type="date" value="${escapeAttr(employee.resignationDate || "")}" />
           </label>
+          <div class="field">
+            <span>시급 점검일(매년) · 💰 표시 날짜</span>
+            <div class="month-day-picker">
+              <select class="mini-select" name="salaryReviewMonth">${monthDayOptions(Number(getSalaryReviewMonthDay(employee).slice(0, 2)) || 0, Number(getSalaryReviewMonthDay(employee).slice(3)) || 0).months}</select>
+              <select class="mini-select" name="salaryReviewDay">${monthDayOptions(Number(getSalaryReviewMonthDay(employee).slice(0, 2)) || 0, Number(getSalaryReviewMonthDay(employee).slice(3)) || 0).days}</select>
+            </div>
+          </div>
         </div>
         ${renderEmployeeLeaveAdmin(employee)}
         <div class="salary-adjust-box">
@@ -2945,18 +3027,13 @@
     const firstWorkDate = getEmployeeFirstWorkStartDate(employee);
     const tenureText = firstWorkDate ? formatTenureFrom(firstWorkDate) : "";
     const workSummary = workPatternSummary(employee);
-    const salaryReview = getSalaryReviewStatus(employee); // 직원관리는 관리자(마스터) 전용 화면
-    const salaryReviewText = salaryReview
-      ? `💰 시급 기준 ${formatFullDate(salaryReview.baseDate)}${salaryReview.years ? ` · 만 ${salaryReview.years}년 지남` : ""} · 만 ${salaryReview.nextYears}년 ${formatFullDate(salaryReview.nextDate)}${
-          salaryReview.nextMarkDate && salaryReview.nextMarkDate !== salaryReview.nextDate ? ` (표시: ${formatFullDate(salaryReview.nextMarkDate)} 근무)` : ""
-        }`
-      : "";
+    const salaryReviewText = getSalaryReviewStatusText(employee); // 직원관리는 관리자(마스터) 전용 화면
     return `
       <div class="employee-card-meta">
         <span class="employee-meta-chip">ID ${escapeHtml(employee.loginId)}</span>
         <span class="employee-meta-chip">${escapeHtml(employeeDisplayRole(employee))}</span>
         ${employee.mustChangePassword ? `<span class="employee-meta-chip warning">비밀번호 설정 필요</span>` : ""}
-        ${salaryReviewText ? `<span class="employee-meta-chip salary-review${salaryReview.years ? " due" : ""}">${escapeHtml(salaryReviewText)}</span>` : ""}
+        ${salaryReviewText ? `<span class="employee-meta-chip salary-review">${escapeHtml(salaryReviewText)}</span>` : ""}
       </div>
       <div class="employee-card-info">
         ${hireDate ? `<span>입사 ${escapeHtml(formatDate(hireDate))}</span>` : ""}
@@ -3994,6 +4071,15 @@
     upsertSalaryChange(employee, employee.salaryEffectiveDate);
     employee.resignationDate = resignationDate;
     employee.status = getEmployeeStatusAfterResignationSave(requestedStatus, resignationDate);
+    // 시급 점검일(매년 MM-DD). 월을 '자동'으로 두면 저장값을 지워 코드 기본값/자동 기준으로 돌아간다.
+    const reviewMonth = Number(getRowValue(row, "salaryReviewMonth") || 0);
+    const reviewDay = Number(getRowValue(row, "salaryReviewDay") || 0);
+    const previousReviewMonthDay = getSalaryReviewMonthDay(employee);
+    employee.salaryReviewMonthDay = reviewMonth && reviewDay ? `${pad(reviewMonth)}-${pad(reviewDay)}` : "";
+    if (getSalaryReviewMonthDay(employee) !== previousReviewMonthDay) {
+      const next = getSalaryReviewMonthDay(employee);
+      addAudit(user.id, `${employee.name} 직원의 시급 점검일을 ${next ? `매년 ${Number(next.slice(0, 2))}월 ${Number(next.slice(3))}일` : "자동 기준"}으로 바꿨습니다.`);
+    }
     employee.leaveAllowance = roleKind === "staff1" ? Number(getRowValue(row, "leaveAllowance") || 0) : 0;
     employee.leaveCycleStartDate =
       roleKind === "staff1" ? getRowValue(row, "leaveCycleStartDate") || employee.leaveCycleStartDate || effectiveStartDate : "";
