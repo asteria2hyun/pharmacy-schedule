@@ -1628,6 +1628,12 @@
       app.innerHTML = renderPasswordSetup(user);
       return;
     }
+    // 퇴사 예정자가 마지막 근무일 이후 달을 보고 있었다면 마지막 달로 되돌린다.
+    const viewMonthLimit = getUserViewMonthLimit(user);
+    if (viewMonthLimit && monthCursor > viewMonthLimit) {
+      monthCursor = viewMonthLimit;
+      adminSelectedDate = `${monthCursor}-01`;
+    }
     ensureMonthData(monthCursor, db, true, { preserveExisting: true });
     // 옵저버는 근무약사와 동일하게 근무표/근무변경/급여 탭만 허용한다.
     if (user.viewOnly && !["calendar", "swap", "salary"].includes(currentTab)) {
@@ -1845,6 +1851,17 @@
     const hasPendingSwap = hasPendingSwapOnDate(date);
     const color = holiday || weekday === 0 ? "red" : weekday === 6 ? "blue" : "";
     const dateTone = holiday || weekday === 0 ? "red-line" : weekday === 6 ? "blue-line" : "";
+    // 퇴사 예정자 본인 화면: 마지막 근무일 다음 날부터는 근무표를 비워 보여준다.
+    if (isDateHiddenForUser(user, date)) {
+      return `
+      <article class="day-cell ${dateTone} ${isToday ? "today" : ""} after-resignation" data-date="${date}" aria-label="${month}월 ${day}일 (마지막 근무일 이후)">
+        <div class="day-top">
+          <span class="day-number ${color}">${day}</span>
+        </div>
+        <div class="day-content"><div class="after-resignation-note">마지막 근무일 이후</div></div>
+      </article>
+    `;
+    }
     const schedules = getSchedulesByDate(date).filter((schedule) => shouldShowRxScheduleOnCalendar(user, schedule));
     const hasIrregular = schedules.some((schedule) => schedule.shiftType === "irregular");
     return `
@@ -2228,6 +2245,25 @@
     return user?.id === "emp-bae" || user?.role === "admin";
   }
 
+  // ===== 퇴사 예정자(마지막 근무일이 저장된 사람) 화면 제한 =====
+  // - 마지막 근무일이 있는 달까지만 볼 수 있다(다음 달로 넘기기 비활성).
+  // - 마지막 근무일 다음 날부터는 달력 칸을 비워서 보여준다.
+  // - 관리자·옵저버는 제한 없음. 로그인 차단은 isEmployeeAccessActive(오늘 > 마지막 근무일)에서 처리.
+  function getUserViewMonthLimit(user) {
+    if (!user || user.viewOnly || user.role === "admin") return "";
+    return /^\d{4}-\d{2}-\d{2}$/.test(user.resignationDate || "") ? user.resignationDate.slice(0, 7) : "";
+  }
+
+  function isDateHiddenForUser(user, date) {
+    if (!user || user.viewOnly || user.role === "admin" || !date) return false;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(user.resignationDate || "")) return false;
+    return date > user.resignationDate;
+  }
+
+  function getMonthLimitMessage(user) {
+    return `마지막 근무일(${formatDate(user.resignationDate)}) 이후 달은 볼 수 없습니다.`;
+  }
+
   function isDefaultScheduleTime(schedule, fallbackType) {
     const actual = getScheduleTimeRange(schedule, fallbackType);
     const defaults = getDefaultTimeRange(fallbackType);
@@ -2242,11 +2278,15 @@
     const todayButton = showToday
       ? `<button class="today-button${isCurrentMonth ? " is-current" : ""}" type="button" data-action="month-today" aria-label="오늘로 이동"${isCurrentMonth ? " disabled" : ""}>오늘</button>`
       : "";
+    // 퇴사 예정자는 마지막 근무일이 있는 달까지만. 그 다음 달 버튼은 눌리지 않게 한다.
+    const viewer = getCurrentUser();
+    const monthLimit = getUserViewMonthLimit(viewer);
+    const nextDisabled = Boolean(monthLimit) && shiftMonth(monthCursor, 1) > monthLimit;
     return `
       <div class="monthbar${showToday ? " has-today" : ""}">
         <button class="icon-button" type="button" data-action="month-prev" aria-label="이전 달">‹</button>
         <button class="month-title" type="button" data-action="month-today">${year}년 ${month}월</button>
-        <button class="icon-button" type="button" data-action="month-next" aria-label="다음 달">›</button>
+        <button class="icon-button${nextDisabled ? " is-disabled" : ""}" type="button" data-action="month-next" aria-label="다음 달"${nextDisabled ? ` disabled title="${escapeAttr(getMonthLimitMessage(viewer))}"` : ""}>›</button>
         ${todayButton}
       </div>
     `;
@@ -3426,6 +3466,8 @@
       return;
     }
     if (action === "month-next") {
+      const monthLimit = getUserViewMonthLimit(user);
+      if (monthLimit && shiftMonth(monthCursor, 1) > monthLimit) return showToast(getMonthLimitMessage(user));
       monthCursor = shiftMonth(monthCursor, 1);
       adminSelectedDate = `${monthCursor}-01`;
       if (monthCursor === getKoreaMonthKey()) requestTodayFocus();
@@ -3591,6 +3633,8 @@
     const target = getEmployee(targetSchedule.personId);
     if (!target || target.status !== "active") return showToast("재직중인 근무자와만 교체할 수 있습니다.");
     if (!canSwapEmployees(user, target)) return showToast("선택한 두 사람은 교체 가능한 조합이 아닙니다.");
+    if (!isEmployeeAvailableForScheduleDate(user, targetSchedule.date)) return showToast(`${formatDate(targetSchedule.date)}은 내가 근무할 수 없는 날(마지막 근무일 이후·연차)입니다.`);
+    if (!isEmployeeAvailableForScheduleDate(target, ownSchedule.date)) return showToast(`${target.name}님은 ${formatDate(ownSchedule.date)}에 근무할 수 없습니다(마지막 근무일 이후·연차).`);
     const duplicateMessage = getSwapDuplicateMessage(user.id, target.id, ownSchedule, targetSchedule);
     if (duplicateMessage) return showToast(duplicateMessage);
     if (hasPendingForSchedule(ownSchedule.ref) || hasPendingForSchedule(targetSchedule.ref)) {
@@ -3774,7 +3818,11 @@
     }
     const requester = getEmployee(request.requesterId);
     const target = getEmployee(request.targetId);
-    if (!canSwapEmployees(requester, target)) {
+    if (
+      !canSwapEmployees(requester, target) ||
+      !isEmployeeAvailableForScheduleDate(requester, targetSchedule.date) ||
+      !isEmployeeAvailableForScheduleDate(target, requesterSchedule.date)
+    ) {
       request.status = "rejected";
       request.rejectedAt = nowIso();
       addAudit(user.id, "교체 가능한 조합이 아니어서 요청을 자동 거절했습니다.");
@@ -5365,6 +5413,8 @@
       .filter((assignment) => assignment.personId !== userId)
       .filter((assignment) => !targetEmployeeId || assignment.personId === targetEmployeeId)
       .filter((assignment) => assignment.date >= start && assignment.date <= end)
+      // 퇴사 예정자는 마지막 근무일 이후 날짜의 근무를 받아올 수 없다(연차일도 제외).
+      .filter((assignment) => isEmployeeAvailableForScheduleDate(user, assignment.date))
       .filter((assignment) => {
         const employee = getEmployee(assignment.personId);
         if (employeeCategory(user) === "staff2" && employee?.role === "admin") return false;

@@ -406,6 +406,25 @@ input:disabled {
   font-weight: 900;
 }
 
+/* 퇴사 예정자: 마지막 근무일 이후 달로 넘기는 버튼은 흐리게(눌리지 않음) */
+.icon-button:disabled,
+.icon-button.is-disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* 퇴사 예정자 본인 화면: 마지막 근무일 다음 날부터 빈 칸 */
+.day-cell.after-resignation {
+  background: rgba(240, 243, 241, 0.7);
+}
+
+.day-cell.after-resignation .after-resignation-note {
+  padding: 10px 8px;
+  color: var(--muted);
+  font-size: 0.74rem;
+  text-align: center;
+}
+
 .month-title {
   display: grid;
   place-items: center;
