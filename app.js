@@ -1890,11 +1890,7 @@
     return `
       <div class="shift-block schedule-section shift-section ${meta.className}">
         <span class="shift-label ${meta.className}${noonOpen ? " noon-open" : ""}" title="${noonOpen ? "12시 오픈일" : meta.detail}">${label}</span>
-        ${
-          shiftSchedules.length
-            ? shiftSchedules.map((schedule) => renderPersonRow(user, schedule)).join("")
-            : `<div class="person-row">미배정</div>`
-        }
+        ${shiftSchedules.map((schedule) => renderPersonRow(user, schedule)).join("")}
       </div>
     `;
   }
