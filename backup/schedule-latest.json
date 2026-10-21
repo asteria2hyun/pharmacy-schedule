@@ -1,7 +1,7 @@
 {
-  "backedUpAt": "2026-10-20T21:42:48.051Z",
-  "sourceVersion": 326,
-  "sourceUpdatedAt": "2026-10-19T13:47:11.293+00:00",
+  "backedUpAt": "2026-10-21T21:48:57.472Z",
+  "sourceVersion": 327,
+  "sourceUpdatedAt": "2026-10-21T07:05:12.936+00:00",
   "note": "비밀번호(authAccounts) 제외. 복원 시 비번은 관리자가 초기화.",
   "counts": {
     "employees": 13,
@@ -11,7 +11,7 @@
     "holidays": 22
   },
   "data": {
-    "savedAt": "2026-10-19T13:47:11.277Z",
+    "savedAt": "2026-10-21T07:05:12.929Z",
     "holidays": [
       {
         "id": "holiday-2026-01-01",
@@ -32334,8 +32334,17 @@
         "date": "2026-11-18",
         "hours": 10.5,
         "endHour": 8.5,
-        "staffId": "emp-bae",
-        "startHour": 10
+        "staffId": "emp-hyojin",
+        "changedAt": "2026-10-21T07:05:12.208Z",
+        "changedBy": "emp-bae",
+        "startHour": 10,
+        "changeType": "staff-manual",
+        "changeOriginal": {
+          "hours": 10.5,
+          "endHour": 8.5,
+          "staffId": "emp-bae",
+          "startHour": 10
+        }
       }
     ],
     "overseasSchedules": [

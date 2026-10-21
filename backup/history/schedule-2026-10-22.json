@@ -1,17 +1,17 @@
 {
-  "backedUpAt": "2026-10-14T21:47:26.244Z",
-  "sourceVersion": 306,
-  "sourceUpdatedAt": "2026-10-14T11:11:27.929+00:00",
+  "backedUpAt": "2026-10-21T21:48:57.472Z",
+  "sourceVersion": 327,
+  "sourceUpdatedAt": "2026-10-21T07:05:12.936+00:00",
   "note": "비밀번호(authAccounts) 제외. 복원 시 비번은 관리자가 초기화.",
   "counts": {
     "employees": 13,
-    "schedules": 3394,
-    "staffSchedules": 1610,
+    "schedules": 2907,
+    "staffSchedules": 1609,
     "swapRequests": 68,
     "holidays": 22
   },
   "data": {
-    "savedAt": "2026-10-14T11:11:27.916Z",
+    "savedAt": "2026-10-21T07:05:12.929Z",
     "holidays": [
       {
         "id": "holiday-2026-01-01",
@@ -338,8 +338,8 @@
             "salaryType": "hourly",
             "effectiveDate": "2026-06-01",
             "monthlySalary": 0,
-            "weekdayHourlyRate": 27000,
-            "weekendHourlyRate": 32000
+            "weekdayHourlyRate": 30000,
+            "weekendHourlyRate": 35000
           },
           {
             "salaryType": "hourly",
@@ -352,13 +352,15 @@
         "workStartDate": "2026-06-01",
         "workStartHour": 10,
         "leaveAllowance": 0,
-        "resignationDate": "",
+        "resignationDate": "2026-10-31",
         "weekdayHourlyRate": 30000,
         "weekendHourlyRate": 35000,
         "firstWorkStartDate": "2024-08-10",
         "leaveCycleStartDate": "",
-        "salaryEffectiveDate": "2026-09-01",
-        "lastModifiedStartDate": "2026-06-01"
+        "salaryEffectiveDate": "2026-06-01",
+        "salaryReviewMonthDay": "",
+        "lastModifiedStartDate": "2026-06-01",
+        "salaryReviewMonthDaySetAt": ""
       },
       {
         "id": "emp-jaehee",
@@ -2279,10 +2281,19 @@
       {
         "id": "sch-004cabe8-773a-451c-9172-b767843f2b09",
         "date": "2026-11-03",
-        "endHour": 8,
-        "shiftType": "8pm",
+        "endHour": 10,
+        "changedAt": "2026-10-19T13:39:16.202Z",
+        "changedBy": "emp-bae",
+        "shiftType": "10pm",
         "startHour": 10,
-        "pharmacistId": "emp-bae"
+        "changeType": "rx-manual",
+        "pharmacistId": "emp-bae",
+        "changeOriginal": {
+          "endHour": 8,
+          "shiftType": "8pm",
+          "startHour": 10,
+          "pharmacistId": "emp-bae"
+        }
       },
       {
         "id": "sch-cc4f8729-70f1-4ae2-a804-1804446c52b8",
@@ -18202,94 +18213,6 @@
         "pharmacistId": "emp-juyeon"
       },
       {
-        "id": "sch-975c89f1-1eba-440f-9a5c-e9fefcd4d9ba",
-        "date": "2026-11-02",
-        "endHour": 10,
-        "shiftType": "10pm",
-        "startHour": 10,
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-1570ac7d-ff40-40d1-8b2f-19df2d25b109",
-        "date": "2026-11-03",
-        "endHour": 10,
-        "shiftType": "10pm",
-        "startHour": 10,
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-49610aa0-a896-4b8d-a0af-8c024bf99c21",
-        "date": "2026-11-06",
-        "endHour": 8,
-        "shiftType": "8pm",
-        "startHour": 10,
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-8da2d967-a138-40a5-8914-ed6cc19622c1",
-        "date": "2026-11-07",
-        "endHour": 10,
-        "shiftType": "10pm",
-        "startHour": 10,
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-ebd8c1e1-f695-43ef-a36a-9633f1024e47",
-        "date": "2026-11-09",
-        "endHour": 10,
-        "shiftType": "10pm",
-        "startHour": 10,
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-501e6f81-ea1f-4a84-8544-613b60210ee9",
-        "date": "2026-11-10",
-        "endHour": 10,
-        "shiftType": "10pm",
-        "startHour": 10,
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-35c9d9bf-7527-484c-953c-939ad8803d92",
-        "date": "2026-11-13",
-        "endHour": 8,
-        "shiftType": "8pm",
-        "startHour": 10,
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-3573b6d1-e929-4c84-92e1-e98555f07799",
-        "date": "2026-11-14",
-        "endHour": 10,
-        "shiftType": "10pm",
-        "startHour": 10,
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-9ac8f6f3-8534-4a20-badf-35f81dcb9c50",
-        "date": "2026-11-16",
-        "endHour": 10,
-        "shiftType": "10pm",
-        "startHour": 10,
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-c6bc3c55-3a01-43e4-84fe-f07c60c07cb1",
-        "date": "2026-11-17",
-        "endHour": 10,
-        "shiftType": "10pm",
-        "startHour": 10,
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-b83f8e00-554f-4651-98c8-07ae614bc077",
-        "date": "2026-11-20",
-        "endHour": 8,
-        "shiftType": "8pm",
-        "startHour": 10,
-        "pharmacistId": "emp-juyeon"
-      },
-      {
         "id": "sch-4345f495-7d93-408f-bcf7-40e7e0d80651",
         "date": "2026-11-21",
         "endHour": 10,
@@ -18304,38 +18227,6 @@
         "shiftType": "10pm",
         "startHour": 10,
         "pharmacistId": "emp-juna"
-      },
-      {
-        "id": "sch-79b265ba-ddec-4fc4-a81e-5f8852797b76",
-        "date": "2026-11-24",
-        "endHour": 10,
-        "shiftType": "10pm",
-        "startHour": 10,
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-47c0a89d-f825-45ea-a67c-b30ee8889231",
-        "date": "2026-11-27",
-        "endHour": 8,
-        "shiftType": "8pm",
-        "startHour": 10,
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2ab863d6-9b9f-4f98-a826-12d698eed2d0",
-        "date": "2026-11-28",
-        "endHour": 10,
-        "shiftType": "10pm",
-        "startHour": 10,
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-11adeaa9-47bb-4e6b-a125-e826072f868a",
-        "date": "2026-11-30",
-        "endHour": 10,
-        "shiftType": "10pm",
-        "startHour": 10,
-        "pharmacistId": "emp-juyeon"
       },
       {
         "id": "sch-5749d7fb-d53d-4be8-b324-db725b282f4d",
@@ -18404,1776 +18295,6 @@
         "pharmacistId": "emp-juyeon"
       },
       {
-        "id": "sch-2026-12-01-10pm-0",
-        "date": "2026-12-01",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2026-12-04-8pm-1",
-        "date": "2026-12-04",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2026-12-05-10pm-1",
-        "date": "2026-12-05",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2026-12-07-10pm-0",
-        "date": "2026-12-07",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2026-12-08-10pm-0",
-        "date": "2026-12-08",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2026-12-11-8pm-1",
-        "date": "2026-12-11",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2026-12-12-10pm-1",
-        "date": "2026-12-12",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2026-12-14-10pm-0",
-        "date": "2026-12-14",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2026-12-15-10pm-0",
-        "date": "2026-12-15",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2026-12-18-8pm-1",
-        "date": "2026-12-18",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2026-12-19-10pm-1",
-        "date": "2026-12-19",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2026-12-21-10pm-0",
-        "date": "2026-12-21",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2026-12-22-10pm-0",
-        "date": "2026-12-22",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2026-12-25-8pm-1",
-        "date": "2026-12-25",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2026-12-26-10pm-1",
-        "date": "2026-12-26",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2026-12-28-10pm-0",
-        "date": "2026-12-28",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2026-12-29-10pm-0",
-        "date": "2026-12-29",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-01-01-8pm-1",
-        "date": "2027-01-01",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-01-02-10pm-1",
-        "date": "2027-01-02",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-01-04-10pm-0",
-        "date": "2027-01-04",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-01-05-10pm-0",
-        "date": "2027-01-05",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-01-08-8pm-1",
-        "date": "2027-01-08",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-01-09-10pm-1",
-        "date": "2027-01-09",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-01-11-10pm-0",
-        "date": "2027-01-11",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-01-12-10pm-0",
-        "date": "2027-01-12",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-01-15-8pm-1",
-        "date": "2027-01-15",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-01-16-10pm-1",
-        "date": "2027-01-16",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-01-18-10pm-0",
-        "date": "2027-01-18",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-01-19-10pm-0",
-        "date": "2027-01-19",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-01-22-8pm-1",
-        "date": "2027-01-22",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-01-23-10pm-1",
-        "date": "2027-01-23",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-01-25-10pm-0",
-        "date": "2027-01-25",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-01-26-10pm-0",
-        "date": "2027-01-26",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-01-29-8pm-1",
-        "date": "2027-01-29",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-01-30-10pm-1",
-        "date": "2027-01-30",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-02-01-10pm-0",
-        "date": "2027-02-01",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-02-02-10pm-0",
-        "date": "2027-02-02",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-02-05-8pm-1",
-        "date": "2027-02-05",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-02-06-10pm-1",
-        "date": "2027-02-06",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-02-08-10pm-0",
-        "date": "2027-02-08",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-02-09-10pm-0",
-        "date": "2027-02-09",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-02-12-8pm-1",
-        "date": "2027-02-12",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-02-13-10pm-1",
-        "date": "2027-02-13",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-02-15-10pm-0",
-        "date": "2027-02-15",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-02-16-10pm-0",
-        "date": "2027-02-16",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-02-19-8pm-1",
-        "date": "2027-02-19",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-02-20-10pm-1",
-        "date": "2027-02-20",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-02-22-10pm-0",
-        "date": "2027-02-22",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-02-23-10pm-0",
-        "date": "2027-02-23",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-02-26-8pm-1",
-        "date": "2027-02-26",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-02-27-10pm-1",
-        "date": "2027-02-27",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-03-01-10pm-0",
-        "date": "2027-03-01",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-03-02-10pm-0",
-        "date": "2027-03-02",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-03-05-8pm-1",
-        "date": "2027-03-05",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-03-06-10pm-1",
-        "date": "2027-03-06",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-03-08-10pm-0",
-        "date": "2027-03-08",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-03-09-10pm-0",
-        "date": "2027-03-09",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-03-12-8pm-1",
-        "date": "2027-03-12",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-03-13-10pm-1",
-        "date": "2027-03-13",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-03-15-10pm-0",
-        "date": "2027-03-15",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-03-16-10pm-0",
-        "date": "2027-03-16",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-03-19-8pm-1",
-        "date": "2027-03-19",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-03-20-10pm-1",
-        "date": "2027-03-20",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-03-22-10pm-0",
-        "date": "2027-03-22",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-03-23-10pm-0",
-        "date": "2027-03-23",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-03-26-8pm-1",
-        "date": "2027-03-26",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-03-27-10pm-1",
-        "date": "2027-03-27",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-03-29-10pm-0",
-        "date": "2027-03-29",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-03-30-10pm-0",
-        "date": "2027-03-30",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-04-02-8pm-1",
-        "date": "2027-04-02",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-04-03-10pm-1",
-        "date": "2027-04-03",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-04-05-10pm-0",
-        "date": "2027-04-05",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-04-06-10pm-0",
-        "date": "2027-04-06",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-04-09-8pm-1",
-        "date": "2027-04-09",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-04-10-10pm-1",
-        "date": "2027-04-10",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-04-12-10pm-0",
-        "date": "2027-04-12",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-04-13-10pm-0",
-        "date": "2027-04-13",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-04-16-8pm-1",
-        "date": "2027-04-16",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-04-17-10pm-1",
-        "date": "2027-04-17",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-04-19-10pm-0",
-        "date": "2027-04-19",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-04-20-10pm-0",
-        "date": "2027-04-20",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-04-23-8pm-1",
-        "date": "2027-04-23",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-04-24-10pm-1",
-        "date": "2027-04-24",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-04-26-10pm-0",
-        "date": "2027-04-26",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-04-27-10pm-0",
-        "date": "2027-04-27",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-04-30-8pm-1",
-        "date": "2027-04-30",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-05-01-10pm-1",
-        "date": "2027-05-01",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-05-03-10pm-0",
-        "date": "2027-05-03",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-05-04-10pm-0",
-        "date": "2027-05-04",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-05-07-8pm-1",
-        "date": "2027-05-07",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-05-08-10pm-1",
-        "date": "2027-05-08",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-05-10-10pm-0",
-        "date": "2027-05-10",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-05-11-10pm-0",
-        "date": "2027-05-11",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-05-14-8pm-1",
-        "date": "2027-05-14",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-05-15-10pm-1",
-        "date": "2027-05-15",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-05-17-10pm-0",
-        "date": "2027-05-17",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-05-18-10pm-0",
-        "date": "2027-05-18",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-05-21-8pm-1",
-        "date": "2027-05-21",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-05-22-10pm-1",
-        "date": "2027-05-22",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-05-24-10pm-0",
-        "date": "2027-05-24",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-05-25-10pm-0",
-        "date": "2027-05-25",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-05-28-8pm-1",
-        "date": "2027-05-28",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-05-29-10pm-1",
-        "date": "2027-05-29",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-05-31-10pm-0",
-        "date": "2027-05-31",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-06-01-10pm-0",
-        "date": "2027-06-01",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-06-04-8pm-1",
-        "date": "2027-06-04",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-06-05-10pm-1",
-        "date": "2027-06-05",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-06-07-10pm-0",
-        "date": "2027-06-07",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-06-08-10pm-0",
-        "date": "2027-06-08",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-06-11-8pm-1",
-        "date": "2027-06-11",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-06-12-10pm-1",
-        "date": "2027-06-12",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-06-14-10pm-0",
-        "date": "2027-06-14",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-06-15-10pm-0",
-        "date": "2027-06-15",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-06-18-8pm-1",
-        "date": "2027-06-18",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-06-19-10pm-1",
-        "date": "2027-06-19",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-06-21-10pm-0",
-        "date": "2027-06-21",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-06-22-10pm-0",
-        "date": "2027-06-22",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-06-25-8pm-1",
-        "date": "2027-06-25",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-06-26-10pm-1",
-        "date": "2027-06-26",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-06-28-10pm-0",
-        "date": "2027-06-28",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-06-29-10pm-0",
-        "date": "2027-06-29",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-07-02-8pm-1",
-        "date": "2027-07-02",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-07-03-10pm-1",
-        "date": "2027-07-03",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-07-05-10pm-0",
-        "date": "2027-07-05",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-07-06-10pm-0",
-        "date": "2027-07-06",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-07-09-8pm-1",
-        "date": "2027-07-09",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-07-10-10pm-1",
-        "date": "2027-07-10",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-07-12-10pm-0",
-        "date": "2027-07-12",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-07-13-10pm-0",
-        "date": "2027-07-13",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-07-16-8pm-1",
-        "date": "2027-07-16",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-07-17-10pm-1",
-        "date": "2027-07-17",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-07-19-10pm-0",
-        "date": "2027-07-19",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-07-20-10pm-0",
-        "date": "2027-07-20",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-07-23-8pm-1",
-        "date": "2027-07-23",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-07-24-10pm-1",
-        "date": "2027-07-24",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-07-26-10pm-0",
-        "date": "2027-07-26",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-07-27-10pm-0",
-        "date": "2027-07-27",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-07-30-8pm-1",
-        "date": "2027-07-30",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-07-31-10pm-1",
-        "date": "2027-07-31",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-08-02-10pm-0",
-        "date": "2027-08-02",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-08-03-10pm-0",
-        "date": "2027-08-03",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-08-06-8pm-1",
-        "date": "2027-08-06",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-08-07-10pm-1",
-        "date": "2027-08-07",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-08-09-10pm-0",
-        "date": "2027-08-09",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-08-10-10pm-0",
-        "date": "2027-08-10",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-08-13-8pm-1",
-        "date": "2027-08-13",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-08-14-10pm-1",
-        "date": "2027-08-14",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-08-16-10pm-0",
-        "date": "2027-08-16",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-08-17-10pm-0",
-        "date": "2027-08-17",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-08-20-8pm-1",
-        "date": "2027-08-20",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-08-21-10pm-1",
-        "date": "2027-08-21",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-08-23-10pm-0",
-        "date": "2027-08-23",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-08-24-10pm-0",
-        "date": "2027-08-24",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-08-27-8pm-1",
-        "date": "2027-08-27",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-08-28-10pm-1",
-        "date": "2027-08-28",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-08-30-10pm-0",
-        "date": "2027-08-30",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-08-31-10pm-0",
-        "date": "2027-08-31",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-09-03-8pm-1",
-        "date": "2027-09-03",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-09-04-10pm-1",
-        "date": "2027-09-04",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-09-06-10pm-0",
-        "date": "2027-09-06",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-09-07-10pm-0",
-        "date": "2027-09-07",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-09-10-8pm-1",
-        "date": "2027-09-10",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-09-11-10pm-1",
-        "date": "2027-09-11",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-09-13-10pm-0",
-        "date": "2027-09-13",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-09-14-10pm-0",
-        "date": "2027-09-14",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-09-17-8pm-1",
-        "date": "2027-09-17",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-09-18-10pm-1",
-        "date": "2027-09-18",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-09-20-10pm-0",
-        "date": "2027-09-20",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-09-21-10pm-0",
-        "date": "2027-09-21",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-09-24-8pm-1",
-        "date": "2027-09-24",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-09-25-10pm-1",
-        "date": "2027-09-25",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-09-27-10pm-0",
-        "date": "2027-09-27",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-09-28-10pm-0",
-        "date": "2027-09-28",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-10-01-8pm-1",
-        "date": "2027-10-01",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-10-02-10pm-1",
-        "date": "2027-10-02",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-10-04-10pm-0",
-        "date": "2027-10-04",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-10-05-10pm-0",
-        "date": "2027-10-05",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-10-08-8pm-1",
-        "date": "2027-10-08",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-10-09-10pm-1",
-        "date": "2027-10-09",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-10-11-10pm-0",
-        "date": "2027-10-11",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-10-12-10pm-0",
-        "date": "2027-10-12",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-10-15-8pm-1",
-        "date": "2027-10-15",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-10-16-10pm-1",
-        "date": "2027-10-16",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-10-18-10pm-0",
-        "date": "2027-10-18",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-10-19-10pm-0",
-        "date": "2027-10-19",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-10-22-8pm-1",
-        "date": "2027-10-22",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-10-23-10pm-1",
-        "date": "2027-10-23",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-10-25-10pm-0",
-        "date": "2027-10-25",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-10-26-10pm-0",
-        "date": "2027-10-26",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-10-29-8pm-1",
-        "date": "2027-10-29",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-10-30-10pm-1",
-        "date": "2027-10-30",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-11-01-10pm-0",
-        "date": "2027-11-01",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-11-02-10pm-0",
-        "date": "2027-11-02",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-11-05-8pm-1",
-        "date": "2027-11-05",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-11-06-10pm-1",
-        "date": "2027-11-06",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-11-08-10pm-0",
-        "date": "2027-11-08",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-11-09-10pm-0",
-        "date": "2027-11-09",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-11-12-8pm-1",
-        "date": "2027-11-12",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-11-13-10pm-1",
-        "date": "2027-11-13",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-11-15-10pm-0",
-        "date": "2027-11-15",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-11-16-10pm-0",
-        "date": "2027-11-16",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-11-19-8pm-1",
-        "date": "2027-11-19",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-11-20-10pm-1",
-        "date": "2027-11-20",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-11-22-10pm-0",
-        "date": "2027-11-22",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-11-23-10pm-0",
-        "date": "2027-11-23",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-11-26-8pm-1",
-        "date": "2027-11-26",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-11-27-10pm-1",
-        "date": "2027-11-27",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-11-29-10pm-0",
-        "date": "2027-11-29",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-11-30-10pm-0",
-        "date": "2027-11-30",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-12-03-8pm-1",
-        "date": "2027-12-03",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-12-04-10pm-1",
-        "date": "2027-12-04",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-12-06-10pm-0",
-        "date": "2027-12-06",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-12-07-10pm-0",
-        "date": "2027-12-07",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-12-10-8pm-1",
-        "date": "2027-12-10",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-12-11-10pm-1",
-        "date": "2027-12-11",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-12-13-10pm-0",
-        "date": "2027-12-13",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-12-14-10pm-0",
-        "date": "2027-12-14",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-12-17-8pm-1",
-        "date": "2027-12-17",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-12-18-10pm-1",
-        "date": "2027-12-18",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-12-20-10pm-0",
-        "date": "2027-12-20",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-12-21-10pm-0",
-        "date": "2027-12-21",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-12-24-8pm-1",
-        "date": "2027-12-24",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-12-25-10pm-1",
-        "date": "2027-12-25",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-12-27-10pm-0",
-        "date": "2027-12-27",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-12-28-10pm-0",
-        "date": "2027-12-28",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2027-12-31-8pm-1",
-        "date": "2027-12-31",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-01-01-10pm-1",
-        "date": "2028-01-01",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-01-03-10pm-0",
-        "date": "2028-01-03",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-01-04-10pm-0",
-        "date": "2028-01-04",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-01-07-8pm-1",
-        "date": "2028-01-07",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-01-08-10pm-1",
-        "date": "2028-01-08",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-01-10-10pm-0",
-        "date": "2028-01-10",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-01-11-10pm-0",
-        "date": "2028-01-11",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-01-14-8pm-1",
-        "date": "2028-01-14",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-01-15-10pm-1",
-        "date": "2028-01-15",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-01-17-10pm-0",
-        "date": "2028-01-17",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-01-18-10pm-0",
-        "date": "2028-01-18",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-01-21-8pm-1",
-        "date": "2028-01-21",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-01-22-10pm-1",
-        "date": "2028-01-22",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-01-24-10pm-0",
-        "date": "2028-01-24",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-01-25-10pm-0",
-        "date": "2028-01-25",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-01-28-8pm-1",
-        "date": "2028-01-28",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-01-29-10pm-1",
-        "date": "2028-01-29",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-01-31-10pm-0",
-        "date": "2028-01-31",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-02-01-10pm-0",
-        "date": "2028-02-01",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-02-04-8pm-1",
-        "date": "2028-02-04",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-02-05-10pm-1",
-        "date": "2028-02-05",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-02-07-10pm-0",
-        "date": "2028-02-07",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-02-08-10pm-0",
-        "date": "2028-02-08",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-02-11-8pm-1",
-        "date": "2028-02-11",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-02-12-10pm-1",
-        "date": "2028-02-12",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-02-14-10pm-0",
-        "date": "2028-02-14",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-02-15-10pm-0",
-        "date": "2028-02-15",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-02-18-8pm-1",
-        "date": "2028-02-18",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-02-19-10pm-1",
-        "date": "2028-02-19",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-02-21-10pm-0",
-        "date": "2028-02-21",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-02-22-10pm-0",
-        "date": "2028-02-22",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-02-25-8pm-1",
-        "date": "2028-02-25",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-02-26-10pm-1",
-        "date": "2028-02-26",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-02-28-10pm-0",
-        "date": "2028-02-28",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-02-29-10pm-0",
-        "date": "2028-02-29",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-03-03-8pm-1",
-        "date": "2028-03-03",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-03-04-10pm-1",
-        "date": "2028-03-04",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-03-06-10pm-0",
-        "date": "2028-03-06",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-03-07-10pm-0",
-        "date": "2028-03-07",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-03-10-8pm-1",
-        "date": "2028-03-10",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-03-11-10pm-1",
-        "date": "2028-03-11",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-03-13-10pm-0",
-        "date": "2028-03-13",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-03-14-10pm-0",
-        "date": "2028-03-14",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-03-17-8pm-1",
-        "date": "2028-03-17",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-03-18-10pm-1",
-        "date": "2028-03-18",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-03-20-10pm-0",
-        "date": "2028-03-20",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-03-21-10pm-0",
-        "date": "2028-03-21",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-03-24-8pm-1",
-        "date": "2028-03-24",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-03-25-10pm-1",
-        "date": "2028-03-25",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-03-27-10pm-0",
-        "date": "2028-03-27",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-03-28-10pm-0",
-        "date": "2028-03-28",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-03-31-8pm-1",
-        "date": "2028-03-31",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-04-01-10pm-1",
-        "date": "2028-04-01",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-04-03-10pm-0",
-        "date": "2028-04-03",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-04-04-10pm-0",
-        "date": "2028-04-04",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-04-07-8pm-1",
-        "date": "2028-04-07",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-04-08-10pm-1",
-        "date": "2028-04-08",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-04-10-10pm-0",
-        "date": "2028-04-10",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-04-11-10pm-0",
-        "date": "2028-04-11",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-04-14-8pm-1",
-        "date": "2028-04-14",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-04-15-10pm-1",
-        "date": "2028-04-15",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-04-17-10pm-0",
-        "date": "2028-04-17",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-04-18-10pm-0",
-        "date": "2028-04-18",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-04-21-8pm-1",
-        "date": "2028-04-21",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-04-22-10pm-1",
-        "date": "2028-04-22",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-04-24-10pm-0",
-        "date": "2028-04-24",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-04-25-10pm-0",
-        "date": "2028-04-25",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-04-28-8pm-1",
-        "date": "2028-04-28",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-04-29-10pm-1",
-        "date": "2028-04-29",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
         "id": "sch-6c271b41-69b7-4e56-980f-5d80e473d681",
         "date": "2026-07-20",
         "endHour": 8,
@@ -20187,738 +18308,6 @@
         "endHour": 8,
         "shiftType": "8pm",
         "startHour": 10,
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-05-01-10pm-0",
-        "date": "2028-05-01",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-05-02-10pm-0",
-        "date": "2028-05-02",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-05-05-8pm-1",
-        "date": "2028-05-05",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-05-06-10pm-1",
-        "date": "2028-05-06",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-05-08-10pm-0",
-        "date": "2028-05-08",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-05-09-10pm-0",
-        "date": "2028-05-09",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-05-12-8pm-1",
-        "date": "2028-05-12",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-05-13-10pm-1",
-        "date": "2028-05-13",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-05-15-10pm-0",
-        "date": "2028-05-15",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-05-16-10pm-0",
-        "date": "2028-05-16",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-05-19-8pm-1",
-        "date": "2028-05-19",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-05-20-10pm-1",
-        "date": "2028-05-20",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-05-22-10pm-0",
-        "date": "2028-05-22",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-05-23-10pm-0",
-        "date": "2028-05-23",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-05-26-8pm-1",
-        "date": "2028-05-26",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-05-27-10pm-1",
-        "date": "2028-05-27",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-05-29-10pm-0",
-        "date": "2028-05-29",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-05-30-10pm-0",
-        "date": "2028-05-30",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-06-02-8pm-1",
-        "date": "2028-06-02",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-06-03-10pm-1",
-        "date": "2028-06-03",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-06-05-10pm-0",
-        "date": "2028-06-05",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-06-06-10pm-0",
-        "date": "2028-06-06",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-06-09-8pm-1",
-        "date": "2028-06-09",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-06-10-10pm-1",
-        "date": "2028-06-10",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-06-12-10pm-0",
-        "date": "2028-06-12",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-06-13-10pm-0",
-        "date": "2028-06-13",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-06-16-8pm-1",
-        "date": "2028-06-16",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-06-17-10pm-1",
-        "date": "2028-06-17",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-06-19-10pm-0",
-        "date": "2028-06-19",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-06-20-10pm-0",
-        "date": "2028-06-20",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-06-23-8pm-1",
-        "date": "2028-06-23",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-06-24-10pm-1",
-        "date": "2028-06-24",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-06-26-10pm-0",
-        "date": "2028-06-26",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-06-27-10pm-0",
-        "date": "2028-06-27",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-06-30-8pm-1",
-        "date": "2028-06-30",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-07-01-10pm-1",
-        "date": "2028-07-01",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-07-03-10pm-0",
-        "date": "2028-07-03",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-07-04-10pm-0",
-        "date": "2028-07-04",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-07-07-8pm-1",
-        "date": "2028-07-07",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-07-08-10pm-1",
-        "date": "2028-07-08",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-07-10-10pm-0",
-        "date": "2028-07-10",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-07-11-10pm-0",
-        "date": "2028-07-11",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-07-14-8pm-1",
-        "date": "2028-07-14",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-07-15-10pm-1",
-        "date": "2028-07-15",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-07-17-10pm-0",
-        "date": "2028-07-17",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-07-18-10pm-0",
-        "date": "2028-07-18",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-07-21-8pm-1",
-        "date": "2028-07-21",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-07-22-10pm-1",
-        "date": "2028-07-22",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-07-24-10pm-0",
-        "date": "2028-07-24",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-07-25-10pm-0",
-        "date": "2028-07-25",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-07-28-8pm-1",
-        "date": "2028-07-28",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-07-29-10pm-1",
-        "date": "2028-07-29",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-07-31-10pm-0",
-        "date": "2028-07-31",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-08-01-10pm-0",
-        "date": "2028-08-01",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-08-04-8pm-1",
-        "date": "2028-08-04",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-08-05-10pm-1",
-        "date": "2028-08-05",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-08-07-10pm-0",
-        "date": "2028-08-07",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-08-08-10pm-0",
-        "date": "2028-08-08",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-08-11-8pm-1",
-        "date": "2028-08-11",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-08-12-10pm-1",
-        "date": "2028-08-12",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-08-14-10pm-0",
-        "date": "2028-08-14",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-08-15-10pm-0",
-        "date": "2028-08-15",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-08-18-8pm-1",
-        "date": "2028-08-18",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-08-19-10pm-1",
-        "date": "2028-08-19",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-08-21-10pm-0",
-        "date": "2028-08-21",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-08-22-10pm-0",
-        "date": "2028-08-22",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-08-25-8pm-1",
-        "date": "2028-08-25",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-08-26-10pm-1",
-        "date": "2028-08-26",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-08-28-10pm-0",
-        "date": "2028-08-28",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-08-29-10pm-0",
-        "date": "2028-08-29",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-09-01-8pm-1",
-        "date": "2028-09-01",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-09-02-10pm-1",
-        "date": "2028-09-02",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-09-04-10pm-0",
-        "date": "2028-09-04",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-09-05-10pm-0",
-        "date": "2028-09-05",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-09-08-8pm-1",
-        "date": "2028-09-08",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-09-09-10pm-1",
-        "date": "2028-09-09",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-09-11-10pm-0",
-        "date": "2028-09-11",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-09-12-10pm-0",
-        "date": "2028-09-12",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-09-15-8pm-1",
-        "date": "2028-09-15",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-09-16-10pm-1",
-        "date": "2028-09-16",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-09-18-10pm-0",
-        "date": "2028-09-18",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-09-19-10pm-0",
-        "date": "2028-09-19",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-09-22-8pm-1",
-        "date": "2028-09-22",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-09-23-10pm-1",
-        "date": "2028-09-23",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-09-25-10pm-0",
-        "date": "2028-09-25",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-09-26-10pm-0",
-        "date": "2028-09-26",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-09-29-8pm-1",
-        "date": "2028-09-29",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-09-30-10pm-1",
-        "date": "2028-09-30",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-10-02-10pm-0",
-        "date": "2028-10-02",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-10-03-10pm-0",
-        "date": "2028-10-03",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-10-06-8pm-1",
-        "date": "2028-10-06",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-10-07-10pm-1",
-        "date": "2028-10-07",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-10-09-10pm-0",
-        "date": "2028-10-09",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-10-10-10pm-0",
-        "date": "2028-10-10",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-10-13-8pm-1",
-        "date": "2028-10-13",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-10-14-10pm-1",
-        "date": "2028-10-14",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-10-16-10pm-0",
-        "date": "2028-10-16",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-10-17-10pm-0",
-        "date": "2028-10-17",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-10-20-8pm-1",
-        "date": "2028-10-20",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-10-21-10pm-1",
-        "date": "2028-10-21",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-10-23-10pm-0",
-        "date": "2028-10-23",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-10-24-10pm-0",
-        "date": "2028-10-24",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-10-27-8pm-1",
-        "date": "2028-10-27",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-10-28-10pm-1",
-        "date": "2028-10-28",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-10-30-10pm-0",
-        "date": "2028-10-30",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-10-31-10pm-0",
-        "date": "2028-10-31",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-11-03-8pm-1",
-        "date": "2028-11-03",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-11-04-10pm-1",
-        "date": "2028-11-04",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-11-06-10pm-0",
-        "date": "2028-11-06",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-11-07-10pm-0",
-        "date": "2028-11-07",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-11-10-8pm-1",
-        "date": "2028-11-10",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-11-11-10pm-1",
-        "date": "2028-11-11",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-11-13-10pm-0",
-        "date": "2028-11-13",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-11-14-10pm-0",
-        "date": "2028-11-14",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-11-17-8pm-1",
-        "date": "2028-11-17",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-11-18-10pm-1",
-        "date": "2028-11-18",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-11-20-10pm-0",
-        "date": "2028-11-20",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-11-21-10pm-0",
-        "date": "2028-11-21",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-11-24-8pm-1",
-        "date": "2028-11-24",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-11-25-10pm-1",
-        "date": "2028-11-25",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-11-27-10pm-0",
-        "date": "2028-11-27",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
-        "id": "sch-2028-11-28-10pm-0",
-        "date": "2028-11-28",
-        "shiftType": "10pm",
         "pharmacistId": "emp-juyeon"
       },
       {
@@ -20961,12 +18350,6 @@
         "pharmacistId": "emp-juna"
       },
       {
-        "id": "sch-2028-12-01-8pm-1",
-        "date": "2028-12-01",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
         "id": "sch-2028-12-01-10pm-2",
         "date": "2028-12-01",
         "shiftType": "10pm",
@@ -20977,12 +18360,6 @@
         "date": "2028-12-02",
         "shiftType": "10pm",
         "pharmacistId": "emp-juna"
-      },
-      {
-        "id": "sch-2028-12-02-10pm-1",
-        "date": "2028-12-02",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
       },
       {
         "id": "sch-2028-12-02-8pm-2",
@@ -21009,12 +18386,6 @@
         "pharmacistId": "emp-hyeonju"
       },
       {
-        "id": "sch-2028-12-04-10pm-0",
-        "date": "2028-12-04",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
         "id": "sch-2028-12-04-10pm-1",
         "date": "2028-12-04",
         "shiftType": "10pm",
@@ -21031,12 +18402,6 @@
         "date": "2028-12-04",
         "shiftType": "8pm",
         "pharmacistId": "emp-hyeonju"
-      },
-      {
-        "id": "sch-2028-12-05-10pm-0",
-        "date": "2028-12-05",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
       },
       {
         "id": "sch-2028-12-05-8pm-1",
@@ -21093,12 +18458,6 @@
         "pharmacistId": "emp-juna"
       },
       {
-        "id": "sch-2028-12-08-8pm-1",
-        "date": "2028-12-08",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
         "id": "sch-2028-12-08-10pm-2",
         "date": "2028-12-08",
         "shiftType": "10pm",
@@ -21109,12 +18468,6 @@
         "date": "2028-12-09",
         "shiftType": "10pm",
         "pharmacistId": "emp-juna"
-      },
-      {
-        "id": "sch-2028-12-09-10pm-1",
-        "date": "2028-12-09",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
       },
       {
         "id": "sch-2028-12-09-8pm-2",
@@ -21141,12 +18494,6 @@
         "pharmacistId": "emp-hyeonju"
       },
       {
-        "id": "sch-2028-12-11-10pm-0",
-        "date": "2028-12-11",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
         "id": "sch-2028-12-11-10pm-1",
         "date": "2028-12-11",
         "shiftType": "10pm",
@@ -21163,12 +18510,6 @@
         "date": "2028-12-11",
         "shiftType": "8pm",
         "pharmacistId": "emp-hyeonju"
-      },
-      {
-        "id": "sch-2028-12-12-10pm-0",
-        "date": "2028-12-12",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
       },
       {
         "id": "sch-2028-12-12-8pm-1",
@@ -21225,12 +18566,6 @@
         "pharmacistId": "emp-juna"
       },
       {
-        "id": "sch-2028-12-15-8pm-1",
-        "date": "2028-12-15",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
         "id": "sch-2028-12-15-10pm-2",
         "date": "2028-12-15",
         "shiftType": "10pm",
@@ -21241,12 +18576,6 @@
         "date": "2028-12-16",
         "shiftType": "10pm",
         "pharmacistId": "emp-juna"
-      },
-      {
-        "id": "sch-2028-12-16-10pm-1",
-        "date": "2028-12-16",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
       },
       {
         "id": "sch-2028-12-16-8pm-2",
@@ -21273,12 +18602,6 @@
         "pharmacistId": "emp-hyeonju"
       },
       {
-        "id": "sch-2028-12-18-10pm-0",
-        "date": "2028-12-18",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
         "id": "sch-2028-12-18-10pm-1",
         "date": "2028-12-18",
         "shiftType": "10pm",
@@ -21295,12 +18618,6 @@
         "date": "2028-12-18",
         "shiftType": "8pm",
         "pharmacistId": "emp-hyeonju"
-      },
-      {
-        "id": "sch-2028-12-19-10pm-0",
-        "date": "2028-12-19",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
       },
       {
         "id": "sch-2028-12-19-8pm-1",
@@ -21357,12 +18674,6 @@
         "pharmacistId": "emp-juna"
       },
       {
-        "id": "sch-2028-12-22-8pm-1",
-        "date": "2028-12-22",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
         "id": "sch-2028-12-22-10pm-2",
         "date": "2028-12-22",
         "shiftType": "10pm",
@@ -21373,12 +18684,6 @@
         "date": "2028-12-23",
         "shiftType": "10pm",
         "pharmacistId": "emp-juna"
-      },
-      {
-        "id": "sch-2028-12-23-10pm-1",
-        "date": "2028-12-23",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
       },
       {
         "id": "sch-2028-12-23-8pm-2",
@@ -21405,12 +18710,6 @@
         "pharmacistId": "emp-hyeonju"
       },
       {
-        "id": "sch-2028-12-25-10pm-0",
-        "date": "2028-12-25",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
         "id": "sch-2028-12-25-10pm-1",
         "date": "2028-12-25",
         "shiftType": "10pm",
@@ -21427,12 +18726,6 @@
         "date": "2028-12-25",
         "shiftType": "8pm",
         "pharmacistId": "emp-hyeonju"
-      },
-      {
-        "id": "sch-2028-12-26-10pm-0",
-        "date": "2028-12-26",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
       },
       {
         "id": "sch-2028-12-26-8pm-1",
@@ -21489,12 +18782,6 @@
         "pharmacistId": "emp-juna"
       },
       {
-        "id": "sch-2028-12-29-8pm-1",
-        "date": "2028-12-29",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
         "id": "sch-2028-12-29-10pm-2",
         "date": "2028-12-29",
         "shiftType": "10pm",
@@ -21505,12 +18792,6 @@
         "date": "2028-12-30",
         "shiftType": "10pm",
         "pharmacistId": "emp-juna"
-      },
-      {
-        "id": "sch-2028-12-30-10pm-1",
-        "date": "2028-12-30",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
       },
       {
         "id": "sch-2028-12-30-8pm-2",
@@ -21537,12 +18818,6 @@
         "pharmacistId": "emp-hyeonju"
       },
       {
-        "id": "sch-2029-01-01-10pm-0",
-        "date": "2029-01-01",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
         "id": "sch-2029-01-01-10pm-1",
         "date": "2029-01-01",
         "shiftType": "10pm",
@@ -21559,12 +18834,6 @@
         "date": "2029-01-01",
         "shiftType": "8pm",
         "pharmacistId": "emp-hyeonju"
-      },
-      {
-        "id": "sch-2029-01-02-10pm-0",
-        "date": "2029-01-02",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
       },
       {
         "id": "sch-2029-01-02-8pm-1",
@@ -21621,12 +18890,6 @@
         "pharmacistId": "emp-juna"
       },
       {
-        "id": "sch-2029-01-05-8pm-1",
-        "date": "2029-01-05",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
         "id": "sch-2029-01-05-10pm-2",
         "date": "2029-01-05",
         "shiftType": "10pm",
@@ -21637,12 +18900,6 @@
         "date": "2029-01-06",
         "shiftType": "10pm",
         "pharmacistId": "emp-juna"
-      },
-      {
-        "id": "sch-2029-01-06-10pm-1",
-        "date": "2029-01-06",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
       },
       {
         "id": "sch-2029-01-06-8pm-2",
@@ -21669,12 +18926,6 @@
         "pharmacistId": "emp-hyeonju"
       },
       {
-        "id": "sch-2029-01-08-10pm-0",
-        "date": "2029-01-08",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
         "id": "sch-2029-01-08-10pm-1",
         "date": "2029-01-08",
         "shiftType": "10pm",
@@ -21691,12 +18942,6 @@
         "date": "2029-01-08",
         "shiftType": "8pm",
         "pharmacistId": "emp-hyeonju"
-      },
-      {
-        "id": "sch-2029-01-09-10pm-0",
-        "date": "2029-01-09",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
       },
       {
         "id": "sch-2029-01-09-8pm-1",
@@ -21753,12 +18998,6 @@
         "pharmacistId": "emp-juna"
       },
       {
-        "id": "sch-2029-01-12-8pm-1",
-        "date": "2029-01-12",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
         "id": "sch-2029-01-12-10pm-2",
         "date": "2029-01-12",
         "shiftType": "10pm",
@@ -21769,12 +19008,6 @@
         "date": "2029-01-13",
         "shiftType": "10pm",
         "pharmacistId": "emp-juna"
-      },
-      {
-        "id": "sch-2029-01-13-10pm-1",
-        "date": "2029-01-13",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
       },
       {
         "id": "sch-2029-01-13-8pm-2",
@@ -21801,12 +19034,6 @@
         "pharmacistId": "emp-hyeonju"
       },
       {
-        "id": "sch-2029-01-15-10pm-0",
-        "date": "2029-01-15",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
         "id": "sch-2029-01-15-10pm-1",
         "date": "2029-01-15",
         "shiftType": "10pm",
@@ -21823,12 +19050,6 @@
         "date": "2029-01-15",
         "shiftType": "8pm",
         "pharmacistId": "emp-hyeonju"
-      },
-      {
-        "id": "sch-2029-01-16-10pm-0",
-        "date": "2029-01-16",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
       },
       {
         "id": "sch-2029-01-16-8pm-1",
@@ -21885,12 +19106,6 @@
         "pharmacistId": "emp-juna"
       },
       {
-        "id": "sch-2029-01-19-8pm-1",
-        "date": "2029-01-19",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
         "id": "sch-2029-01-19-10pm-2",
         "date": "2029-01-19",
         "shiftType": "10pm",
@@ -21901,12 +19116,6 @@
         "date": "2029-01-20",
         "shiftType": "10pm",
         "pharmacistId": "emp-juna"
-      },
-      {
-        "id": "sch-2029-01-20-10pm-1",
-        "date": "2029-01-20",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
       },
       {
         "id": "sch-2029-01-20-8pm-2",
@@ -21933,12 +19142,6 @@
         "pharmacistId": "emp-hyeonju"
       },
       {
-        "id": "sch-2029-01-22-10pm-0",
-        "date": "2029-01-22",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
         "id": "sch-2029-01-22-10pm-1",
         "date": "2029-01-22",
         "shiftType": "10pm",
@@ -21955,12 +19158,6 @@
         "date": "2029-01-22",
         "shiftType": "8pm",
         "pharmacistId": "emp-hyeonju"
-      },
-      {
-        "id": "sch-2029-01-23-10pm-0",
-        "date": "2029-01-23",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
       },
       {
         "id": "sch-2029-01-23-8pm-1",
@@ -22017,12 +19214,6 @@
         "pharmacistId": "emp-juna"
       },
       {
-        "id": "sch-2029-01-26-8pm-1",
-        "date": "2029-01-26",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
         "id": "sch-2029-01-26-10pm-2",
         "date": "2029-01-26",
         "shiftType": "10pm",
@@ -22033,12 +19224,6 @@
         "date": "2029-01-27",
         "shiftType": "10pm",
         "pharmacistId": "emp-juna"
-      },
-      {
-        "id": "sch-2029-01-27-10pm-1",
-        "date": "2029-01-27",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
       },
       {
         "id": "sch-2029-01-27-8pm-2",
@@ -22065,12 +19250,6 @@
         "pharmacistId": "emp-hyeonju"
       },
       {
-        "id": "sch-2029-01-29-10pm-0",
-        "date": "2029-01-29",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
         "id": "sch-2029-01-29-10pm-1",
         "date": "2029-01-29",
         "shiftType": "10pm",
@@ -22087,12 +19266,6 @@
         "date": "2029-01-29",
         "shiftType": "8pm",
         "pharmacistId": "emp-hyeonju"
-      },
-      {
-        "id": "sch-2029-01-30-10pm-0",
-        "date": "2029-01-30",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
       },
       {
         "id": "sch-2029-01-30-8pm-1",
@@ -22149,12 +19322,6 @@
         "pharmacistId": "emp-juna"
       },
       {
-        "id": "sch-2029-02-02-8pm-1",
-        "date": "2029-02-02",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
         "id": "sch-2029-02-02-10pm-2",
         "date": "2029-02-02",
         "shiftType": "10pm",
@@ -22165,12 +19332,6 @@
         "date": "2029-02-03",
         "shiftType": "10pm",
         "pharmacistId": "emp-juna"
-      },
-      {
-        "id": "sch-2029-02-03-10pm-1",
-        "date": "2029-02-03",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
       },
       {
         "id": "sch-2029-02-03-8pm-2",
@@ -22197,12 +19358,6 @@
         "pharmacistId": "emp-hyeonju"
       },
       {
-        "id": "sch-2029-02-05-10pm-0",
-        "date": "2029-02-05",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
         "id": "sch-2029-02-05-10pm-1",
         "date": "2029-02-05",
         "shiftType": "10pm",
@@ -22219,12 +19374,6 @@
         "date": "2029-02-05",
         "shiftType": "8pm",
         "pharmacistId": "emp-hyeonju"
-      },
-      {
-        "id": "sch-2029-02-06-10pm-0",
-        "date": "2029-02-06",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
       },
       {
         "id": "sch-2029-02-06-8pm-1",
@@ -22281,12 +19430,6 @@
         "pharmacistId": "emp-juna"
       },
       {
-        "id": "sch-2029-02-09-8pm-1",
-        "date": "2029-02-09",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
         "id": "sch-2029-02-09-10pm-2",
         "date": "2029-02-09",
         "shiftType": "10pm",
@@ -22297,12 +19440,6 @@
         "date": "2029-02-10",
         "shiftType": "10pm",
         "pharmacistId": "emp-juna"
-      },
-      {
-        "id": "sch-2029-02-10-10pm-1",
-        "date": "2029-02-10",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
       },
       {
         "id": "sch-2029-02-10-8pm-2",
@@ -22329,12 +19466,6 @@
         "pharmacistId": "emp-hyeonju"
       },
       {
-        "id": "sch-2029-02-12-10pm-0",
-        "date": "2029-02-12",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
         "id": "sch-2029-02-12-10pm-1",
         "date": "2029-02-12",
         "shiftType": "10pm",
@@ -22351,12 +19482,6 @@
         "date": "2029-02-12",
         "shiftType": "8pm",
         "pharmacistId": "emp-hyeonju"
-      },
-      {
-        "id": "sch-2029-02-13-10pm-0",
-        "date": "2029-02-13",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
       },
       {
         "id": "sch-2029-02-13-8pm-1",
@@ -22413,12 +19538,6 @@
         "pharmacistId": "emp-juna"
       },
       {
-        "id": "sch-2029-02-16-8pm-1",
-        "date": "2029-02-16",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
         "id": "sch-2029-02-16-10pm-2",
         "date": "2029-02-16",
         "shiftType": "10pm",
@@ -22429,12 +19548,6 @@
         "date": "2029-02-17",
         "shiftType": "10pm",
         "pharmacistId": "emp-juna"
-      },
-      {
-        "id": "sch-2029-02-17-10pm-1",
-        "date": "2029-02-17",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
       },
       {
         "id": "sch-2029-02-17-8pm-2",
@@ -22461,12 +19574,6 @@
         "pharmacistId": "emp-hyeonju"
       },
       {
-        "id": "sch-2029-02-19-10pm-0",
-        "date": "2029-02-19",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
         "id": "sch-2029-02-19-10pm-1",
         "date": "2029-02-19",
         "shiftType": "10pm",
@@ -22483,12 +19590,6 @@
         "date": "2029-02-19",
         "shiftType": "8pm",
         "pharmacistId": "emp-hyeonju"
-      },
-      {
-        "id": "sch-2029-02-20-10pm-0",
-        "date": "2029-02-20",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
       },
       {
         "id": "sch-2029-02-20-8pm-1",
@@ -22545,12 +19646,6 @@
         "pharmacistId": "emp-juna"
       },
       {
-        "id": "sch-2029-02-23-8pm-1",
-        "date": "2029-02-23",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
         "id": "sch-2029-02-23-10pm-2",
         "date": "2029-02-23",
         "shiftType": "10pm",
@@ -22561,12 +19656,6 @@
         "date": "2029-02-24",
         "shiftType": "10pm",
         "pharmacistId": "emp-juna"
-      },
-      {
-        "id": "sch-2029-02-24-10pm-1",
-        "date": "2029-02-24",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
       },
       {
         "id": "sch-2029-02-24-8pm-2",
@@ -22593,12 +19682,6 @@
         "pharmacistId": "emp-hyeonju"
       },
       {
-        "id": "sch-2029-02-26-10pm-0",
-        "date": "2029-02-26",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
         "id": "sch-2029-02-26-10pm-1",
         "date": "2029-02-26",
         "shiftType": "10pm",
@@ -22615,12 +19698,6 @@
         "date": "2029-02-26",
         "shiftType": "8pm",
         "pharmacistId": "emp-hyeonju"
-      },
-      {
-        "id": "sch-2029-02-27-10pm-0",
-        "date": "2029-02-27",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
       },
       {
         "id": "sch-2029-02-27-8pm-1",
@@ -22677,12 +19754,6 @@
         "pharmacistId": "emp-juna"
       },
       {
-        "id": "sch-2029-03-02-8pm-1",
-        "date": "2029-03-02",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
         "id": "sch-2029-03-02-10pm-2",
         "date": "2029-03-02",
         "shiftType": "10pm",
@@ -22693,12 +19764,6 @@
         "date": "2029-03-03",
         "shiftType": "10pm",
         "pharmacistId": "emp-juna"
-      },
-      {
-        "id": "sch-2029-03-03-10pm-1",
-        "date": "2029-03-03",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
       },
       {
         "id": "sch-2029-03-03-8pm-2",
@@ -22725,12 +19790,6 @@
         "pharmacistId": "emp-hyeonju"
       },
       {
-        "id": "sch-2029-03-05-10pm-0",
-        "date": "2029-03-05",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
         "id": "sch-2029-03-05-10pm-1",
         "date": "2029-03-05",
         "shiftType": "10pm",
@@ -22747,12 +19806,6 @@
         "date": "2029-03-05",
         "shiftType": "8pm",
         "pharmacistId": "emp-hyeonju"
-      },
-      {
-        "id": "sch-2029-03-06-10pm-0",
-        "date": "2029-03-06",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
       },
       {
         "id": "sch-2029-03-06-8pm-1",
@@ -22809,12 +19862,6 @@
         "pharmacistId": "emp-juna"
       },
       {
-        "id": "sch-2029-03-09-8pm-1",
-        "date": "2029-03-09",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
         "id": "sch-2029-03-09-10pm-2",
         "date": "2029-03-09",
         "shiftType": "10pm",
@@ -22825,12 +19872,6 @@
         "date": "2029-03-10",
         "shiftType": "10pm",
         "pharmacistId": "emp-juna"
-      },
-      {
-        "id": "sch-2029-03-10-10pm-1",
-        "date": "2029-03-10",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
       },
       {
         "id": "sch-2029-03-10-8pm-2",
@@ -22857,12 +19898,6 @@
         "pharmacistId": "emp-hyeonju"
       },
       {
-        "id": "sch-2029-03-12-10pm-0",
-        "date": "2029-03-12",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
         "id": "sch-2029-03-12-10pm-1",
         "date": "2029-03-12",
         "shiftType": "10pm",
@@ -22879,12 +19914,6 @@
         "date": "2029-03-12",
         "shiftType": "8pm",
         "pharmacistId": "emp-hyeonju"
-      },
-      {
-        "id": "sch-2029-03-13-10pm-0",
-        "date": "2029-03-13",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
       },
       {
         "id": "sch-2029-03-13-8pm-1",
@@ -22941,12 +19970,6 @@
         "pharmacistId": "emp-juna"
       },
       {
-        "id": "sch-2029-03-16-8pm-1",
-        "date": "2029-03-16",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
         "id": "sch-2029-03-16-10pm-2",
         "date": "2029-03-16",
         "shiftType": "10pm",
@@ -22957,12 +19980,6 @@
         "date": "2029-03-17",
         "shiftType": "10pm",
         "pharmacistId": "emp-juna"
-      },
-      {
-        "id": "sch-2029-03-17-10pm-1",
-        "date": "2029-03-17",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
       },
       {
         "id": "sch-2029-03-17-8pm-2",
@@ -22989,12 +20006,6 @@
         "pharmacistId": "emp-hyeonju"
       },
       {
-        "id": "sch-2029-03-19-10pm-0",
-        "date": "2029-03-19",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
         "id": "sch-2029-03-19-10pm-1",
         "date": "2029-03-19",
         "shiftType": "10pm",
@@ -23011,12 +20022,6 @@
         "date": "2029-03-19",
         "shiftType": "8pm",
         "pharmacistId": "emp-hyeonju"
-      },
-      {
-        "id": "sch-2029-03-20-10pm-0",
-        "date": "2029-03-20",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
       },
       {
         "id": "sch-2029-03-20-8pm-1",
@@ -23073,12 +20078,6 @@
         "pharmacistId": "emp-juna"
       },
       {
-        "id": "sch-2029-03-23-8pm-1",
-        "date": "2029-03-23",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
         "id": "sch-2029-03-23-10pm-2",
         "date": "2029-03-23",
         "shiftType": "10pm",
@@ -23089,12 +20088,6 @@
         "date": "2029-03-24",
         "shiftType": "10pm",
         "pharmacistId": "emp-juna"
-      },
-      {
-        "id": "sch-2029-03-24-10pm-1",
-        "date": "2029-03-24",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
       },
       {
         "id": "sch-2029-03-24-8pm-2",
@@ -23121,12 +20114,6 @@
         "pharmacistId": "emp-hyeonju"
       },
       {
-        "id": "sch-2029-03-26-10pm-0",
-        "date": "2029-03-26",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
         "id": "sch-2029-03-26-10pm-1",
         "date": "2029-03-26",
         "shiftType": "10pm",
@@ -23143,12 +20130,6 @@
         "date": "2029-03-26",
         "shiftType": "8pm",
         "pharmacistId": "emp-hyeonju"
-      },
-      {
-        "id": "sch-2029-03-27-10pm-0",
-        "date": "2029-03-27",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
       },
       {
         "id": "sch-2029-03-27-8pm-1",
@@ -23205,12 +20186,6 @@
         "pharmacistId": "emp-juna"
       },
       {
-        "id": "sch-2029-03-30-8pm-1",
-        "date": "2029-03-30",
-        "shiftType": "8pm",
-        "pharmacistId": "emp-juyeon"
-      },
-      {
         "id": "sch-2029-03-30-10pm-2",
         "date": "2029-03-30",
         "shiftType": "10pm",
@@ -23221,12 +20196,6 @@
         "date": "2029-03-31",
         "shiftType": "10pm",
         "pharmacistId": "emp-juna"
-      },
-      {
-        "id": "sch-2029-03-31-10pm-1",
-        "date": "2029-03-31",
-        "shiftType": "10pm",
-        "pharmacistId": "emp-juyeon"
       },
       {
         "id": "sch-2029-03-31-8pm-2",
@@ -23312,6 +20281,126 @@
         "endHour": 8,
         "shiftType": "irregular",
         "startHour": 11,
+        "pharmacistId": "emp-bae"
+      },
+      {
+        "id": "sch-e15bdf86-da45-4951-90c6-a56e45f9f3c6",
+        "date": "2026-11-03",
+        "endHour": 8,
+        "shiftType": "8pm",
+        "startHour": 10,
+        "pharmacistId": "emp-juna"
+      },
+      {
+        "id": "sch-f169608e-f7e3-47ab-af6c-4c63a9edd609",
+        "date": "2026-11-02",
+        "endHour": 10,
+        "shiftType": "10pm",
+        "startHour": 10,
+        "pharmacistId": "emp-bae"
+      },
+      {
+        "id": "sch-437c7873-c82f-400e-831f-0fd968da1a56",
+        "date": "2026-11-06",
+        "endHour": 8,
+        "shiftType": "8pm",
+        "startHour": 10,
+        "pharmacistId": "emp-bae"
+      },
+      {
+        "id": "sch-a21fc2b4-754f-41f3-aede-ab166d472ea6",
+        "date": "2026-11-07",
+        "endHour": 10,
+        "shiftType": "10pm",
+        "startHour": 10,
+        "pharmacistId": "emp-bae"
+      },
+      {
+        "id": "sch-d0a51c10-9424-42f3-a859-6c02289714df",
+        "date": "2026-11-09",
+        "endHour": 10,
+        "shiftType": "10pm",
+        "startHour": 10,
+        "pharmacistId": "emp-bae"
+      },
+      {
+        "id": "sch-52dbfd83-0608-42ed-bbde-7e334e27bbde",
+        "date": "2026-11-10",
+        "endHour": 10,
+        "shiftType": "10pm",
+        "startHour": 10,
+        "pharmacistId": "emp-bae"
+      },
+      {
+        "id": "sch-947aee23-b500-49ae-a0a9-a733771773d5",
+        "date": "2026-11-14",
+        "endHour": 10,
+        "shiftType": "10pm",
+        "startHour": 10,
+        "pharmacistId": "emp-bae"
+      },
+      {
+        "id": "sch-2f29f628-1c93-4e27-adf6-37ef6eb82908",
+        "date": "2026-11-16",
+        "endHour": 10,
+        "shiftType": "10pm",
+        "startHour": 10,
+        "pharmacistId": "emp-bae"
+      },
+      {
+        "id": "sch-c9ccd57f-3d57-415a-af33-b5d1735f8aeb",
+        "date": "2026-11-17",
+        "endHour": 10,
+        "shiftType": "10pm",
+        "startHour": 10,
+        "pharmacistId": "emp-bae"
+      },
+      {
+        "id": "sch-80b320b2-ad5a-4f6f-9a46-a37a37ddd76b",
+        "date": "2026-11-20",
+        "endHour": 8,
+        "shiftType": "8pm",
+        "startHour": 10,
+        "pharmacistId": "emp-bae"
+      },
+      {
+        "id": "sch-fb59d8df-919c-4518-bdb3-e54721c1e5af",
+        "date": "2026-11-13",
+        "endHour": 8,
+        "shiftType": "8pm",
+        "startHour": 10,
+        "pharmacistId": "emp-bae"
+      },
+      {
+        "id": "sch-4b89a4e6-ce80-4425-ba14-697e0b5949b1",
+        "date": "2026-11-24",
+        "endHour": 10,
+        "shiftType": "10pm",
+        "startHour": 10,
+        "pharmacistId": "emp-bae"
+      },
+      {
+        "id": "sch-269bda1a-406b-4349-9848-f1609e5e5778",
+        "date": "2026-11-27",
+        "endHour": 8,
+        "shiftType": "8pm",
+        "startHour": 10,
+        "pharmacistId": "emp-bae"
+      },
+      {
+        "id": "sch-e5195faf-1a38-4b36-9bc8-7d58f334a2a6",
+        "date": "2026-11-28",
+        "endHour": 10,
+        "shiftType": "10pm",
+        "startHour": 10,
+        "pharmacistId": "emp-bae"
+      },
+      {
+        "id": "sch-d32ae08f-4c06-4885-ad9a-00319a200cd6",
+        "date": "2026-11-30",
+        "endHour": 10,
+        "shiftType": "10pm",
+        "startHour": 10,
         "pharmacistId": "emp-bae"
       }
     ],
@@ -35241,20 +32330,21 @@
         "staffId": "emp-hyojin"
       },
       {
-        "id": "staff-45588d97-bade-42d6-9dfe-277b8cd9921d",
-        "date": "2026-11-17",
-        "hours": 10.5,
-        "endHour": 8.5,
-        "staffId": "emp-bae",
-        "startHour": 10
-      },
-      {
         "id": "staff-ddd6c3a5-c57f-40cd-ad6c-7bf9be83bf76",
         "date": "2026-11-18",
         "hours": 10.5,
         "endHour": 8.5,
-        "staffId": "emp-bae",
-        "startHour": 10
+        "staffId": "emp-hyojin",
+        "changedAt": "2026-10-21T07:05:12.208Z",
+        "changedBy": "emp-bae",
+        "startHour": 10,
+        "changeType": "staff-manual",
+        "changeOriginal": {
+          "hours": 10.5,
+          "endHour": 8.5,
+          "staffId": "emp-bae",
+          "startHour": 10
+        }
       }
     ],
     "overseasSchedules": [
@@ -35316,7 +32406,8 @@
       "sch-43ce2011-4e00-4131-a902-5afb2bfd3ae8",
       "sch-4ef84742-6525-4d4f-b968-ca5303944636",
       "sch-cba794e2-0f3d-4103-92ce-6ac358111bae",
-      "sch-c32638c4-5e68-45ff-81c6-9f94935d07ac"
+      "sch-c32638c4-5e68-45ff-81c6-9f94935d07ac",
+      "sch-94c574e4-848e-4e55-a97e-574fcecbcf1f"
     ],
     "deletedStaffScheduleSeedIds": [
       "staff-2026-06-25-0",
@@ -35333,7 +32424,8 @@
       "staff-26b1437d-606c-45b4-8d55-18d98ba71841",
       "staff-2026-08-16-0",
       "staff-91dc35d5-7e30-47e1-9035-eb2401aeb8d1",
-      "staff-58d0f4c0-9272-4990-aefe-388adb33264f"
+      "staff-58d0f4c0-9272-4990-aefe-388adb33264f",
+      "staff-45588d97-bade-42d6-9dfe-277b8cd9921d"
     ]
   }
 }
