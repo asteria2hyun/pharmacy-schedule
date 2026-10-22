@@ -1,17 +1,17 @@
 {
-  "backedUpAt": "2026-10-21T21:48:57.472Z",
-  "sourceVersion": 327,
-  "sourceUpdatedAt": "2026-10-21T07:05:12.936+00:00",
+  "backedUpAt": "2026-10-22T21:43:58.960Z",
+  "sourceVersion": 331,
+  "sourceUpdatedAt": "2026-10-22T09:23:18.964+00:00",
   "note": "비밀번호(authAccounts) 제외. 복원 시 비번은 관리자가 초기화.",
   "counts": {
     "employees": 13,
-    "schedules": 2907,
+    "schedules": 2906,
     "staffSchedules": 1609,
     "swapRequests": 68,
     "holidays": 22
   },
   "data": {
-    "savedAt": "2026-10-21T07:05:12.929Z",
+    "savedAt": "2026-10-22T09:23:18.961Z",
     "holidays": [
       {
         "id": "holiday-2026-01-01",
@@ -20236,22 +20236,6 @@
         "pharmacistId": "emp-bae"
       },
       {
-        "id": "sch-6b717aef-2cb3-4c3c-8637-9829f04fff80",
-        "date": "2026-10-23",
-        "endHour": 8,
-        "shiftType": "8pm",
-        "startHour": 10,
-        "pharmacistId": "emp-bae"
-      },
-      {
-        "id": "sch-39d96001-425a-454c-8562-9a89ef85214c",
-        "date": "2026-10-30",
-        "endHour": 8,
-        "shiftType": "8pm",
-        "startHour": 10,
-        "pharmacistId": "emp-bae"
-      },
-      {
         "id": "sch-6f72a05e-cdcb-4506-8026-d72007fdb49a",
         "date": "2026-09-30",
         "endHour": 8,
@@ -20402,6 +20386,23 @@
         "shiftType": "10pm",
         "startHour": 10,
         "pharmacistId": "emp-bae"
+      },
+      {
+        "id": "sch-34e59bd7-b76d-48bf-8658-b7e45a39a2a4",
+        "date": "2026-10-22",
+        "endHour": 7,
+        "changedAt": "2026-10-22T09:23:18.246Z",
+        "changedBy": "emp-bae",
+        "shiftType": "irregular",
+        "startHour": 11,
+        "changeType": "rx-manual",
+        "pharmacistId": "emp-bae",
+        "changeOriginal": {
+          "endHour": 6,
+          "shiftType": "irregular",
+          "startHour": 11,
+          "pharmacistId": "emp-bae"
+        }
       }
     ],
     "swapRequests": [
@@ -32407,7 +32408,9 @@
       "sch-4ef84742-6525-4d4f-b968-ca5303944636",
       "sch-cba794e2-0f3d-4103-92ce-6ac358111bae",
       "sch-c32638c4-5e68-45ff-81c6-9f94935d07ac",
-      "sch-94c574e4-848e-4e55-a97e-574fcecbcf1f"
+      "sch-94c574e4-848e-4e55-a97e-574fcecbcf1f",
+      "sch-6b717aef-2cb3-4c3c-8637-9829f04fff80",
+      "sch-39d96001-425a-454c-8562-9a89ef85214c"
     ],
     "deletedStaffScheduleSeedIds": [
       "staff-2026-06-25-0",
