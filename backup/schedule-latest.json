@@ -1,17 +1,17 @@
 {
-  "backedUpAt": "2026-10-22T21:43:58.960Z",
-  "sourceVersion": 331,
-  "sourceUpdatedAt": "2026-10-22T09:23:18.964+00:00",
+  "backedUpAt": "2026-10-23T21:30:09.119Z",
+  "sourceVersion": 339,
+  "sourceUpdatedAt": "2026-10-23T08:01:17.359+00:00",
   "note": "비밀번호(authAccounts) 제외. 복원 시 비번은 관리자가 초기화.",
   "counts": {
     "employees": 13,
     "schedules": 2906,
     "staffSchedules": 1609,
-    "swapRequests": 68,
+    "swapRequests": 72,
     "holidays": 22
   },
   "data": {
-    "savedAt": "2026-10-22T09:23:18.961Z",
+    "savedAt": "2026-10-23T08:01:17.353Z",
     "holidays": [
       {
         "id": "holiday-2026-01-01",
@@ -4768,7 +4768,7 @@
         "id": "sch-2026-12-05-10pm-0",
         "date": "2026-12-05",
         "shiftType": "10pm",
-        "pharmacistId": "emp-minji"
+        "pharmacistId": "emp-yeongju"
       },
       {
         "id": "sch-2026-12-05-8pm-2",
@@ -4786,7 +4786,7 @@
         "id": "sch-2026-12-06-10pm-1",
         "date": "2026-12-06",
         "shiftType": "10pm",
-        "pharmacistId": "emp-yeongju"
+        "pharmacistId": "emp-minji"
       },
       {
         "id": "sch-2026-12-07-10pm-1",
@@ -4864,7 +4864,7 @@
         "id": "sch-2026-12-13-10pm-0",
         "date": "2026-12-13",
         "shiftType": "10pm",
-        "pharmacistId": "emp-minji"
+        "pharmacistId": "emp-jaehee"
       },
       {
         "id": "sch-2026-12-13-10pm-1",
@@ -4876,7 +4876,7 @@
         "id": "sch-2026-12-14-10pm-1",
         "date": "2026-12-14",
         "shiftType": "10pm",
-        "pharmacistId": "emp-minji"
+        "pharmacistId": "emp-juna"
       },
       {
         "id": "sch-2026-12-14-8pm-2",
@@ -4924,7 +4924,7 @@
         "id": "sch-2026-12-18-10pm-0",
         "date": "2026-12-18",
         "shiftType": "10pm",
-        "pharmacistId": "emp-juna"
+        "pharmacistId": "emp-minji"
       },
       {
         "id": "sch-2026-12-18-10pm-2",
@@ -4942,7 +4942,7 @@
         "id": "sch-2026-12-19-8pm-2",
         "date": "2026-12-19",
         "shiftType": "8pm",
-        "pharmacistId": "emp-jaehee"
+        "pharmacistId": "emp-minji"
       },
       {
         "id": "sch-2026-12-20-10pm-0",
@@ -21500,6 +21500,71 @@
         "requesterAssignmentType": "rx",
         "targetOriginalPharmacistId": "emp-bae",
         "requesterOriginalPharmacistId": "emp-juyeon"
+      },
+      {
+        "id": "swap-a8d2bef1-7eb5-4cef-abe7-27dda1c86c9b",
+        "status": "approved",
+        "targetId": "emp-juna",
+        "createdAt": "2026-10-23T06:57:09.543Z",
+        "approvedAt": "2026-10-23T07:10:07.472Z",
+        "rejectedAt": "",
+        "cancelledAt": "",
+        "requesterId": "emp-minji",
+        "targetScheduleId": "rx:sch-2026-12-18-10pm-0",
+        "requesterScheduleId": "rx:sch-2026-12-14-10pm-1",
+        "targetAssignmentType": "rx",
+        "requesterAssignmentType": "rx",
+        "targetOriginalPharmacistId": "emp-juna",
+        "requesterOriginalPharmacistId": "emp-minji"
+      },
+      {
+        "id": "swap-4b5c8acf-da92-4419-95a9-2feb073e53b0",
+        "status": "approved",
+        "targetId": "emp-minji",
+        "createdAt": "2026-10-23T06:58:40.667Z",
+        "approvedAt": "2026-10-23T06:59:54.287Z",
+        "rejectedAt": "",
+        "cancelledAt": "",
+        "requesterId": "emp-yeongju",
+        "targetScheduleId": "rx:sch-2026-12-05-10pm-0",
+        "requesterScheduleId": "rx:sch-2026-12-06-10pm-1",
+        "targetAssignmentType": "rx",
+        "requesterAssignmentType": "rx",
+        "targetOriginalPharmacistId": "emp-minji",
+        "requesterOriginalPharmacistId": "emp-yeongju"
+      },
+      {
+        "id": "swap-3bb3db81-e24e-42ed-8d11-b5ae12be4304",
+        "status": "approved",
+        "targetId": "emp-jaehee",
+        "createdAt": "2026-10-23T07:17:19.822Z",
+        "approvedAt": "2026-10-23T07:19:12.880Z",
+        "rejectedAt": "",
+        "cancelledAt": "",
+        "requesterId": "emp-minji",
+        "targetScheduleId": "rx:sch-2026-12-19-8pm-2",
+        "requesterScheduleId": "rx:sch-2026-12-13-10pm-0",
+        "targetAssignmentType": "rx",
+        "requesterAssignmentType": "rx",
+        "targetOriginalPharmacistId": "emp-jaehee",
+        "requesterOriginalPharmacistId": "emp-minji"
+      },
+      {
+        "id": "swap-3bd20b72-958c-4793-92ca-1ede956c7b2b",
+        "type": "coverage",
+        "status": "approved",
+        "targetId": "emp-bae",
+        "createdAt": "2026-10-23T07:58:11.129Z",
+        "approvedAt": "2026-10-23T08:01:16.630Z",
+        "rejectedAt": "",
+        "cancelledAt": "",
+        "requesterId": "emp-yuri",
+        "targetScheduleId": "",
+        "requesterScheduleId": "staff:staff-2026-12-06-0",
+        "targetAssignmentType": "adminCoverage",
+        "requesterAssignmentType": "staff",
+        "targetOriginalPharmacistId": "emp-bae",
+        "requesterOriginalPharmacistId": "emp-yuri"
       }
     ],
     "sharedVersion": 1,
@@ -23614,7 +23679,7 @@
         "id": "staff-2026-12-06-0",
         "date": "2026-12-06",
         "hours": 10.5,
-        "staffId": "emp-yuri"
+        "staffId": "emp-bae"
       },
       {
         "id": "staff-2026-12-06-1",
