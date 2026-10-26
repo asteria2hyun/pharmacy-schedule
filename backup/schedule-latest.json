@@ -1,17 +1,17 @@
 {
-  "backedUpAt": "2026-10-25T20:57:24.639Z",
-  "sourceVersion": 339,
-  "sourceUpdatedAt": "2026-10-23T08:01:17.359+00:00",
+  "backedUpAt": "2026-10-26T22:45:02.159Z",
+  "sourceVersion": 341,
+  "sourceUpdatedAt": "2026-10-26T07:04:07.696+00:00",
   "note": "비밀번호(authAccounts) 제외. 복원 시 비번은 관리자가 초기화.",
   "counts": {
     "employees": 13,
     "schedules": 2906,
     "staffSchedules": 1609,
-    "swapRequests": 72,
+    "swapRequests": 73,
     "holidays": 22
   },
   "data": {
-    "savedAt": "2026-10-23T08:01:17.353Z",
+    "savedAt": "2026-10-26T07:04:07.684Z",
     "holidays": [
       {
         "id": "holiday-2026-01-01",
@@ -2325,7 +2325,7 @@
         "endHour": 8,
         "shiftType": "8pm",
         "startHour": 10,
-        "pharmacistId": "emp-jaehee"
+        "pharmacistId": "emp-hyeonju"
       },
       {
         "id": "sch-22a1fd1b-7718-4884-bf83-005f3dfaf133",
@@ -17319,7 +17319,7 @@
         "id": "sch-7b2ab282-eed5-4e80-a59f-f67c5a3dc040",
         "date": "2026-11-10",
         "shiftType": "10pm",
-        "pharmacistId": "emp-hyeonju"
+        "pharmacistId": "emp-jaehee"
       },
       {
         "id": "sch-08303561-73a3-4087-be4b-70256d6dde32",
@@ -21565,6 +21565,22 @@
         "requesterAssignmentType": "staff",
         "targetOriginalPharmacistId": "emp-bae",
         "requesterOriginalPharmacistId": "emp-yuri"
+      },
+      {
+        "id": "swap-6aea19a0-ff54-413b-87b0-9fc125752edd",
+        "status": "approved",
+        "targetId": "emp-jaehee",
+        "createdAt": "2026-10-26T00:33:54.607Z",
+        "approvedAt": "2026-10-26T07:04:06.960Z",
+        "rejectedAt": "",
+        "cancelledAt": "",
+        "requesterId": "emp-hyeonju",
+        "targetScheduleId": "rx:sch-d396e963-1904-4bc9-9de6-ce3d85597650",
+        "requesterScheduleId": "rx:sch-7b2ab282-eed5-4e80-a59f-f67c5a3dc040",
+        "targetAssignmentType": "rx",
+        "requesterAssignmentType": "rx",
+        "targetOriginalPharmacistId": "emp-jaehee",
+        "requesterOriginalPharmacistId": "emp-hyeonju"
       }
     ],
     "sharedVersion": 1,
