@@ -1,7 +1,7 @@
 {
-  "backedUpAt": "2026-10-30T22:27:57.431Z",
-  "sourceVersion": 343,
-  "sourceUpdatedAt": "2026-10-30T09:55:50.081+00:00",
+  "backedUpAt": "2026-10-31T21:43:07.213Z",
+  "sourceVersion": 345,
+  "sourceUpdatedAt": "2026-10-31T09:18:25.753+00:00",
   "note": "비밀번호(authAccounts) 제외. 복원 시 비번은 관리자가 초기화.",
   "counts": {
     "employees": 13,
@@ -11,7 +11,7 @@
     "holidays": 22
   },
   "data": {
-    "savedAt": "2026-10-30T09:55:50.078Z",
+    "savedAt": "2026-10-31T09:18:25.744Z",
     "holidays": [
       {
         "id": "holiday-2026-01-01",
@@ -692,7 +692,7 @@
           4,
           5
         ],
-        "monthlySalary": 2700000,
+        "monthlySalary": 2800000,
         "salaryChanges": [
           {
             "salaryType": "fixed",
@@ -704,7 +704,7 @@
           {
             "salaryType": "fixed",
             "effectiveDate": "2026-06-01",
-            "monthlySalary": 2700000,
+            "monthlySalary": 2800000,
             "weekdayHourlyRate": 0,
             "weekendHourlyRate": 0
           },
@@ -712,6 +712,13 @@
             "salaryType": "fixed",
             "effectiveDate": "2026-08-01",
             "monthlySalary": 2700000,
+            "weekdayHourlyRate": 0,
+            "weekendHourlyRate": 0
+          },
+          {
+            "salaryType": "fixed",
+            "effectiveDate": "2026-11-01",
+            "monthlySalary": 2800000,
             "weekdayHourlyRate": 0,
             "weekendHourlyRate": 0
           }
@@ -725,7 +732,9 @@
         "firstWorkStartDate": "2024-11-01",
         "leaveCycleStartDate": "2025-11-01",
         "salaryEffectiveDate": "2026-06-01",
-        "lastModifiedStartDate": "2026-06-01"
+        "salaryReviewMonthDay": "11-01",
+        "lastModifiedStartDate": "2026-06-01",
+        "salaryReviewMonthDaySetAt": "2026-10-31"
       },
       {
         "id": "emp-yuri",
