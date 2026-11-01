@@ -1,17 +1,17 @@
 {
-  "backedUpAt": "2026-10-31T21:43:07.213Z",
-  "sourceVersion": 345,
-  "sourceUpdatedAt": "2026-10-31T09:18:25.753+00:00",
+  "backedUpAt": "2026-11-01T22:09:50.850Z",
+  "sourceVersion": 346,
+  "sourceUpdatedAt": "2026-11-01T01:47:20.229+00:00",
   "note": "비밀번호(authAccounts) 제외. 복원 시 비번은 관리자가 초기화.",
   "counts": {
     "employees": 13,
-    "schedules": 2908,
+    "schedules": 2907,
     "staffSchedules": 1609,
     "swapRequests": 73,
     "holidays": 22
   },
   "data": {
-    "savedAt": "2026-10-31T09:18:25.744Z",
+    "savedAt": "2026-11-01T01:47:20.217Z",
     "holidays": [
       {
         "id": "holiday-2026-01-01",
@@ -290,7 +290,7 @@
         "id": "emp-juyeon",
         "name": "황주연",
         "role": "pharmacist",
-        "status": "active",
+        "status": "resigned",
         "loginId": "jooyeon",
         "hireDate": "2025-08-10",
         "staffType": "",
@@ -2327,14 +2327,6 @@
         "shiftType": "8pm",
         "startHour": 10,
         "pharmacistId": "emp-jaehee"
-      },
-      {
-        "id": "sch-d396e963-1904-4bc9-9de6-ce3d85597650",
-        "date": "2026-11-10",
-        "endHour": 8,
-        "shiftType": "8pm",
-        "startHour": 10,
-        "pharmacistId": "emp-hyeonju"
       },
       {
         "id": "sch-22a1fd1b-7718-4884-bf83-005f3dfaf133",
@@ -32516,7 +32508,8 @@
       "sch-c32638c4-5e68-45ff-81c6-9f94935d07ac",
       "sch-94c574e4-848e-4e55-a97e-574fcecbcf1f",
       "sch-6b717aef-2cb3-4c3c-8637-9829f04fff80",
-      "sch-39d96001-425a-454c-8562-9a89ef85214c"
+      "sch-39d96001-425a-454c-8562-9a89ef85214c",
+      "sch-d396e963-1904-4bc9-9de6-ce3d85597650"
     ],
     "deletedStaffScheduleSeedIds": [
       "staff-2026-06-25-0",
