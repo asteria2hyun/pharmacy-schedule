@@ -1,17 +1,17 @@
 {
-  "backedUpAt": "2026-11-03T01:04:08.565Z",
-  "sourceVersion": 357,
-  "sourceUpdatedAt": "2026-11-03T00:31:25.598+00:00",
+  "backedUpAt": "2026-11-03T23:29:06.271Z",
+  "sourceVersion": 358,
+  "sourceUpdatedAt": "2026-11-03T10:17:40.003+00:00",
   "note": "비밀번호(authAccounts) 제외. 복원 시 비번은 관리자가 초기화.",
   "counts": {
     "employees": 13,
     "schedules": 2985,
     "staffSchedules": 1644,
-    "swapRequests": 77,
+    "swapRequests": 78,
     "holidays": 22
   },
   "data": {
-    "savedAt": "2026-11-03T00:31:25.589Z",
+    "savedAt": "2026-11-03T10:17:39.995Z",
     "holidays": [
       {
         "id": "holiday-2026-01-01",
@@ -22150,6 +22150,23 @@
         "targetScheduleId": "rx:sch-d32ae08f-4c06-4885-ad9a-00319a200cd6",
         "requesterScheduleId": "rx:sch-cf7cf84e-afa3-44d3-a5ca-5d6dcce07918",
         "targetAssignmentType": "rx",
+        "requesterAssignmentType": "rx",
+        "targetOriginalPharmacistId": "emp-bae",
+        "requesterOriginalPharmacistId": "emp-yeongju"
+      },
+      {
+        "id": "swap-98d8a9d9-9a7c-4be2-99ed-c5eaa9af28f5",
+        "type": "handoff",
+        "status": "pending",
+        "targetId": "emp-bae",
+        "createdAt": "2026-11-03T10:17:39.287Z",
+        "approvedAt": "",
+        "rejectedAt": "",
+        "cancelledAt": "",
+        "requesterId": "emp-yeongju",
+        "targetScheduleId": "",
+        "requesterScheduleId": "rx:sch-2026-12-13-10pm-1",
+        "targetAssignmentType": "handoff",
         "requesterAssignmentType": "rx",
         "targetOriginalPharmacistId": "emp-bae",
         "requesterOriginalPharmacistId": "emp-yeongju"
