@@ -243,6 +243,16 @@ input:disabled {
   min-width: 0;
 }
 
+/* 제목 옆 버전 표시(예: v1.00). 배포가 내 화면에 반영됐는지 숫자로 확인하는 용도 */
+.app-version {
+  margin-left: 4px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  vertical-align: middle;
+}
+
 .app-title strong {
   font-size: 1.05rem;
   overflow: hidden;

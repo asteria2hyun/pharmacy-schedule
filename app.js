@@ -1,4 +1,7 @@
 (() => {
+  // 화면에 보이는 앱 버전. 큰 변화는 앞 숫자, 작은 변화는 뒷 숫자를 올린다(2026-11-04 점주 요청).
+  // 배포할 때마다 index.html의 ?v= 와 함께 꼭 올릴 것. 점주가 "내 화면이 새 버전인지"를 이 숫자로 확인한다.
+  const APP_VERSION = "v1.00";
   const STORAGE_KEY = "pharmacy-schedule-mvp-v12";
   const SESSION_KEY = "pharmacy-schedule-session-v12";
   const LEGACY_INITIAL_PASSWORD = "1".repeat(4);
@@ -1656,7 +1659,7 @@
       <div class="app-shell">
         <header class="topbar">
           <div class="app-title">
-            <strong>근무 관리</strong>
+            <strong>근무 관리 <span class="app-version" title="앱 버전">${APP_VERSION}</span></strong>
             <span>${escapeHtml(user.name)}</span>
           </div>
           <div class="top-actions">
@@ -1694,7 +1697,7 @@
     return `
       <section class="login-page">
         <div class="login-panel">
-          <h1 class="login-title">근무 관리</h1>
+          <h1 class="login-title">근무 관리 <span class="app-version" title="앱 버전">${APP_VERSION}</span></h1>
           <p class="login-subtitle">본인 근무와 급여를 안전하게 확인하기 위해 아이디와 비밀번호로 로그인합니다.</p>
           ${error ? `<div class="notice" role="alert">${escapeHtml(error)}</div>` : ""}
           <form class="field-stack" data-form="login">
