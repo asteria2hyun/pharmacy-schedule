@@ -1,7 +1,7 @@
 (() => {
   // 화면에 보이는 앱 버전. 큰 변화는 앞 숫자, 작은 변화는 뒷 숫자를 올린다(2026-11-04 점주 요청).
   // 배포할 때마다 index.html의 ?v= 와 함께 꼭 올릴 것. 점주가 "내 화면이 새 버전인지"를 이 숫자로 확인한다.
-  const APP_VERSION = "v1.00";
+  const APP_VERSION = "v1.01";
   const STORAGE_KEY = "pharmacy-schedule-mvp-v12";
   const SESSION_KEY = "pharmacy-schedule-session-v12";
   const LEGACY_INITIAL_PASSWORD = "1".repeat(4);
@@ -4279,6 +4279,10 @@
       pharmacistId: data.pharmacistId,
       startHour: parseHourValue(data.startHour, getDefaultTimeRange(data.shiftType).start),
       endHour: parseHourValue(data.endHour, getDefaultTimeRange(data.shiftType).end),
+      // 관리자가 손으로 넣은 근무 표시: 요일 근무 설정을 바꿔도 지워지거나 시간이 바뀌지 않게 보호
+      changedAt: nowIso(),
+      changedBy: user.id,
+      changeType: "rx-manual-add",
     });
     adminSelectedDate = data.date;
     monthCursor = data.date.slice(0, 7);
@@ -4315,6 +4319,10 @@
         parseHourValue(data.startHour, getDefaultTimeRange("staff").start),
         parseHourValue(data.endHour, getDefaultTimeRange("staff").end),
       ),
+      // 관리자가 손으로 넣은 근무 표시: 요일 근무 설정을 바꿔도 지워지거나 시간이 바뀌지 않게 보호
+      changedAt: nowIso(),
+      changedBy: user.id,
+      changeType: "staff-manual-add",
     });
     adminSelectedDate = data.date;
     monthCursor = data.date.slice(0, 7);
@@ -4892,15 +4900,18 @@
         if (isScheduleTouched(schedule, type, targetDb)) return keep.push(schedule);
         const weekday = weekdayOf(schedule.date);
         const previous = previousPatterns.find((pattern) => pattern.weekday === weekday);
-        if (!previous) return keep.push(schedule); // 예전 요일에 없던 날 = 따로 넣은 근무
-        const range = getScheduleTimeRange(schedule, type === "staff" ? "staff" : schedule.shiftType);
-        if (range.start !== previous.startHour || range.end !== previous.endHour) return keep.push(schedule); // 시간을 따로 바꾼 근무
         const next = nextPatterns.find((pattern) => pattern.weekday === weekday);
+        const range = getScheduleTimeRange(schedule, type === "staff" ? "staff" : schedule.shiftType);
         if (!next) {
+          // 새 요일에 없는 날: 예전 요일에 있던 날이면 기본 근무였던 것이므로 뺀다. 예전 요일에도 없던 날은 따로 넣은 근무 → 둔다.
+          if (!previous) return keep.push(schedule);
           removed += 1;
           rememberDeletedSeed(type === "staff" ? "staffSchedules" : "schedules", schedule.id);
-          return; // 새 요일에 없음 → 뺀다
+          return;
         }
+        // 새 요일에 있는 날: 손 안 댄 근무는 설정 시간에 맞춘다.
+        // (처음 자동으로 깔린 근무는 설정과 시간이 달라도 '손 안 댄' 것이므로 맞춰야 한다 —
+        //  2026-11-04 원영주 월요일 10-8→10-10이 안 바뀐 원인)
         if (next.startHour !== range.start || next.endHour !== range.end) {
           schedule.startHour = next.startHour;
           schedule.endHour = next.endHour;
