@@ -1,7 +1,7 @@
 {
-  "backedUpAt": "2026-11-04T00:36:18.478Z",
-  "sourceVersion": 359,
-  "sourceUpdatedAt": "2026-11-04T00:35:05.773+00:00",
+  "backedUpAt": "2026-11-04T01:01:30.967Z",
+  "sourceVersion": 360,
+  "sourceUpdatedAt": "2026-11-04T01:00:12.698+00:00",
   "note": "비밀번호(authAccounts) 제외. 복원 시 비번은 관리자가 초기화.",
   "counts": {
     "employees": 13,
@@ -11,7 +11,7 @@
     "holidays": 22
   },
   "data": {
-    "savedAt": "2026-11-04T00:35:05.764Z",
+    "savedAt": "2026-11-04T01:00:12.687Z",
     "holidays": [
       {
         "id": "holiday-2026-01-01",
@@ -583,9 +583,9 @@
         "firstWorkStartDate": "2024-12-05",
         "leaveCycleStartDate": "",
         "salaryEffectiveDate": "2026-12-01",
-        "salaryReviewMonthDay": "12-05",
+        "salaryReviewMonthDay": "12-01",
         "lastModifiedStartDate": "2026-12-01",
-        "salaryReviewMonthDaySetAt": "2026-11-02"
+        "salaryReviewMonthDaySetAt": "2026-11-04"
       },
       {
         "id": "emp-hyeonju",
