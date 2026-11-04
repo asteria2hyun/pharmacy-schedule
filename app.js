@@ -46,6 +46,9 @@
     import: "가져오기",
   };
   const SEED_MONTH = "2026-06";
+  // 같은 날 같은 시간대(10-10 / 10-8 / 직원)에 둘 수 있는 최대 인원. 평소엔 2명이 기본이지만
+  // 요일 근무 설정 변경·관리자 수동 배정이 막히지 않도록 4명까지 허용한다(2026-11-04 점주 요청).
+  const PATTERN_FILL_MAX_PER_SHIFT = 4;
   const PHARMACIST_RATE_PRESETS = {
     "emp-minji": 32000,
     "emp-juna": 35000,
@@ -4164,12 +4167,15 @@
       roleKind === "staff1" ? getRowValue(row, "leaveCycleStartDate") || employee.leaveCycleStartDate || effectiveStartDate : "";
     employee.workStartDate = effectiveStartDate;
     employee.lastModifiedStartDate = effectiveStartDate;
+    const previousPatterns = normalizeWorkPatterns(employee); // 저장 직전 요일 근무(빠질 요일을 찾는 기준)
     employee.workPatterns = readWorkPatternsFromContainer(row);
     employee.workWeekdays = employee.workPatterns.map((pattern) => pattern.weekday);
     employee.workStartHour = employee.workPatterns[0]?.startHour ?? 10;
     employee.workEndHour = employee.workPatterns[0]?.endHour ?? (employee.role === "staff" ? 8.5 : 8);
     const patternResult =
-      isEmployeeAccessActive(employee) ? applyEmployeePatternChange(employee, { skipPast: true }) : { attempted: false, added: 0, skipped: 0, startDate: employee.workStartDate };
+      isEmployeeAccessActive(employee)
+        ? applyEmployeePatternChange(employee, { skipPast: true, previousPatterns })
+        : { attempted: false, added: 0, skipped: 0, removed: 0, updated: 0, startDate: employee.workStartDate };
     const resignationResult = applyEmployeeResignation(employee);
     employee.firstWorkStartDate = minDate(employee.firstWorkStartDate, findFirstEmployeeWorkDate(employee.id), effectiveStartDate) || effectiveStartDate;
     employee.hireDate = employee.hireDate || employee.firstWorkStartDate;
@@ -4179,7 +4185,7 @@
       [
         `적용 시작일: ${formatFullDate(effectiveStartDate)}`,
         patternResult.attempted
-          ? `변경 스케줄 반영: ${formatDate(patternResult.startDate)}부터 ${patternResult.added}건 배치${patternResult.skipped ? `, ${patternResult.skipped}건 건너뜀` : ""}`
+          ? `변경 스케줄 반영: ${formatDate(patternResult.startDate)}부터 ${patternResult.added}건 배치${patternResult.removed ? `, ${patternResult.removed}건 제외` : ""}${patternResult.updated ? `, ${patternResult.updated}건 시간 변경` : ""}${patternResult.skipped ? `, ${patternResult.skipped}건 건너뜀` : ""}`
           : "",
         resignationResult.removed
           ? `퇴사일 이후 근무 제거: ${formatDate(resignationResult.resignationDate)} 이후 ${resignationResult.removed}건`
@@ -4257,11 +4263,11 @@
       return showToast("같은 날짜에 같은 직원을 중복 배정할 수 없습니다.");
     }
     const sameShiftCount = sameDateSchedules.filter((schedule) => schedule.shiftType === data.shiftType).length;
-    if (data.shiftType === "10pm" && sameShiftCount >= 2) {
-      return showToast("10-10은 하루 최대 2명까지 배정합니다.");
+    if (data.shiftType === "10pm" && sameShiftCount >= PATTERN_FILL_MAX_PER_SHIFT) {
+      return showToast(`10-10은 하루 최대 ${PATTERN_FILL_MAX_PER_SHIFT}명까지 배정합니다.`);
     }
-    if (data.shiftType === "8pm" && sameShiftCount >= 3) {
-      return showToast("10-8은 하루 최대 3명까지 배정합니다.");
+    if (data.shiftType === "8pm" && sameShiftCount >= PATTERN_FILL_MAX_PER_SHIFT) {
+      return showToast(`10-8은 하루 최대 ${PATTERN_FILL_MAX_PER_SHIFT}명까지 배정합니다.`);
     }
     db.schedules.push({
       id: makeId("sch"),
@@ -4293,8 +4299,8 @@
     const activeSameDateCount = sameDateSchedules.filter((schedule) =>
       isEmployeeAvailableForScheduleDate(getEmployee(schedule.staffId), schedule.date),
     ).length;
-    if (activeSameDateCount >= 3) {
-      return showToast("직원근무는 하루 최대 3명까지 배정합니다.");
+    if (activeSameDateCount >= PATTERN_FILL_MAX_PER_SHIFT) {
+      return showToast(`직원근무는 하루 최대 ${PATTERN_FILL_MAX_PER_SHIFT}명까지 배정합니다.`);
     }
     db.staffSchedules.push({
       id: makeId("staff"),
@@ -4332,8 +4338,8 @@
     );
     if (duplicate) return showToast("같은 날짜에 같은 직원을 중복 배정할 수 없습니다.");
     const sameShiftCount = db.schedules.filter((item) => item.id !== id && item.date === schedule.date && item.shiftType === nextShiftType).length;
-    if (nextShiftType === "10pm" && sameShiftCount >= 2) return showToast("10-10은 하루 최대 2명까지 배정합니다.");
-    if (nextShiftType === "8pm" && sameShiftCount >= 3) return showToast("10-8은 하루 최대 3명까지 배정합니다.");
+    if (nextShiftType === "10pm" && sameShiftCount >= PATTERN_FILL_MAX_PER_SHIFT) return showToast(`10-10은 하루 최대 ${PATTERN_FILL_MAX_PER_SHIFT}명까지 배정합니다.`);
+    if (nextShiftType === "8pm" && sameShiftCount >= PATTERN_FILL_MAX_PER_SHIFT) return showToast(`10-8은 하루 최대 ${PATTERN_FILL_MAX_PER_SHIFT}명까지 배정합니다.`);
     const before = snapshotRxSchedule(schedule);
     const defaults = getDefaultTimeRange(nextShiftType);
     schedule.shiftType = nextShiftType;
@@ -4820,26 +4826,98 @@
   // options.skipPast=true: 오늘 이전 날짜는 다시 채우지 않는다.
   // (기존 직원 '설정 저장'에서 사용. 예전에는 적용 시작일(예: 6/1)부터 과거까지 다시 훑어,
   //  남에게 넘겼거나 원래 없던 요일의 지난 근무가 되살아나 지난 급여 계산이 달라지는 문제가 있었다.)
+  // options.previousPatterns: 저장 직전의 요일 근무. 이게 있으면 '예전 기본 요일대로 깔려 있던 손 안 댄 근무'를
+  // 새 요일에 맞춰 빼거나 시간을 바꾼다. 교환·넘기기·관리자 수정 등 손댄 근무는 그대로 둔다.
+  // 예) 월화수 → 월화금 으로 바꾸면: 손 안 댄 수요일은 빠지고 금요일이 들어간다. 수→목으로 바꿔둔 주는 목요일 그대로 + 금요일 추가.
   function applyEmployeePatternChange(employee, options = {}) {
     const originalStartDate = employee.workStartDate;
     const patterns = normalizeWorkPatterns(employee);
-    if (!originalStartDate || !patterns.length) return { attempted: false, added: 0, skipped: 0, startDate: originalStartDate };
+    const empty = { attempted: false, added: 0, skipped: 0, removed: 0, updated: 0, startDate: originalStartDate };
+    if (!originalStartDate || !patterns.length) return empty;
     const today = getKoreaDateString();
     const startDate = options.skipPast && originalStartDate < today ? today : originalStartDate;
+    const previousPatterns = Array.isArray(options.previousPatterns) ? normalizeWorkPatterns(options.previousPatterns) : null;
     const months = getExistingScheduleMonthsFrom(startDate);
     return months.reduce(
       (result, monthKey) => {
         ensureBaseMonthTemplates(monthKey, db);
-        // 기존 근무는 지우지 않고(=손으로 바꾼 미래 근무 보존), 비어 있는 요일에만 기본근무를 채운다.
-        // 예전에는 마지막 인자가 true라 시작일부터 이 사람 근무를 전부 지우고 다시 깔아, 수동 편집이 사라졌다.
+        if (previousPatterns) {
+          const retired = retireUntouchedBaseSchedules(employee, previousPatterns, patterns, startDate, monthKey, db);
+          result.removed += retired.removed;
+          result.updated += retired.updated;
+        }
+        // 손댄 근무는 지우지 않고, 비어 있는 요일에만 기본근무를 채운다.
         const applied = applyEmployeeWorkPattern(employee, startDate, patterns, monthKey, db, false);
         result.added += applied.added;
         result.skipped += applied.skipped;
         result.attempted = result.attempted || applied.attempted;
         return result;
       },
-      { attempted: false, added: 0, skipped: 0, startDate },
+      { ...empty, startDate },
     );
+  }
+
+  // 교환·넘기기·대체 승인 기록에 들어 있거나 관리자가 손으로 고친 근무인지(= 자동으로 깔린 기본 근무가 아님).
+  function isScheduleTouched(schedule, type, targetDb = db) {
+    if (!schedule) return false;
+    if (schedule.changedAt) return true;
+    const ref = `${type === "staff" ? "staff" : "rx"}:${schedule.id}`;
+    return (targetDb.swapRequests || []).some(
+      (request) =>
+        request &&
+        request.status === "approved" &&
+        request.type !== "leave" &&
+        (normalizeAssignmentRef(request.requesterScheduleId) === ref || normalizeAssignmentRef(request.targetScheduleId) === ref),
+    );
+  }
+
+  // '예전 요일 근무 그대로 깔려 있고 손 안 댄' 이 사람의 근무를 새 요일 근무에 맞춘다(시작일 이후, 해당 달만).
+  //  - 새 요일에 없는 날 → 뺀다
+  //  - 새 요일에 있지만 시간이 다른 날 → 시간만 바꾼다
+  //  - 예전 요일에 없던 날이나 시간이 달랐던 날(=누군가 일부러 바꾼 것), 손댄 근무 → 그대로 둔다
+  function retireUntouchedBaseSchedules(employee, previousPatterns, nextPatterns, startDate, monthKey, targetDb = db) {
+    let removed = 0;
+    let updated = 0;
+    const weekdayOf = (date) => {
+      const [year, month, day] = date.split("-").map(Number);
+      return getWeekday(year, month, day);
+    };
+    const handle = (collection, type, ownerKey) => {
+      const keep = [];
+      collection.forEach((schedule) => {
+        if (schedule[ownerKey] !== employee.id || !schedule.date.startsWith(monthKey) || schedule.date < startDate) return keep.push(schedule);
+        if (isScheduleTouched(schedule, type, targetDb)) return keep.push(schedule);
+        const weekday = weekdayOf(schedule.date);
+        const previous = previousPatterns.find((pattern) => pattern.weekday === weekday);
+        if (!previous) return keep.push(schedule); // 예전 요일에 없던 날 = 따로 넣은 근무
+        const range = getScheduleTimeRange(schedule, type === "staff" ? "staff" : schedule.shiftType);
+        if (range.start !== previous.startHour || range.end !== previous.endHour) return keep.push(schedule); // 시간을 따로 바꾼 근무
+        const next = nextPatterns.find((pattern) => pattern.weekday === weekday);
+        if (!next) {
+          removed += 1;
+          rememberDeletedSeed(type === "staff" ? "staffSchedules" : "schedules", schedule.id);
+          return; // 새 요일에 없음 → 뺀다
+        }
+        if (next.startHour !== range.start || next.endHour !== range.end) {
+          schedule.startHour = next.startHour;
+          schedule.endHour = next.endHour;
+          if (type === "staff") {
+            schedule.hours = getHoursFromRange(next.startHour, next.endHour);
+          } else {
+            schedule.shiftType = inferShiftTypeFromHours(next.startHour, next.endHour);
+          }
+          updated += 1;
+        }
+        keep.push(schedule);
+      });
+      return keep;
+    };
+    if (employee.role === "staff") {
+      targetDb.staffSchedules = handle(targetDb.staffSchedules, "staff", "staffId");
+    } else {
+      targetDb.schedules = handle(targetDb.schedules, "rx", "pharmacistId");
+    }
+    return { removed, updated };
   }
 
   function getExistingScheduleMonthsFrom(startDate) {
@@ -4931,9 +5009,11 @@
 
   function addEmployeeScheduleForDate(targetDb, employee, date, startHour, endHour) {
     if (!isEmployeeAvailableForScheduleDate(employee, date)) return false;
+    // 인원 제한: 기본은 시간대별 2명이지만, 요일 근무 설정을 바꿀 때는 4명까지 허용한다(2026-11-04 점주 요청).
+    // 예전엔 2명(10-8은 3명)이 차 있으면 새 요일 근무가 조용히 빠져 "저장했는데 안 바뀐다"는 문제가 있었다.
     if (employee.role === "staff") {
       const sameDateSchedules = targetDb.staffSchedules.filter((schedule) => schedule.date === date);
-      if (sameDateSchedules.some((schedule) => schedule.staffId === employee.id) || sameDateSchedules.length >= 2) return false;
+      if (sameDateSchedules.some((schedule) => schedule.staffId === employee.id) || sameDateSchedules.length >= PATTERN_FILL_MAX_PER_SHIFT) return false;
       targetDb.staffSchedules.push({
         id: makeId("staff"),
         date,
@@ -4949,7 +5029,7 @@
     const sameDateSchedules = targetDb.schedules.filter((schedule) => schedule.date === date);
     if (sameDateSchedules.some((schedule) => schedule.pharmacistId === employee.id)) return false;
     const sameShiftCount = sameDateSchedules.filter((schedule) => schedule.shiftType === shiftType).length;
-    if (sameShiftCount >= (shiftType === "10pm" ? 2 : 3)) return false;
+    if (sameShiftCount >= PATTERN_FILL_MAX_PER_SHIFT) return false;
     targetDb.schedules.push({
       id: makeId("sch"),
       date,
