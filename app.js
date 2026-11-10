@@ -1,7 +1,7 @@
 (() => {
   // 화면에 보이는 앱 버전. 큰 변화는 앞 숫자, 작은 변화는 뒷 숫자를 올린다(2026-11-04 점주 요청).
   // 배포할 때마다 index.html의 ?v= 와 함께 꼭 올릴 것. 점주가 "내 화면이 새 버전인지"를 이 숫자로 확인한다.
-  const APP_VERSION = "v1.01";
+  const APP_VERSION = "v1.02";
   const STORAGE_KEY = "pharmacy-schedule-mvp-v12";
   const SESSION_KEY = "pharmacy-schedule-session-v12";
   const LEGACY_INITIAL_PASSWORD = "1".repeat(4);
@@ -1902,7 +1902,7 @@
   }
 
   function renderIrregularBlock(user, schedules) {
-    if (!canSeeAdminPrivateSchedule(user)) return "";
+    // schedules는 이미 shouldShowRxScheduleOnCalendar로 걸러져 있다(관리자 전부, 당사자는 본인 것만).
     const shiftSchedules = schedules.filter((schedule) => schedule.shiftType === "irregular");
     if (!shiftSchedules.length) return "";
     const meta = SHIFT_META.irregular;
@@ -2222,7 +2222,8 @@
 
   function shouldShowRxScheduleOnCalendar(user, schedule) {
     if (!isScheduleOwnerEmployedOnDate(schedule?.pharmacistId, schedule?.date)) return false; // 퇴사자: 마지막 근무일 이후 근무표에서 숨김
-    if (schedule?.shiftType === "irregular") return canSeeAdminPrivateSchedule(user);
+    // 비정규 근무: 관리자와 '그 근무의 당사자'만 본다(2026-11-11 점주 요청). 다른 직원에게는 안 보임.
+    if (schedule?.shiftType === "irregular") return canSeeAdminPrivateSchedule(user) || schedule.pharmacistId === user?.id;
     if (schedule?.pharmacistId !== "emp-bae") return true;
     if (canSeeAdminPrivateSchedule(user)) return true;
     return isDefaultScheduleTime(schedule, schedule.shiftType);
