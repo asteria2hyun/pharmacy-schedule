@@ -1,17 +1,17 @@
 {
-  "backedUpAt": "2026-11-08T22:15:06.501Z",
-  "sourceVersion": 362,
-  "sourceUpdatedAt": "2026-11-04T01:14:16.962+00:00",
+  "backedUpAt": "2026-11-10T01:37:52.466Z",
+  "sourceVersion": 364,
+  "sourceUpdatedAt": "2026-11-10T00:46:22.766+00:00",
   "note": "비밀번호(authAccounts) 제외. 복원 시 비번은 관리자가 초기화.",
   "counts": {
     "employees": 13,
-    "schedules": 3489,
+    "schedules": 3490,
     "staffSchedules": 1644,
-    "swapRequests": 78,
+    "swapRequests": 79,
     "holidays": 22
   },
   "data": {
-    "savedAt": "2026-11-04T01:14:16.953Z",
+    "savedAt": "2026-11-10T00:46:22.757Z",
     "holidays": [
       {
         "id": "holiday-2026-01-01",
@@ -25230,6 +25230,17 @@
         "shiftType": "8pm",
         "startHour": 10,
         "pharmacistId": "emp-bae"
+      },
+      {
+        "id": "sch-c75f45c6-1b08-43eb-9a62-e2d46203c5ab",
+        "date": "2026-11-10",
+        "endHour": 8.5,
+        "changedAt": "2026-11-10T00:46:22.032Z",
+        "changedBy": "emp-bae",
+        "shiftType": "irregular",
+        "startHour": 2,
+        "changeType": "rx-manual-add",
+        "pharmacistId": "emp-hyojin"
       }
     ],
     "swapRequests": [
@@ -26489,6 +26500,22 @@
         "requesterAssignmentType": "rx",
         "targetOriginalPharmacistId": "emp-bae",
         "requesterOriginalPharmacistId": "emp-yeongju"
+      },
+      {
+        "id": "swap-4c6c68ad-a80a-43d5-af0e-6f347719c448",
+        "status": "pending",
+        "targetId": "emp-hyeonju",
+        "createdAt": "2026-11-09T12:49:30.175Z",
+        "approvedAt": "",
+        "rejectedAt": "",
+        "cancelledAt": "",
+        "requesterId": "emp-jaehee",
+        "targetScheduleId": "rx:sch-2df6b1a2-8f7e-4236-80d5-81a30b236f69",
+        "requesterScheduleId": "rx:sch-b55b8788-dc4e-45b9-ad7c-fa50b2d5fe52",
+        "targetAssignmentType": "rx",
+        "requesterAssignmentType": "rx",
+        "targetOriginalPharmacistId": "emp-hyeonju",
+        "requesterOriginalPharmacistId": "emp-jaehee"
       }
     ],
     "sharedVersion": 1,
