@@ -1,7 +1,7 @@
 (() => {
   // 화면에 보이는 앱 버전. 큰 변화는 앞 숫자, 작은 변화는 뒷 숫자를 올린다(2026-11-04 점주 요청).
   // 배포할 때마다 index.html의 ?v= 와 함께 꼭 올릴 것. 점주가 "내 화면이 새 버전인지"를 이 숫자로 확인한다.
-  const APP_VERSION = "v1.02";
+  const APP_VERSION = "v1.03";
   const STORAGE_KEY = "pharmacy-schedule-mvp-v12";
   const SESSION_KEY = "pharmacy-schedule-session-v12";
   const LEGACY_INITIAL_PASSWORD = "1".repeat(4);
@@ -1923,13 +1923,16 @@
     const statusMark = employee && employee.status === "resigned" ? " (퇴사)" : "";
     const changedMark = isChangedSchedule(schedule, "rx") ? renderChangedScheduleMark() : "";
     const salaryMark = renderSalaryReviewMark(user, employee, schedule.date);
+    // 주말 시급 예외 표시: 관리자와 당사자에게만
+    const weekendPayMark =
+      schedule.payAsWeekend && (canSeeAdminPrivateSchedule(user) || isMine) ? `<span class="weekend-pay-mark" title="주말 시급으로 계산되는 근무">주말급</span>` : "";
     const timeLabel = schedule.pharmacistId === "emp-bae" ? SHIFT_META[schedule.shiftType]?.label : getScheduleTimeLabel(schedule);
     const timeMark =
       schedule.pharmacistId !== "emp-bae" && timeLabel !== SHIFT_META[schedule.shiftType]?.label
         ? `<span class="person-time">${escapeHtml(timeLabel)}</span>`
         : "";
     return `<div class="person-row ${isMine ? "mine" : ""} ${pendingSwap ? "pending-swap-person" : ""} ${pendingForMe ? "needs-my-approval" : ""}">
-      <span class="person-name">${escapeHtml(name)}${changedMark}${statusMark}${salaryMark}</span>${timeMark}${pendingSwap ? `<span class="swap-badge">${pendingForMe ? "승인필요" : "교체대기"}</span>` : ""}
+      <span class="person-name">${escapeHtml(name)}${changedMark}${statusMark}${salaryMark}${weekendPayMark}</span>${timeMark}${pendingSwap ? `<span class="swap-badge">${pendingForMe ? "승인필요" : "교체대기"}</span>` : ""}
     </div>`;
   }
 
@@ -3256,6 +3259,13 @@
                               .join("")}
                           </select>
                         </label>
+                        <label class="field">
+                          <span>급여 계산</span>
+                          <label class="weekday-check weekend-pay-check">
+                            <input type="checkbox" data-schedule-weekend-pay="${schedule.id}" ${schedule.payAsWeekend ? "checked" : ""} />
+                            <span>주말 시급으로 계산 (예외)</span>
+                          </label>
+                        </label>
                         <div class="button-row">
                           <button class="secondary-button" type="button" data-action="save-schedule" data-id="${schedule.id}">저장</button>
                           <button class="danger-button" type="button" data-action="delete-schedule" data-id="${schedule.id}">삭제</button>
@@ -4358,6 +4368,12 @@
     schedule.pharmacistId = select.value;
     schedule.startHour = parseHourValue(startSelect?.value, defaults.start);
     schedule.endHour = parseHourValue(endSelect?.value, defaults.end);
+    // 예외: 평일 근무라도 주말 시급으로 계산(관리자가 체크). 체크 해제하면 표시를 지운다.
+    const weekendPayBox = app.querySelector(`[data-schedule-weekend-pay="${cssEscape(id)}"]`);
+    if (weekendPayBox) {
+      if (weekendPayBox.checked) schedule.payAsWeekend = true;
+      else delete schedule.payAsWeekend;
+    }
     const after = snapshotRxSchedule(schedule);
     if (isScheduleSnapshotChanged(before, after)) markManualScheduleChange(schedule, "rx", before, user.id);
     addAudit(
@@ -5148,6 +5164,7 @@
       pharmacistId: schedule.pharmacistId,
       startHour: schedule.startHour,
       endHour: schedule.endHour,
+      ...(schedule.payAsWeekend ? { payAsWeekend: true } : {}), // 표시가 있을 때만 포함(옛 기록과 비교가 틀어지지 않게)
     };
   }
 
@@ -5701,7 +5718,8 @@
     const staffCount = schedules.filter((schedule) => schedule.type === "staff").length;
     const salaryRows = schedules.map((schedule) => {
       const hours = Number(schedule.hours || 0);
-      const weekend = isWeekendDate(schedule.date);
+      // 주말·공휴일이거나, 관리자가 그 근무에 '주말 시급으로 계산' 표시를 해 둔 경우(예외 처리)
+      const weekend = isWeekendDate(schedule.date) || Boolean(schedule.raw?.payAsWeekend);
       const salaryConfig = getSalaryConfigForDate(employee, schedule.date);
       const hourlyRate = salaryConfig.salaryType === "fixed" ? 0 : Number(weekend ? salaryConfig.weekendHourlyRate || 0 : salaryConfig.weekdayHourlyRate || 0);
       return {

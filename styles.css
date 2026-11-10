@@ -731,6 +731,25 @@ input:disabled {
   white-space: nowrap;
 }
 
+/* 평일인데 주말 시급으로 계산하는 예외 근무 표시(관리자·당사자) */
+.weekend-pay-mark {
+  display: inline-block;
+  margin-left: 3px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #e8f1ff;
+  color: #1f4f9c;
+  font-size: 0.68em;
+  font-weight: 900;
+  line-height: 1.4;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.weekend-pay-check {
+  font-size: 0.85rem;
+}
+
 .employee-meta-chip.salary-review {
   background: #f3f6f4;
   color: #4b5d53;
