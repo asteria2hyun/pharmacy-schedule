@@ -1,17 +1,17 @@
 {
-  "backedUpAt": "2026-11-12T23:41:54.202Z",
-  "sourceVersion": 366,
-  "sourceUpdatedAt": "2026-11-10T21:46:54.872+00:00",
+  "backedUpAt": "2026-11-13T23:40:13.340Z",
+  "sourceVersion": 368,
+  "sourceUpdatedAt": "2026-11-13T09:06:38.181+00:00",
   "note": "비밀번호(authAccounts) 제외. 복원 시 비번은 관리자가 초기화.",
   "counts": {
     "employees": 13,
     "schedules": 3490,
-    "staffSchedules": 1644,
+    "staffSchedules": 1645,
     "swapRequests": 79,
     "holidays": 22
   },
   "data": {
-    "savedAt": "2026-11-10T21:46:54.864Z",
+    "savedAt": "2026-11-13T09:06:38.168Z",
     "holidays": [
       {
         "id": "holiday-2026-01-01",
@@ -25243,12 +25243,18 @@
         "id": "sch-c75f45c6-1b08-43eb-9a62-e2d46203c5ab",
         "date": "2026-11-10",
         "endHour": 8.5,
-        "changedAt": "2026-11-10T00:46:22.032Z",
+        "changedAt": "2026-11-13T00:01:07.631Z",
         "changedBy": "emp-bae",
         "shiftType": "irregular",
-        "startHour": 2,
-        "changeType": "rx-manual-add",
-        "pharmacistId": "emp-hyojin"
+        "startHour": 1,
+        "changeType": "rx-manual",
+        "pharmacistId": "emp-hyojin",
+        "changeOriginal": {
+          "endHour": 8.5,
+          "shiftType": "irregular",
+          "startHour": 2,
+          "pharmacistId": "emp-hyojin"
+        }
       }
     ],
     "swapRequests": [
@@ -37580,6 +37586,17 @@
         "date": "2029-04-30",
         "hours": 10.5,
         "staffId": "emp-subin"
+      },
+      {
+        "id": "staff-31d11bcf-21a3-4427-8fb0-5cf65a2529f9",
+        "date": "2026-11-17",
+        "hours": 10.5,
+        "endHour": 8.5,
+        "staffId": "emp-e18e5484-6eef-43df-93c8-9fbfe7ccd507",
+        "changedAt": "2026-11-13T09:06:37.441Z",
+        "changedBy": "emp-bae",
+        "startHour": 10,
+        "changeType": "staff-manual-add"
       }
     ],
     "overseasSchedules": [
