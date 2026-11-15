@@ -1,7 +1,7 @@
 {
-  "backedUpAt": "2026-11-14T22:32:12.995Z",
-  "sourceVersion": 369,
-  "sourceUpdatedAt": "2026-11-14T05:53:18.667+00:00",
+  "backedUpAt": "2026-11-15T22:56:59.988Z",
+  "sourceVersion": 370,
+  "sourceUpdatedAt": "2026-11-15T12:19:28.16+00:00",
   "note": "비밀번호(authAccounts) 제외. 복원 시 비번은 관리자가 초기화.",
   "counts": {
     "employees": 13,
@@ -11,7 +11,7 @@
     "holidays": 22
   },
   "data": {
-    "savedAt": "2026-11-14T05:53:18.655Z",
+    "savedAt": "2026-11-15T12:19:28.154Z",
     "holidays": [
       {
         "id": "holiday-2026-01-01",
@@ -20675,9 +20675,18 @@
         "id": "sch-4b89a4e6-ce80-4425-ba14-697e0b5949b1",
         "date": "2026-11-24",
         "endHour": 10,
+        "changedAt": "2026-11-15T12:19:27.435Z",
+        "changedBy": "emp-bae",
         "shiftType": "10pm",
         "startHour": 10,
-        "pharmacistId": "emp-bae"
+        "changeType": "rx-manual",
+        "pharmacistId": "emp-minji",
+        "changeOriginal": {
+          "endHour": 10,
+          "shiftType": "10pm",
+          "startHour": 10,
+          "pharmacistId": "emp-bae"
+        }
       },
       {
         "id": "sch-269bda1a-406b-4349-9848-f1609e5e5778",
