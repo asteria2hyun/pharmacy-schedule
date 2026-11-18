@@ -1,17 +1,17 @@
 {
-  "backedUpAt": "2026-11-10T23:29:59.226Z",
-  "sourceVersion": 366,
-  "sourceUpdatedAt": "2026-11-10T21:46:54.872+00:00",
+  "backedUpAt": "2026-11-18T01:01:16.458Z",
+  "sourceVersion": 370,
+  "sourceUpdatedAt": "2026-11-15T12:19:28.16+00:00",
   "note": "비밀번호(authAccounts) 제외. 복원 시 비번은 관리자가 초기화.",
   "counts": {
     "employees": 13,
     "schedules": 3490,
-    "staffSchedules": 1644,
+    "staffSchedules": 1645,
     "swapRequests": 79,
     "holidays": 22
   },
   "data": {
-    "savedAt": "2026-11-10T21:46:54.864Z",
+    "savedAt": "2026-11-15T12:19:28.154Z",
     "holidays": [
       {
         "id": "holiday-2026-01-01",
@@ -885,17 +885,24 @@
             "monthlySalary": 0,
             "weekdayHourlyRate": 12000,
             "weekendHourlyRate": 12000
+          },
+          {
+            "salaryType": "hourly",
+            "effectiveDate": "2026-11-01",
+            "monthlySalary": 0,
+            "weekdayHourlyRate": 13000,
+            "weekendHourlyRate": 13000
           }
         ],
         "workStartDate": "2026-06-01",
         "workStartHour": 10,
         "leaveAllowance": 0,
         "resignationDate": "",
-        "weekdayHourlyRate": 12000,
-        "weekendHourlyRate": 12000,
+        "weekdayHourlyRate": 13000,
+        "weekendHourlyRate": 13000,
         "firstWorkStartDate": "2025-11-14",
         "leaveCycleStartDate": "",
-        "salaryEffectiveDate": "2026-06-01",
+        "salaryEffectiveDate": "2026-11-01",
         "lastModifiedStartDate": "2026-06-01"
       },
       {
@@ -20668,9 +20675,18 @@
         "id": "sch-4b89a4e6-ce80-4425-ba14-697e0b5949b1",
         "date": "2026-11-24",
         "endHour": 10,
+        "changedAt": "2026-11-15T12:19:27.435Z",
+        "changedBy": "emp-bae",
         "shiftType": "10pm",
         "startHour": 10,
-        "pharmacistId": "emp-bae"
+        "changeType": "rx-manual",
+        "pharmacistId": "emp-minji",
+        "changeOriginal": {
+          "endHour": 10,
+          "shiftType": "10pm",
+          "startHour": 10,
+          "pharmacistId": "emp-bae"
+        }
       },
       {
         "id": "sch-269bda1a-406b-4349-9848-f1609e5e5778",
@@ -25243,12 +25259,18 @@
         "id": "sch-c75f45c6-1b08-43eb-9a62-e2d46203c5ab",
         "date": "2026-11-10",
         "endHour": 8.5,
-        "changedAt": "2026-11-10T00:46:22.032Z",
+        "changedAt": "2026-11-13T00:01:07.631Z",
         "changedBy": "emp-bae",
         "shiftType": "irregular",
-        "startHour": 2,
-        "changeType": "rx-manual-add",
-        "pharmacistId": "emp-hyojin"
+        "startHour": 1,
+        "changeType": "rx-manual",
+        "pharmacistId": "emp-hyojin",
+        "changeOriginal": {
+          "endHour": 8.5,
+          "shiftType": "irregular",
+          "startHour": 2,
+          "pharmacistId": "emp-hyojin"
+        }
       }
     ],
     "swapRequests": [
@@ -37580,6 +37602,17 @@
         "date": "2029-04-30",
         "hours": 10.5,
         "staffId": "emp-subin"
+      },
+      {
+        "id": "staff-31d11bcf-21a3-4427-8fb0-5cf65a2529f9",
+        "date": "2026-11-17",
+        "hours": 10.5,
+        "endHour": 8.5,
+        "staffId": "emp-e18e5484-6eef-43df-93c8-9fbfe7ccd507",
+        "changedAt": "2026-11-13T09:06:37.441Z",
+        "changedBy": "emp-bae",
+        "startHour": 10,
+        "changeType": "staff-manual-add"
       }
     ],
     "overseasSchedules": [
