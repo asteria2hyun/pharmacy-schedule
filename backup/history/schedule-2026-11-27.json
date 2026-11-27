@@ -1,17 +1,17 @@
 {
-  "backedUpAt": "2026-11-20T00:41:12.903Z",
-  "sourceVersion": 372,
-  "sourceUpdatedAt": "2026-11-19T11:12:59.031+00:00",
+  "backedUpAt": "2026-11-27T01:47:27.004Z",
+  "sourceVersion": 375,
+  "sourceUpdatedAt": "2026-11-26T04:46:17.858+00:00",
   "note": "비밀번호(authAccounts) 제외. 복원 시 비번은 관리자가 초기화.",
   "counts": {
     "employees": 13,
-    "schedules": 3490,
+    "schedules": 3491,
     "staffSchedules": 1645,
-    "swapRequests": 80,
+    "swapRequests": 81,
     "holidays": 22
   },
   "data": {
-    "savedAt": "2026-11-19T11:12:59.024Z",
+    "savedAt": "2026-11-26T04:46:17.851Z",
     "holidays": [
       {
         "id": "holiday-2026-01-01",
@@ -5030,7 +5030,7 @@
         "id": "sch-2026-12-21-10pm-1",
         "date": "2026-12-21",
         "shiftType": "10pm",
-        "pharmacistId": "emp-minji"
+        "pharmacistId": "emp-juna"
       },
       {
         "id": "sch-2026-12-21-8pm-2",
@@ -5080,7 +5080,7 @@
         "id": "sch-2026-12-25-10pm-0",
         "date": "2026-12-25",
         "shiftType": "10pm",
-        "pharmacistId": "emp-juna"
+        "pharmacistId": "emp-minji"
       },
       {
         "id": "sch-2026-12-25-10pm-2",
@@ -25271,6 +25271,17 @@
           "startHour": 2,
           "pharmacistId": "emp-hyojin"
         }
+      },
+      {
+        "id": "sch-bdf130fe-0566-40b4-a762-0bfc43ad6a09",
+        "date": "2026-11-25",
+        "endHour": 8,
+        "changedAt": "2026-11-25T10:08:00.585Z",
+        "changedBy": "emp-bae",
+        "shiftType": "irregular",
+        "startHour": 11,
+        "changeType": "rx-manual-add",
+        "pharmacistId": "emp-bae"
       }
     ],
     "swapRequests": [
@@ -26562,6 +26573,22 @@
         "requesterAssignmentType": "rx",
         "targetOriginalPharmacistId": "emp-bae",
         "requesterOriginalPharmacistId": "emp-yeongju"
+      },
+      {
+        "id": "swap-ceed2f13-3826-4931-bdce-e60963e74a97",
+        "status": "approved",
+        "targetId": "emp-juna",
+        "createdAt": "2026-11-26T04:45:45.960Z",
+        "approvedAt": "2026-11-26T04:46:17.140Z",
+        "rejectedAt": "",
+        "cancelledAt": "",
+        "requesterId": "emp-minji",
+        "targetScheduleId": "rx:sch-2026-12-25-10pm-0",
+        "requesterScheduleId": "rx:sch-2026-12-21-10pm-1",
+        "targetAssignmentType": "rx",
+        "requesterAssignmentType": "rx",
+        "targetOriginalPharmacistId": "emp-juna",
+        "requesterOriginalPharmacistId": "emp-minji"
       }
     ],
     "sharedVersion": 1,
